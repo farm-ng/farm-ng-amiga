@@ -36,6 +36,8 @@ class CleanFilesCommand(Command):
         proto_files_root = Path("farm_ng")
         for proto_file in proto_files_root.rglob("*_pb2*.py"):
             assert proto_file.unlink() is None
+        for proto_file in proto_files_root.rglob("*_pb2*.pyi"):
+            assert proto_file.unlink() is None
 
 
 class BuildProtosInstall(install):
