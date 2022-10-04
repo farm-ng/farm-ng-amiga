@@ -38,7 +38,7 @@ class EventsFileReader:
         return uri.string() in self.offsets.keys()
 
     # TODO: discuss the api signature
-    def compute_offsets(self) -> Dict[Uri, List[int]]:
+    def compute_offsets(self) -> None:
         if not self.is_open:
             raise Exception("Reader not open. Please, use reader.open()")
 
