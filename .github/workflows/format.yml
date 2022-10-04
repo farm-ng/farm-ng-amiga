@@ -14,7 +14,6 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Install dependencies
-      working-directory: brain
       run: pip3 install -e .[dev]
     - name: Run mypy
       run: mypy
