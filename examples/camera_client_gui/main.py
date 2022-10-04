@@ -7,7 +7,7 @@ from typing import List
 
 os.environ["KIVY_NO_ARGS"] = "1"
 
-from farm_ng.oak.client import OakCameraClient, OakCameraClientConfig
+from farm_ng.oak.client import OakCameraClient, OakCameraClientConfig, OakCameraServiceState
 from farm_ng.oak import oak_pb2
 
 from kivy.config import Config  # noreorder
@@ -83,7 +83,7 @@ class CameraApp(App):
 
         while True:
             # query the service state
-            state: oak_pb2.OakServiceState = await client.get_state()
+            state: OakCameraServiceState = await client.get_state()
 
             if state.value != oak_pb2.OakServiceState.RUNNING:
                 await asyncio.sleep(0.01)

@@ -8,6 +8,7 @@ import numpy as np
 from farm_ng.oak import oak_pb2
 from farm_ng.oak.client import OakCameraClient
 from farm_ng.oak.client import OakCameraClientConfig
+from farm_ng.oak.client import OakCameraServiceState
 
 
 async def main(address: str, port: int, stream_every_n: int) -> None:
@@ -23,7 +24,7 @@ async def main(address: str, port: int, stream_every_n: int) -> None:
 
     while True:
         # query the service state
-        state: oak_pb2.OakServiceState = await client.get_state()
+        state: OakCameraServiceState = await client.get_state()
 
         if state.value != oak_pb2.OakServiceState.RUNNING:
             print("Camera is not streaming!")
