@@ -32,10 +32,11 @@ python -c "import farm_ng; print(farm_ng.__version__)"
 
 ```bash
 cd examples/file_reader
+pip install -r requirements.txt
 ```
 
 Specify the file (download before)
 
 ```bash
-python main --file-name events_09162022160753_000000.bin
+python main.py --file-name events_09162022160753_000000.bin
 ```

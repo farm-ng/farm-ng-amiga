@@ -1,4 +1,6 @@
 # Copyright (c) farm-ng, inc. All rights reserved.
+from __future__ import annotations
+
 import argparse
 import asyncio
 
