@@ -31,7 +31,7 @@ class TestEventsWriter:
         assert writer.open()
         assert not writer.is_closed()
         assert writer.is_open()
-        assert writer.file_name.name == "event.log"
+        assert writer.file_name.name == "event.log"  # type: ignore
         # close the file
         assert writer.close()
         assert writer.is_closed()
@@ -62,7 +62,7 @@ class TestEventsReader:
         assert reader.open()
         assert not reader.is_closed()
         assert reader.is_open()
-        assert reader.file_name.name == "event.log"
+        assert reader.file_name.name == "event.log"  # type: ignore
         # close the file
         assert reader.close()
         assert reader.is_closed()
@@ -79,7 +79,7 @@ class TestEventsReader:
         assert writer.close()
         # read back the data
         assert reader.open()
-        event, frame_out = reader.read()
+        event, frame_out = reader.read()  # type: ignore
         assert event.uri.path == 'foo'
         assert reader.close()
         assert frame_out.image_data == frame.image_data
