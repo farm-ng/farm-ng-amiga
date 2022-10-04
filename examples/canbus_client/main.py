@@ -4,10 +4,12 @@ import asyncio
 
 import cv2
 import numpy as np
+
+from farm_ng.canbus.canbus_client import CanbusClient
+from farm_ng.canbus.canbus_client import CanbusClientConfig
 from farm_ng.oak import oak_pb2
 from farm_ng.oak.oak_client import OakCameraClient
 from farm_ng.oak.oak_client import OakCameraClientConfig
-from farm_ng.canbus.canbus_client import CanbusClient, CanbusClientConfig
 
 
 async def main(address: str, camera_port: int, canbus_port: int, stream_every_n: int) -> None:

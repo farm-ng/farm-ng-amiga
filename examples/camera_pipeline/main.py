@@ -1,15 +1,18 @@
-from limbus.core import Component, Pipeline, Params, ComponentState 
-
-from farm_ng.oak.client import OakCameraClient, OakCameraClientConfig
-
-import numpy as np
-import cv2
-import kornia as K
-
 import asyncio
 
-class AmigaCamera(Component):
+import cv2
+import kornia as K
+import numpy as np
+from limbus.core import Component
+from limbus.core import ComponentState
+from limbus.core import Params
+from limbus.core import Pipeline
 
+from farm_ng.oak.client import OakCameraClient
+from farm_ng.oak.client import OakCameraClientConfig
+
+
+class AmigaCamera(Component):
     def __init__(self, name: str):
         super().__init__(name)
         # configure the camera client
@@ -23,14 +26,14 @@ class AmigaCamera(Component):
         outputs = Params()
         outputs.declare("img")
         return outputs
-  
+
     async def forward(self):
         if self.stream is None:
             self.stream = self.client.stream_frames(every_n=10)
 
         response = await self.stream.read()
         frame = response.frame
-        
+
         data: bytes = getattr(frame, "rgb").image_data
 
         # use imdecode function
@@ -42,7 +45,6 @@ class AmigaCamera(Component):
 
 
 class OpencvWindow(Component):
-
     @staticmethod
     def register_inputs():
         inputs = Params()
@@ -57,7 +59,6 @@ class OpencvWindow(Component):
 
 
 class KorniaProcess(Component):
-
     @staticmethod
     def register_inputs():
         inputs = Params()
@@ -74,7 +75,7 @@ class KorniaProcess(Component):
         img = self.inputs.get_param("img")
 
         img_t = K.image_to_tensor(img)
-        img_t = img_t[None].float() / 255.
+        img_t = img_t[None].float() / 255.0
         img_t = K.filters.sobel(img_t, normalized=False)
 
         img = K.tensor_to_image(img_t)
@@ -99,7 +100,7 @@ async def main():
     pipeline = Pipeline()
     # NOTE: in future not needed
     pipeline.add_nodes([cam, viz1, viz2, imgproc])
-    
+
     # run your pipeline
     # NOTE: in future not needed
     pipeline.traverse()

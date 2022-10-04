@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+
 from farm_ng.core import event_pb2
 from farm_ng.core.events_file_reader import EventsFileReader
 from farm_ng.core.events_file_writer import EventsFileWriter
