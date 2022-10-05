@@ -6,8 +6,8 @@ from farm_ng.oak.client import OakCameraClientConfig
 from farm_ng.oak.client import OakCameraServiceState
 
 
-@pytest.fixture
-def config() -> OakCameraClientConfig:
+@pytest.fixture(name="config")
+def fixture_config() -> OakCameraClientConfig:
     return OakCameraClientConfig(port=50051)
 
 

@@ -1,6 +1,9 @@
 {
     "python.linting.enabled": true,
 	"python.linting.pylintEnabled": true,
+	"python.linting.pylintArgs": [
+		"--disable=C0111",
+	],
 	"python.linting.flake8Enabled": true,
 	"python.formatting.provider": "black",
 	"python.sortImports.args": [

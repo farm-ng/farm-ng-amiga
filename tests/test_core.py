@@ -8,14 +8,14 @@ from farm_ng.core.events_file_writer import EventsFileWriter
 from farm_ng.oak import oak_pb2
 
 
-@pytest.fixture
-def writer(tmpdir) -> EventsFileWriter:
+@pytest.fixture(name="writer")
+def fixture_writer(tmpdir) -> EventsFileWriter:
     file_name = Path(tmpdir) / "event.log"
     return EventsFileWriter(file_name)
 
 
-@pytest.fixture
-def reader(tmpdir) -> EventsFileReader:
+@pytest.fixture(name="reader")
+def fixture_reader(tmpdir) -> EventsFileReader:
     file_name = Path(tmpdir) / "event.log"
     return EventsFileReader(file_name)
 
