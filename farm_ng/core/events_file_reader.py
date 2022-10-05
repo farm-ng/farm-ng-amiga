@@ -3,8 +3,9 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
-from typing import BinaryIO
-from typing import Dict
+from typing import cast
+from typing import DefaultDict
+from typing import IO
 from typing import List
 from typing import Optional
 
@@ -17,30 +18,38 @@ class EventsFileReader:
         self._file_name = file_name.absolute()
         assert Path(self._file_name.parents[0]).is_dir()
 
-        self._file_stream: Optional[BinaryIO] = None
+        self._file_stream: Optional[IO] = None
         # assert self.open()
         # store the bytes offset in a dictionary where:
         # - the key is the string representation of the Uri of the message
         # - the value is a list of offsets to messages with that Uri
-        self.offsets: Optional[Dict[str, List[int]]] = None
+        self.offsets: DefaultDict[str, List[int]] = defaultdict(list)
         # self.compute_offsets()
 
     def __repr__(self) -> str:
-        return f"file_name: {str(self.file_name)}\nfile_stream: {self._file_stream}\nis_open: {self.is_open}"
+        return f"file_name: {str(self.file_name)}\n" f"file_stream: {self._file_stream}\nis_open: {self.is_open}"
 
     def reset_offsets(self) -> None:
         self.offsets = defaultdict(list)
 
     def uris(self) -> List[Uri]:
+        if self.offsets is None:
+            return []
         return [Uri.from_string(key) for key in self.offsets.keys()]
 
     def has_uri(self, uri) -> bool:
+        if self.offsets is None:
+            return False
         return uri.string() in self.offsets.keys()
 
-    # TODO: discuss the api signature
     def compute_offsets(self) -> None:
         if not self.is_open:
             raise Exception("Reader not open. Please, use reader.open()")
+
+        maybe_file_stream = self._file_stream
+        if maybe_file_stream is None:
+            return None
+        file_stream = cast(IO, maybe_file_stream)
 
         # clear, if any the previous offsets
         self.reset_offsets()
@@ -58,13 +67,13 @@ class EventsFileReader:
 
         while True:
 
-            event_len = int.from_bytes(self._file_stream.read(1), sys.byteorder)
+            event_len = int.from_bytes(file_stream.read(1), sys.byteorder)
             # end file condition
             if event_len == 0:
-                self._file_stream.seek(header_offset)
+                file_stream.seek(header_offset)
                 break
 
-            event: bytes = self._file_stream.read(event_len)
+            event: bytes = file_stream.read(event_len)
 
             event_proto = event_pb2.Event()
             event_proto.ParseFromString(event)
@@ -78,7 +87,7 @@ class EventsFileReader:
 
             current_offset += 1 + event_len + skip_bytes
 
-            self._file_stream.seek(current_offset)
+            file_stream.seek(current_offset)
 
     @property
     def file_name(self) -> Optional[Path]:
@@ -114,7 +123,11 @@ class EventsFileReader:
     def seek(self, uri: Uri, frame_id: int) -> None:
         assert uri.string() in self.offsets.keys()
         assert frame_id < self.num_frames(uri)
-        self._file_stream.seek(self.offsets[uri.string()][frame_id])
+        maybe_file_stream = self._file_stream
+        if maybe_file_stream is None:
+            return None
+        file_stream = cast(IO, maybe_file_stream)
+        file_stream.seek(self.offsets[uri.string()][frame_id])
 
     def seek_and_read(self, uri: Uri, frame_idx: int) -> Optional[Any]:
         self.seek(uri, frame_idx)
@@ -122,13 +135,18 @@ class EventsFileReader:
 
     def read(self) -> Optional[Any]:
         # Read the message's length as bytes and convert it to an integer
-        event_len = int.from_bytes(self._file_stream.read(1), sys.byteorder)
+        maybe_file_stream = self._file_stream
+        if maybe_file_stream is None:
+            return None
+        file_stream = cast(IO, maybe_file_stream)
+
+        event_len = int.from_bytes(file_stream.read(1), sys.byteorder)
         if event_len == 0:
             self.close()
             return None, None
 
         # Read that number of bytes as the message bytes
-        event: bytes = self._file_stream.read(event_len)
+        event: bytes = file_stream.read(event_len)
 
         event_proto = event_pb2.Event()
         event_proto.ParseFromString(event)
@@ -136,7 +154,7 @@ class EventsFileReader:
         # parse the message
         message_cls = getattr(importlib.import_module(event_proto.module), event_proto.name)
 
-        message: bytes = self._file_stream.read(event_proto.length_next)
+        message: bytes = file_stream.read(event_proto.length_next)
 
         message_out = message_cls()
         message_out.ParseFromString(message)
@@ -144,11 +162,15 @@ class EventsFileReader:
         return event_proto, message_out
 
     def header(self) -> event_pb2.EventHeader:
-        self._file_stream.seek(0)
-        header_len = int.from_bytes(self._file_stream.read(1), sys.byteorder)
+        maybe_file_stream = self._file_stream
+        if maybe_file_stream is None:
+            return event_pb2.EventHeader()
+        file_stream = cast(IO, maybe_file_stream)
+        file_stream.seek(0)
+        header_len = int.from_bytes(file_stream.read(1), sys.byteorder)
 
         # Read that number of bytes as the message bytes
-        header: bytes = self._file_stream.read(header_len)
+        header: bytes = file_stream.read(header_len)
 
         header_proto = event_pb2.EventHeader()
         header_proto.ParseFromString(header)

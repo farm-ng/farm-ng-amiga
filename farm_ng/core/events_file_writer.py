@@ -1,7 +1,8 @@
 import sys
 from pathlib import Path
 from typing import Any
-from typing import BinaryIO
+from typing import cast
+from typing import IO
 from typing import Optional
 
 from farm_ng.core import event_pb2
@@ -12,10 +13,10 @@ class EventsFileWriter:
         self._file_name = file_name.absolute()
         assert Path(self._file_name.parents[0]).is_dir()
 
-        self._file_stream: Optional[BinaryIO] = None
+        self._file_stream: Optional[IO] = None
 
     def __repr__(self) -> str:
-        return f"file_name: {str(self.file_name)}\nfile_stream: {self._file_stream}\nis_open: {self.is_open}"
+        return f"file_name: {str(self.file_name)}\n" f"file_stream: {self._file_stream}\nis_open: {self.is_open}"
 
     @property
     def file_name(self) -> Optional[Path]:
@@ -36,11 +37,20 @@ class EventsFileWriter:
         return self.is_open()
 
     def close(self) -> bool:
-        self._file_stream.close()
+        maybe_file_stream = self._file_stream
+        if maybe_file_stream is None:
+            return False
+        file_stream = cast(IO, maybe_file_stream)
+
+        file_stream.close()
         self._file_stream = None
         return self.is_closed()
 
     def write(self, message: Any, uri: Optional[event_pb2.Uri] = None) -> None:
+        maybe_file_stream = self._file_stream
+        if maybe_file_stream is None:
+            return None
+        file_stream = cast(IO, maybe_file_stream)
 
         if uri is None:
             uri = event_pb2.Uri()
@@ -54,6 +64,6 @@ class EventsFileWriter:
 
         event_len: bytes = event.ByteSize().to_bytes(1, sys.byteorder)
 
-        self._file_stream.write(event_len)
-        self._file_stream.write(event.SerializeToString())
-        self._file_stream.write(message.SerializeToString())
+        file_stream.write(event_len)
+        file_stream.write(event.SerializeToString())
+        file_stream.write(message.SerializeToString())
