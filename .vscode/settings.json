@@ -3,6 +3,7 @@
 	"python.linting.pylintEnabled": true,
 	"python.linting.pylintArgs": [
 		"--disable=C0111",
+		"--load-plugins=pylint_protobuf",
 	],
 	"python.linting.flake8Enabled": true,
 	"python.formatting.provider": "black",
@@ -12,7 +13,7 @@
 	  "--project=farm_ng",
     ],
     "python.linting.mypyEnabled": true,
-    "python.testing.pytestArgs": [],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
+    "python.testing.pytestArgs": [],
 }
