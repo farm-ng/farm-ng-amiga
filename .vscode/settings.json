@@ -1,0 +1,15 @@
+{
+    "python.linting.enabled": true,
+	"python.linting.pylintEnabled": true,
+	"python.linting.flake8Enabled": true,
+	"python.formatting.provider": "black",
+	"python.sortImports.args": [
+	  "--force-single-line-imports",
+	  "--line-length=160",
+	  "--project=farm_ng",
+    ],
+    "python.linting.mypyEnabled": true,
+    "python.testing.pytestArgs": [],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+}

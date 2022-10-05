@@ -1,8 +1,8 @@
-# farm-ng Brain ADK
+# farm-ng Brain SDK
 
 ### Install
 
-We recommend running the brain ADK applications in a virtual environment to avoid conflicts with other packages / versions installed on your system.
+We recommend running the brain SDK applications in a virtual environment to avoid conflicts with other packages / versions installed on your system.
 Though this is not a requirement and you are welcome to decide how/where to install.
 
 Install `pip3` & `virtualenv`:
