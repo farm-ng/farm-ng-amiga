@@ -1,0 +1,6 @@
+{
+    "recommendations": [
+        "ms-python.vscode-pylance",
+        "DavidAnson.vscode-markdownlint"
+    ]
+}
