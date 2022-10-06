@@ -24,9 +24,13 @@ class BuildProtosCommand(Command):
         command.build_package_protos(proto_files_root)
 
         for proto_file in proto_files_root.rglob("*_pb2*.py"):
-            proto_file.rename(Path(*proto_file.parts[1:]))
+            proto_file_new = Path(*proto_file.parts[1:])
+            if not proto_file_new.exists():
+                proto_file.rename([proto_file_new])
         for proto_file in proto_files_root.rglob("*_pb2*.pyi"):
-            proto_file.rename(Path(*proto_file.parts[1:]))
+            proto_file_new = Path(*proto_file.parts[1:])
+            if not proto_file_new.exists():
+                proto_file.rename([proto_file_new])
 
 
 class CleanFilesCommand(Command):
