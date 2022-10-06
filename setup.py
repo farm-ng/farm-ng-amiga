@@ -26,11 +26,11 @@ class BuildProtosCommand(Command):
         for proto_file in proto_files_root.rglob("*_pb2*.py"):
             proto_file_new = Path(*proto_file.parts[1:])
             if not proto_file_new.exists():
-                proto_file.rename([proto_file_new])
+                proto_file.rename(proto_file_new)
         for proto_file in proto_files_root.rglob("*_pb2*.pyi"):
             proto_file_new = Path(*proto_file.parts[1:])
             if not proto_file_new.exists():
-                proto_file.rename([proto_file_new])
+                proto_file.rename(proto_file_new)
 
 
 class CleanFilesCommand(Command):
