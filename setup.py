@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import shutil
 from pathlib import Path
 
 from setuptools import Command
@@ -25,13 +26,12 @@ class BuildProtosCommand(Command):
 
         for proto_file in proto_files_root.rglob("*_pb2*.py"):
             proto_file_new = Path(*proto_file.parts[1:])
-            print(proto_file)
-            print(proto_file_new)
-            print("=========")
-            proto_file.absolute().rename(proto_file_new.absolute())
+            shutil.copy(proto_file, proto_file_new)
+            proto_file.unlink()
         for proto_file in proto_files_root.rglob("*_pb2*.pyi"):
             proto_file_new = Path(*proto_file.parts[1:])
-            proto_file.rename(proto_file_new)
+            shutil.copy(proto_file, proto_file_new)
+            proto_file.unlink()
 
 
 class CleanFilesCommand(Command):
