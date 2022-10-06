@@ -28,7 +28,7 @@ class BuildProtosCommand(Command):
             print(proto_file)
             print(proto_file_new)
             print("=========")
-            proto_file.rename(proto_file_new.absolute())
+            proto_file.absolute().rename(proto_file_new.absolute())
         for proto_file in proto_files_root.rglob("*_pb2*.pyi"):
             proto_file_new = Path(*proto_file.parts[1:])
             proto_file.rename(proto_file_new)
