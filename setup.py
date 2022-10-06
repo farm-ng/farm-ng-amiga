@@ -20,7 +20,13 @@ class BuildProtosCommand(Command):
     def run(self):
         from grpc_tools import command
 
-        command.build_package_protos(".")
+        proto_files_root = Path("./protos")
+        command.build_package_protos(proto_files_root)
+
+        for proto_file in proto_files_root.rglob("*_pb2*.py"):
+            proto_file.rename(proto_file.relative_to("protos"))
+        for proto_file in proto_files_root.rglob("*_pb2*.pyi"):
+            proto_file.rename(proto_file.relative_to("protos"))
 
 
 class CleanFilesCommand(Command):

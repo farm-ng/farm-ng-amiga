@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from farm_ng.core import event_pb2
+from farm_ng.core import uri_pb2
 from farm_ng.core.events_file_reader import EventsFileReader
 from farm_ng.core.events_file_writer import EventsFileWriter
 from farm_ng.oak import oak_pb2
@@ -41,7 +41,7 @@ class TestEventsWriter:
 
     def test_write_images(self, writer: EventsFileWriter) -> None:
         assert writer.open()
-        uri = event_pb2.Uri()
+        uri = uri_pb2.Uri()
         frame = oak_pb2.OakFrame()
         frame.image_data = bytes([1, 2, 3, 4, 5, 6, 7, 8, 9])
         writer.write(frame, uri)
@@ -74,13 +74,12 @@ class TestEventsReader:
         # write file
         assert writer.open()
         image_data = bytes([1, 2, 3, 4, 5, 6, 7, 8, 9])
-        uri = event_pb2.Uri(path='foo')
+        uri = uri_pb2.Uri(scheme="farm_ng.oak.oak_pb2", authority="OakFrame")
         frame = oak_pb2.OakFrame(image_data=image_data)
         writer.write(frame, uri)
         assert writer.close()
         # read back the data
         assert reader.open()
-        event, frame_out = reader.read()  # type: ignore
-        assert event.uri.path == 'foo'
+        _, frame_out = reader.read()  # type: ignore
         assert reader.close()
         assert frame_out.image_data == frame.image_data

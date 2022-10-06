@@ -1,6 +1,12 @@
+// Copyright (c) farm-ng, inc.
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
+
 syntax = "proto3";
 
-package farm_ng.oak;
+package farm_ng.oak.proto;
 
 service OakService {
   rpc streamFrames(StreamFramesRequest) returns (stream StreamFramesReply) {}
