@@ -55,8 +55,6 @@ class OakCameraClientConfig:
     Attributes:
         port (int): the port to connect to the server.
         address (str): the address to connect to the server.
-        # TODO rename update_state_frequency to update_state_period
-        update_state_frequency (float): period between queries for the service state
     """
 
     port: int  # the port of the server address
@@ -145,7 +143,7 @@ class OakCameraClient:
         while True:
             try:
                 self._state = await self.get_state()
-                await asyncio.sleep(self.config.update_state_frequency)
+                await asyncio.sleep(0.5)
             except asyncio.CancelledError:
                 self.logger.info("Got CancellededError")
                 break
@@ -202,10 +200,10 @@ class OakCameraClient:
         self.needs_update = True
         self._mono_camera_settings = mono_settings
 
-    def stream_frames(self, every_n: int):
+    async def stream_frames(self, every_n: int):
         """Return the async streaming object.
 
         Args:
             every_n: the streaming frequency. In practice, drops `n` frames.
         """
-        return self.stub.streamFrames(oak_pb2.StreamFramesRequest(every_n=every_n))
+        return await self.stub.streamFrames(oak_pb2.StreamFramesRequest(every_n=every_n))
