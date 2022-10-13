@@ -1,4 +1,5 @@
 import pytest
+
 from farm_ng.oak import oak_pb2
 from farm_ng.oak.client import OakCameraClient
 from farm_ng.oak.client import OakCameraClientConfig
