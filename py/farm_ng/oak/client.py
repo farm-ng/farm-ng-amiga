@@ -1,4 +1,6 @@
+import asyncio
 import logging
+import time
 from dataclasses import dataclass
 
 import grpc
@@ -7,8 +9,43 @@ from farm_ng.oak import oak_pb2_grpc
 
 __all__ = ["OakCameraClientConfig", "OakCameraClient", "OakCameraServiceState"]
 
+logging.basicConfig(level=logging.INFO)
 
-logging.basicConfig(level=logging.DEBUG)
+
+class RateLimiter(object):
+    def __init__(self, period):
+        self.last_call = None
+        self.period = period
+        self.outstanding_call = False
+        self.args = None
+        self.kargs = None
+
+    def wrapper(self, func):
+        self.last_call = time.monotonic()
+        self.outstanding_call = False
+        func(*self.args, **self.kargs)
+
+    def __call__(self, func):
+        """Return a wrapped function that can only be called once per frequency where the most recent call will be
+        executed."""
+
+        def async_wrapper(*args, **kargs):
+            self.args = args
+            self.kargs = kargs
+            delay = self.next_call_wait()
+            if delay < 0:
+                self.wrapper(func)
+            else:
+                if not self.outstanding_call:
+                    asyncio.get_running_loop().call_later(delay, self.wrapper, func)
+                    self.outstanding_call = True
+
+        return async_wrapper
+
+    def next_call_wait(self):
+        if self.last_call is None:
+            return -1
+        return self.period - (time.monotonic() - self.last_call)
 
 
 @dataclass
@@ -18,10 +55,13 @@ class OakCameraClientConfig:
     Attributes:
         port (int): the port to connect to the server.
         address (str): the address to connect to the server.
+        # TODO rename update_state_frequency to update_state_period
+        update_state_frequency (float): period between queries for the service state
     """
 
     port: int  # the port of the server address
     address: str = "localhost"  # the address name of the server
+    update_state_frequency: int = 2  # the frequency in floating second to ping the service and update the state
 
 
 class OakCameraServiceState:
@@ -73,10 +113,48 @@ class OakCameraClient:
         self.channel = grpc.aio.insecure_channel(self.server_address)
         self.stub = oak_pb2_grpc.OakServiceStub(self.channel)
 
+        self._state = OakCameraServiceState()
+
+        self._mono_camera_settings = oak_pb2.CameraSettings(auto_exposure=True)
+        self._rgb_camera_settings = oak_pb2.CameraSettings(auto_exposure=True)
+
+        self.needs_update = False
+
+        # NOTE: in order to cancel this task, the consumer of this class is
+        # responsible to gather the task and cancel.
+        self._sync_task = asyncio.create_task(self._poll_service_state())
+
+    @property
+    def state(self) -> OakCameraServiceState:
+        return self._state
+
     @property
     def server_address(self) -> str:
         """Returns the composed address and port."""
         return f"{self.config.address}:{self.config.port}"
+
+    @property
+    def rgb_settings(self) -> str:
+        return self._rgb_camera_settings
+
+    @property
+    def mono_settings(self) -> str:
+        return self._mono_camera_settings
+
+    def settings_reply(self, reply) -> None:
+        if reply.status == oak_pb2.ReplyStatus.OK:
+            self._mono_camera_settings.CopyFrom(reply.stereo_settings)
+            self._rgb_camera_settings.CopyFrom(reply.rgb_settings)
+
+    async def _poll_service_state(self) -> None:
+        while True:
+            try:
+                self._state = await self.get_state()
+                await asyncio.sleep(self.config.update_state_frequency)
+            except asyncio.CancelledError:
+                self.logger.info("Got CancellededError")
+                break
+        await asyncio.sleep(0.02)
 
     async def get_state(self) -> OakCameraServiceState:
         """Async call to retrieve the state of the connected service."""
@@ -99,6 +177,8 @@ class OakCameraClient:
         state: OakCameraServiceState = await self.get_state()
         if state.value == oak_pb2.OakServiceState.UNAVAILABLE:
             return
+        reply = await self.stub.cameraControl(oak_pb2.CameraControlRequest())
+        self.settings_reply(reply)
         await self.stub.startService(oak_pb2.StartServiceRequest())
 
     async def pause_service(self) -> None:
@@ -110,6 +190,23 @@ class OakCameraClient:
         if state.value == oak_pb2.OakServiceState.UNAVAILABLE:
             return
         await self.stub.pauseService(oak_pb2.PauseServiceRequest())
+
+    async def send_settings(self) -> oak_pb2.CameraControlReply:
+        request = oak_pb2.CameraControlRequest()
+        request.stereo_settings.CopyFrom(self._mono_camera_settings)
+        request.rgb_settings.CopyFrom(self._rgb_camera_settings)
+        self.needs_update = False
+        return await self.stub.cameraControl(request)
+
+    @RateLimiter(period=1)
+    def update_rgb_settings(self, rgb_settings):
+        self.needs_update = True
+        self._rgb_camera_settings = rgb_settings
+
+    @RateLimiter(period=1)
+    def update_mono_settings(self, mono_settings):
+        self.needs_update = True
+        self._mono_camera_settings = mono_settings
 
     def stream_frames(self, every_n: int):
         """Return the async streaming object.

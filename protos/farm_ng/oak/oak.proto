@@ -1,19 +1,17 @@
-// Copyright (c) farm-ng, inc.
-//
-// Use of this source code is governed by an MIT-style
-// license that can be found in the LICENSE file or at
-// https://opensource.org/licenses/MIT.
+// Copyright (c) farm-ng, inc. All rights reserved.
 
 syntax = "proto3";
 
 package farm_ng.oak.proto;
 
 service OakService {
+  rpc cameraControl(CameraControlRequest) returns (CameraControlReply) {}
   rpc streamFrames(StreamFramesRequest) returns (stream StreamFramesReply) {}
   rpc getServiceState(GetServiceStateRequest) returns (GetServiceStateResult) {}
   rpc startService(StartServiceRequest) returns (StartServiceResult) {}
   rpc stopService(StopServiceRequest) returns (StopServiceResult) {}
   rpc pauseService(PauseServiceRequest) returns (PauseServiceResult) {}
+  rpc getCalibration(GetCalibrationRequest) returns (GetCalibrationResult) {}
 }
 
 enum ReplyStatus {
@@ -27,6 +25,15 @@ enum OakServiceState {
   RUNNING = 2;
   IDLE = 3;
   UNAVAILABLE = 4;
+}
+
+message GetCalibrationRequest {
+  string message = 1;
+}
+
+message GetCalibrationResult {
+  OakCalibration calibration = 1;
+  ReplyStatus status = 2;
 }
 
 message StopServiceRequest {
@@ -64,6 +71,18 @@ message GetServiceStateResult {
   string state_name = 1;
   OakServiceState state = 2;
   ReplyStatus status = 3;
+}
+
+message CameraControlRequest {
+  CameraSettings stereo_settings = 1;
+  CameraSettings rgb_settings = 2;
+}
+
+
+message CameraControlReply {
+   ReplyStatus status = 1;
+   CameraSettings stereo_settings = 2;
+   CameraSettings rgb_settings = 3;
 }
 
 message StreamFramesRequest {
@@ -164,4 +183,58 @@ message Metadata {
 message OakDataSample {
   OakSyncFrame frame = 1;
   Metadata metadata = 2;
+}
+
+message RotationMatrix {
+  repeated double rotation_matrix = 1;
+}
+
+message Vector3d {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+}
+
+message Extrinsics {
+  repeated double rotation_matrix = 1;
+  Vector3d spec_translation = 2;
+  int32 to_camera_socket = 3;
+  Vector3d translation = 4;
+}
+
+
+message CameraData {
+  uint32 camera_number = 1;
+  int32 camera_type = 2;
+  repeated double distortion_coeff = 3;
+  Extrinsics extrinsics = 4;
+  uint32 height = 5;
+  repeated double intrinsic_matrix = 6;
+  uint32 lens_position = 7;
+  double spec_hfov_deg = 8;
+  uint32 width = 9;
+}
+
+message StereoRectificationData {
+  uint32 left_camera_socket = 1;
+  repeated double rectified_rotation_left = 2;
+  repeated double rectified_rotation_right = 3;
+  uint32 right_camera_socket = 4;
+}
+
+message OakCalibration {
+  string batch_name = 1;
+  int32 batch_time = 2;
+  string board_conf = 3;
+  string board_custom = 4;
+  string board_name = 5;
+  int32 board_options = 6;
+  string board_rev = 7;
+  repeated CameraData camera_data = 8;
+  string hardware_conf = 9;
+  Extrinsics imu_extrinsics = 10;
+  repeated string miscellaneous_data = 11;
+  string product_name = 12;
+  StereoRectificationData stereo_rectification_data = 13;
+  uint32 version = 14;
 }
