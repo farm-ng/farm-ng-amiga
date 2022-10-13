@@ -4,6 +4,7 @@ import time
 from dataclasses import dataclass
 
 import grpc
+
 from farm_ng.oak import oak_pb2
 from farm_ng.oak import oak_pb2_grpc
 
@@ -12,7 +13,7 @@ __all__ = ["OakCameraClientConfig", "OakCameraClient", "OakCameraServiceState"]
 logging.basicConfig(level=logging.INFO)
 
 
-class RateLimiter(object):
+class RateLimiter:
     def __init__(self, period):
         self.last_call = None
         self.period = period
@@ -200,10 +201,10 @@ class OakCameraClient:
         self.needs_update = True
         self._mono_camera_settings = mono_settings
 
-    async def stream_frames(self, every_n: int):
+    def stream_frames(self, every_n: int):
         """Return the async streaming object.
 
         Args:
             every_n: the streaming frequency. In practice, drops `n` frames.
         """
-        return await self.stub.streamFrames(oak_pb2.StreamFramesRequest(every_n=every_n))
+        return self.stub.streamFrames(oak_pb2.StreamFramesRequest(every_n=every_n))
