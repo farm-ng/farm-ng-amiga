@@ -1,4 +1,4 @@
-name: Continuous Integration
+name: CI Python
 
 on:
   push:
@@ -22,6 +22,8 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
+      working-directory: py
       run: pip3 install -e .[dev]
     - name: Run Tests
+      working-directory: py
       run: pytest -v tests/ --mypy
