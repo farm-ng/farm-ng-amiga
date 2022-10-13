@@ -61,7 +61,6 @@ class OakCameraClientConfig:
 
     port: int  # the port of the server address
     address: str = "localhost"  # the address name of the server
-    update_state_frequency: int = 2  # the frequency in floating second to ping the service and update the state
 
 
 class OakCameraServiceState:
@@ -120,10 +119,6 @@ class OakCameraClient:
 
         self.needs_update = False
 
-        # NOTE: in order to cancel this task, the consumer of this class is
-        # responsible to gather the task and cancel.
-        self._sync_task = asyncio.create_task(self._poll_service_state())
-
     @property
     def state(self) -> OakCameraServiceState:
         return self._state
@@ -154,7 +149,6 @@ class OakCameraClient:
             except asyncio.CancelledError:
                 self.logger.info("Got CancellededError")
                 break
-        await asyncio.sleep(0.02)
 
     async def get_state(self) -> OakCameraServiceState:
         """Async call to retrieve the state of the connected service."""
