@@ -21,15 +21,15 @@ class BuildProtosCommand(Command):
     def run(self):
         from grpc_tools import command
 
-        proto_files_root = Path("./protos")
+        proto_files_root = Path("../protos")
         command.build_package_protos(proto_files_root)
 
         for proto_file in proto_files_root.rglob("*_pb2*.py"):
-            proto_file_new = Path(*proto_file.parts[1:])
+            proto_file_new = Path(*proto_file.parts[2:])
             shutil.copy(proto_file, proto_file_new)
             proto_file.unlink()
         for proto_file in proto_files_root.rglob("*_pb2*.pyi"):
-            proto_file_new = Path(*proto_file.parts[1:])
+            proto_file_new = Path(*proto_file.parts[2:])
             shutil.copy(proto_file, proto_file_new)
             proto_file.unlink()
 
