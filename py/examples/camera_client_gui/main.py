@@ -5,18 +5,21 @@ import io
 import os
 from typing import List
 
+from farm_ng.oak import oak_pb2
+from farm_ng.oak.client import OakCameraClient
+from farm_ng.oak.client import OakCameraClientConfig
+from farm_ng.oak.client import OakCameraServiceState
+
 os.environ["KIVY_NO_ARGS"] = "1"
 
-from farm_ng.oak.client import OakCameraClient, OakCameraClientConfig, OakCameraServiceState
-from farm_ng.oak import oak_pb2
 
-from kivy.config import Config  # noreorder
+from kivy.config import Config  # noreorder # noqa: E402
 
 Config.set("graphics", "fullscreen", "false")
 
-from kivy.app import App
-from kivy.lang.builder import Builder
-from kivy.core.image import Image as CoreImage
+from kivy.app import App  # noqa: E402
+from kivy.lang.builder import Builder  # noqa: E402
+from kivy.core.image import Image as CoreImage  # noqa: E402
 
 kv = """
 TabbedPanel:
