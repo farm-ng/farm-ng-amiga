@@ -6,9 +6,9 @@ import os
 from typing import List
 
 from farm_ng.oak import oak_pb2
-from farm_ng.oak.client import OakCameraClient
-from farm_ng.oak.client import OakCameraClientConfig
-from farm_ng.oak.client import OakCameraServiceState
+from farm_ng.oak.camera_client import OakCameraClient
+from farm_ng.oak.camera_client import OakCameraClientConfig
+from farm_ng.oak.camera_client import OakCameraServiceState
 
 os.environ["KIVY_NO_ARGS"] = "1"
 
