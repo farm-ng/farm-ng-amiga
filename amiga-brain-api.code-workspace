@@ -3,11 +3,5 @@
 		{
 			"path": "."
 		},
-		{
-			"path": "../workspace/amiga"
-		},
-		{
-			"path": "../amiga-dev-kit"
-		}
 	],
 }

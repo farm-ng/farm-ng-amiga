@@ -10,7 +10,7 @@ def fixture_config() -> CanbusClientConfig:
     return CanbusClientConfig(port=50051)
 
 
-class TestOakClient:
+class TestCanbusClient:
     def test_smoke_config(self, config: CanbusClientConfig) -> None:
         assert config.port == 50051
         assert config.address == "localhost"
