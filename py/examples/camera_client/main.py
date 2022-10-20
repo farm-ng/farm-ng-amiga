@@ -7,9 +7,9 @@ import asyncio
 import cv2
 import numpy as np
 from farm_ng.oak import oak_pb2
-from farm_ng.oak.client import OakCameraClient
-from farm_ng.oak.client import OakCameraClientConfig
-from farm_ng.oak.client import OakCameraServiceState
+from farm_ng.oak.camera_client import OakCameraClient
+from farm_ng.oak.camera_client import OakCameraClientConfig
+from farm_ng.oak.camera_client import OakCameraServiceState
 
 
 async def main(address: str, port: int, stream_every_n: int) -> None:

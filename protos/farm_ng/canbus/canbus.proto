@@ -1,3 +1,5 @@
+// Copyright (c) farm-ng, inc. All rights reserved.
+
 syntax = "proto3";
 
 package farm_ng.canbus.proto;
