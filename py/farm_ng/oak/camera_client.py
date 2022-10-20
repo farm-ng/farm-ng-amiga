@@ -158,7 +158,7 @@ class OakCameraClient:
             state = OakCameraServiceState(response.state)
         except grpc.RpcError:
             state = OakCameraServiceState()
-        self.logger.debug("OakServiceStub: port -> %i state is: %i", self.config.port, state.name)
+        self.logger.debug("OakServiceStub: port -> %i state is: %s", self.config.port, state.name)
         return state
 
     async def start_service(self) -> None:
