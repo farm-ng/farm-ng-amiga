@@ -80,7 +80,7 @@ class CanbusClient:
             state = CanbusServiceState(response.state)
         except grpc.RpcError:
             state = CanbusServiceState()
-        self.logger.debug("CanbusServiceStub: port -> %i state is: %i", self.config.port, state.name)
+        self.logger.debug("CanbusServiceStub: port -> %i state is: %s", self.config.port, state.name)
         return state
 
     async def start_service(self) -> None:
