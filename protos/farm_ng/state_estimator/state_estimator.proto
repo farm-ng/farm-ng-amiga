@@ -1,0 +1,114 @@
+syntax = "proto3";
+
+package farm_ng.state_estimator.proto;
+
+// import "farm_ng/amiga/temp_imports.proto";
+
+service StateEstimator {
+  rpc robotDynamics(RobotDynamicsRequest)
+      returns (stream RobotDynamicsResult) {}
+
+  rpc robotCalibrationResult(RobotCalibrationRequest)
+      returns (stream RobotCalibrationResult) {}
+
+  rpc getServiceState(GetServiceStateRequest) returns (GetServiceStateResult) {}
+  rpc startService(StartServiceRequest) returns (StartServiceResult) {}
+  rpc stopService(StopServiceRequest) returns (StopServiceResult) {}
+}
+
+message RobotDynamicsRequest {
+    string device = 1;
+}
+
+message RobotDynamicsResult {
+    // Timestamp from farm-ng-core
+    // SE3d types from Sophus
+    Timestamp stamp = 1;  // this contains which clock
+    SE3d world_pose_robot = 2;
+    // Rate of the robot in the robot's frame
+    SE3dLog robot_rate = 3;
+}
+
+message RobotCalibrationRequest {
+    Timestamp stamp = 1;  // this contains which clock
+    // poses has
+    // robot -> oak0/right
+    // robot -> oak1/right
+    // robot -> wheel/0xA
+    // robot -> wheel/0xB
+    // robot -> wheel/0xC
+    // robot -> wheel/0xD
+    repeated NamedPose3d poses = 2;
+    repeated NamedWheel wheels = 3;
+}
+
+message RobotCalibrationResult {
+    // Timestamp from farm-ng-core
+    // SE3d types from Sophus
+    Timestamp stamp = 1;  // this contains which clock
+    SE3d world_pose_robot = 2;
+    // Rate of the robot in the robot's frame
+    SE3dLog robot_rate = 3;
+}
+
+message NamedWheel {
+    // e.g. wheel/0xA
+    string name = 1;
+    double radius = 2;
+}
+
+////////////////////////////////////////////////
+// From here down should be imported from elsewhere
+// Need to understand desired protos architecture
+////////////////////////////////////////////////
+
+// Geometry/etc. protos
+message SE3d {
+    string foo = 1;
+}
+message SE3dLog {
+    SE3d foo = 1;
+}
+message NamedPose3d {
+    string frame_a = 1;
+    string frame_b = 2;
+    SE3d a_pose_b = 3;
+}
+message Timestamp {
+    string clock_name = 1;
+    double seconds = 2;
+    string clock_type = 3;
+}
+
+
+// Generic service protos
+enum ReplyStatus {
+    OK = 0;
+    FAILED = 1;
+}
+enum ServiceState {
+    STOPPED = 0;
+    RUNNING = 1;
+  }
+message GetServiceStateRequest {
+    string message = 1;
+}
+message GetServiceStateResult {
+    string state_name = 1;
+    ServiceState state = 2;
+    ReplyStatus status = 3;
+}
+message StartServiceRequest {
+    string message = 1;
+}
+message StartServiceResult {
+    string message = 1;
+    ReplyStatus status = 2;
+}
+message StopServiceRequest {
+    string message = 1;
+}
+message StopServiceResult {
+    string message = 1;
+    ReplyStatus status = 2;
+}
