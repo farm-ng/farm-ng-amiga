@@ -1,5 +1,8 @@
 syntax = "proto3";
 
+import "sophus/linalg.proto";
+import "sophus/lie.proto";
+
 package farm_ng.controller.proto;
 
 // import "farm_ng/amiga/temp_imports.proto";
@@ -27,7 +30,8 @@ message MoveToGoalPoseRequest {
         UPDATE_GOAL=1;
     }
     Command command = 1;
-    SE3d  world_pose_goal = 2;
+    sophus.proto.Se3F64 world_pose_goal = 2;
+
 
     // max speed to achieve the goal
     double max_speed = 3;
@@ -36,8 +40,8 @@ message MoveToGoalPoseRequest {
 }
 
 message MoveToGoalPoseResult {
-    SE3d world_pose_goal = 1;
-    SE3d world_pose_robot = 2;
+    sophus.proto.Se3F64 world_pose_goal = 1;
+    sophus.proto.Se3F64 world_pose_robot = 2;
     // estimated time of arrival at the robot
     double eta = 3;
     enum State {
@@ -59,25 +63,6 @@ message MoveToGoalPoseResult {
 // From here down should be imported from elsewhere
 // Need to understand desired protos architecture
 ////////////////////////////////////////////////
-
-// Geometry/etc. protos
-message SE3d {
-    string foo = 1;
-}
-message SE3dLog {
-    SE3d foo = 1;
-}
-message NamedPose3d {
-    string frame_a = 1;
-    string frame_b = 2;
-    SE3d a_pose_b = 3;
-}
-message Timestamp {
-    string clock_name = 1;
-    double seconds = 2;
-    string clock_type = 3;
-}
-
 
 // Generic service protos
 enum ReplyStatus {
