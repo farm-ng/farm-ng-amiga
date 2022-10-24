@@ -21,6 +21,8 @@ jobs:
     - uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Install pip latest
+      run: pip3 install -u pip
     - name: Install dependencies
       run: pip3 install -e .[dev]
     - name: Run Tests
