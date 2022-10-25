@@ -16,7 +16,7 @@ def fixture_config() -> ControllerClientConfig:
     return ControllerClientConfig(port=50051)
 
 
-class TestCanbusClient:
+class TestControllerClient:
     def test_smoke_config(self, config: ControllerClientConfig) -> None:
         assert config.port == 50051
         assert config.address == "localhost"
