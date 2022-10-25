@@ -66,13 +66,13 @@ class ControllerClient:
 
     async def start_service(self) -> None:
         state: controller_pb2.ControllerServiceState = await self.get_state()
-        if state.value == controller_pb2.ServiceState.STOPPED:
+        if state == controller_pb2.ControllerServiceState.STOPPED:
             return
         await self.stub.startService(controller_pb2.StartServiceRequest())
 
     async def stop_service(self) -> None:
         state: controller_pb2.ControllerServiceState = await self.get_state()
-        if state.value == controller_pb2.ControllerServiceState.STOPPED:
+        if state == controller_pb2.ControllerServiceState.STOPPED:
             return
         await self.stub.stopService(controller_pb2.StopServiceRequest())
 
