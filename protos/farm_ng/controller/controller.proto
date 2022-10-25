@@ -71,7 +71,7 @@ enum ReplyStatus {
     OK = 0;
     FAILED = 1;
 }
-enum ServiceState {
+enum ControllerServiceState {
     STOPPED = 0;
     RUNNING = 1;
   }
@@ -80,7 +80,7 @@ message GetServiceStateRequest {
 }
 message GetServiceStateResult {
     string state_name = 1;
-    ServiceState state = 2;
+    ControllerServiceState state = 2;
     ReplyStatus status = 3;
 }
 message StartServiceRequest {
