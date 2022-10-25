@@ -77,7 +77,7 @@ class ControllerClient:
             state = ControllerServiceState(response.state)
         except grpc.RpcError:
             state = ControllerServiceState()
-        self.logger.debug(f"ControllerServiceStub: port -> {self.config.port} state is: {state.name}")
+        self.logger.debug("ControllerServiceStub: port -> %i state is: %s", self.config.port, state.name)
         return state
 
     async def start_service(self) -> None:
@@ -88,7 +88,7 @@ class ControllerClient:
 
     async def stop_service(self) -> None:
         state: ControllerServiceState = await self.get_state()
-        if state.value == controller_pb2.ServiceState.STOPPED:
+        if state.value == controller_pb2.ControllerServiceState.STOPPED:
             return
         await self.stub.stopService(controller_pb2.StopServiceRequest())
 
