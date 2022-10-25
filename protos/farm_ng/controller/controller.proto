@@ -26,8 +26,9 @@ service ControllerService {
 
 message MoveToGoalPoseRequest {
     enum Command {
-        CANCEL=0;
-        UPDATE_GOAL=1;
+        UNKNOWN=0;
+        CANCEL=1;
+        UPDATE_GOAL=2;
     }
     Command command = 1;
     sophus.proto.Se3F64 world_pose_goal = 2;
@@ -45,8 +46,9 @@ message MoveToGoalPoseResult {
     // estimated time of arrival at the robot
     double eta = 3;
     enum State {
-        FAILED = 0;
-        IN_PROGRESS = 1;
+        UNKNOWN=0;
+        FAILED = 1;
+        IN_PROGRESS = 2;
         ACHIEVED = 3;
     }
     State state = 4;
