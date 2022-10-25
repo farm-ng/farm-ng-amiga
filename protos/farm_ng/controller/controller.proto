@@ -1,0 +1,99 @@
+syntax = "proto3";
+
+import "sophus/linalg.proto";
+import "sophus/lie.proto";
+
+package farm_ng.controller.proto;
+
+// import "farm_ng/amiga/temp_imports.proto";
+
+service ControllerService {
+  // called from the gui
+  // Reports progress back to gui until it achieves the goal
+  // TODO how to cancel the request (possibly by cancelling the response stream? or using the input as a stream)
+  rpc moveToGoalPose(MoveToGoalPoseRequest)
+      returns (stream MoveToGoalPoseResult) {}
+
+  // Next week
+  // rpc followTrajectory(stream FollowTrajectorRequest)
+  //    returns (stream FollowTrajectorResult) {}
+
+  rpc getServiceState(GetServiceStateRequest) returns (GetServiceStateResult) {}
+  rpc startService(StartServiceRequest) returns (StartServiceResult) {}
+  rpc stopService(StopServiceRequest) returns (StopServiceResult) {}
+}
+
+
+message MoveToGoalPoseRequest {
+    enum Command {
+        UNKNOWN=0;
+        CANCEL=1;
+        UPDATE_GOAL=2;
+    }
+    Command command = 1;
+    sophus.proto.Se3F64 world_pose_goal = 2;
+
+
+    // max speed to achieve the goal
+    double max_speed = 3;
+    // max angular rate to achieve the goal
+    double max_angular_rate = 4;
+}
+
+message MoveToGoalPoseResult {
+    sophus.proto.Se3F64 world_pose_goal = 1;
+    sophus.proto.Se3F64 world_pose_robot = 2;
+    // estimated time of arrival at the robot
+    double eta = 3;
+    enum State {
+        UNKNOWN=0;
+        FAILED = 1;
+        IN_PROGRESS = 2;
+        ACHIEVED = 3;
+    }
+    State state = 4;
+    ReplyStatus status = 5;
+
+}
+
+// message MoveToGoalPoseResults {
+//     repeated MoveToGoalPoseResult results = 1;
+// }
+
+
+////////////////////////////////////////////////
+// From here down should be imported from elsewhere
+// Need to understand desired protos architecture
+////////////////////////////////////////////////
+
+// Generic service protos
+enum ReplyStatus {
+    OK = 0;
+    FAILED = 1;
+}
+enum ServiceState {
+    STOPPED = 0;
+    RUNNING = 1;
+  }
+message GetServiceStateRequest {
+    string message = 1;
+}
+message GetServiceStateResult {
+    string state_name = 1;
+    ServiceState state = 2;
+    ReplyStatus status = 3;
+}
+message StartServiceRequest {
+    string message = 1;
+}
+message StartServiceResult {
+    string message = 1;
+    ReplyStatus status = 2;
+}
+message StopServiceRequest {
+    string message = 1;
+}
+message StopServiceResult {
+    string message = 1;
+    ReplyStatus status = 2;
+}

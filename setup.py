@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-import shutil
 from pathlib import Path
 
+from farm_ng.core.package import build_package_protos
+from farm_ng.core.package import clean_protos
 from setuptools import Command
 from setuptools import setup
 from setuptools.command.develop import develop
@@ -19,19 +20,7 @@ class BuildProtosCommand(Command):
         pass
 
     def run(self):
-        from grpc_tools import command
-
-        proto_files_root = Path("../protos")
-        command.build_package_protos(proto_files_root)
-
-        for proto_file in proto_files_root.rglob("*_pb2*.py"):
-            proto_file_new = Path(*proto_file.parts[2:])
-            shutil.copy(proto_file, proto_file_new)
-            proto_file.unlink()
-        for proto_file in proto_files_root.rglob("*_pb2*.pyi"):
-            proto_file_new = Path(*proto_file.parts[2:])
-            shutil.copy(proto_file, proto_file_new)
-            proto_file.unlink()
+        build_package_protos(proto_root=Path("protos"), package_root=Path("py"))
 
 
 class CleanFilesCommand(Command):
@@ -44,11 +33,7 @@ class CleanFilesCommand(Command):
         pass
 
     def run(self):
-        proto_files_root = Path("farm_ng")
-        for proto_file in proto_files_root.rglob("*_pb2*.py"):
-            assert proto_file.unlink() is None
-        for proto_file in proto_files_root.rglob("*_pb2*.pyi"):
-            assert proto_file.unlink() is None
+        clean_protos(package_root=Path("py"))
 
 
 class BuildProtosInstall(install):
