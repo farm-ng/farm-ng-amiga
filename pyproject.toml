@@ -19,3 +19,10 @@ skip-magic-trailing-comma = true
 
 [tool.isort]
 profile = "black"
+
+[build-system]
+requires = [
+    "setuptools",
+    "farm-ng-core @ git+https://github.com/farm-ng/farm-ng-core@main"
+    ]
+build-backend = "setuptools.build_meta"
