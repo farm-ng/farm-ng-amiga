@@ -7,6 +7,8 @@ package farm_ng.canbus.proto;
 service CanbusService {
   rpc streamCanbusMessages(StreamCanbusRequest)
       returns (stream StreamCanbusReply) {}
+  rpc sendCanbusMessage(SendCanbusMessageRequest)
+      returns (SendCanbusMessageReply) {}
   rpc getServiceState(GetServiceStateRequest) returns (GetServiceStateResult) {}
   rpc startService(StartServiceRequest) returns (StartServiceResult) {}
   rpc stopService(StopServiceRequest) returns (StopServiceResult) {}
@@ -38,6 +40,14 @@ message StreamCanbusRequest {
 message StreamCanbusReply {
   ReplyStatus status = 1;
   RawCanbusMessages messages = 2;
+}
+
+message SendCanbusMessageRequest {
+  RawCanbusMessage message = 1;
+}
+
+message SendCanbusMessageReply {
+  ReplyStatus status = 1;
 }
 
 message RawCanbusMessage {
