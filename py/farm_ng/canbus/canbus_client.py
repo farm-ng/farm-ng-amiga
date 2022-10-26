@@ -27,7 +27,7 @@ class CanbusServiceState:
     """Canbus service state."""
 
     def __init__(self, proto: canbus_pb2.CanbusServiceState = None) -> None:
-        self._proto = proto or canbus_pb2.CanbusServiceState.STOPPED
+        self._proto = proto or canbus_pb2.CanbusServiceState.UNAVAILABLE
 
     @property
     def value(self) -> int:
@@ -85,12 +85,12 @@ class CanbusClient:
 
     async def start_service(self) -> None:
         state: CanbusServiceState = await self.get_state()
-        if state.value == canbus_pb2.CanbusServiceState.STOPPED:
+        if state.value == canbus_pb2.CanbusServiceState.UNAVAILABLE:
             return
         await self.stub.startService(canbus_pb2.StartServiceRequest())
 
     async def stop_service(self) -> None:
         state: CanbusServiceState = await self.get_state()
-        if state.value == canbus_pb2.CanbusServiceState.STOPPED:
+        if state.value == canbus_pb2.CanbusServiceState.UNAVAILABLE:
             return
         await self.stub.stopService(canbus_pb2.StopServiceRequest())

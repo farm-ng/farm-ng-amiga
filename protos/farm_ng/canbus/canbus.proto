@@ -20,8 +20,11 @@ enum ReplyStatus {
 }
 
 enum CanbusServiceState {
-  STOPPED = 0;
-  RUNNING = 1;
+  UNKNOWN = 0;
+  STOPPED = 1;
+  RUNNING = 2;
+  IDLE = 3;
+  UNAVAILABLE = 4;
 }
 
 message StopServiceRequest {
