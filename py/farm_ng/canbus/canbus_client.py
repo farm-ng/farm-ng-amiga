@@ -94,3 +94,10 @@ class CanbusClient:
         if state.value == canbus_pb2.CanbusServiceState.UNAVAILABLE:
             return
         await self.stub.stopService(canbus_pb2.StopServiceRequest())
+
+    async def send_message_request(self, msg: canbus_pb2.SendCanbusMessageRequest) -> None:
+        state: CanbusServiceState = await self.get_state()
+        if state.value == canbus_pb2.CanbusServiceState.UNAVAILABLE:
+            return
+        response: canbus_pb2.SendCanbusMessageReply = await self.stub.sendCanbusMessage(msg)
+        return response
