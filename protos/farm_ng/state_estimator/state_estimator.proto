@@ -32,7 +32,7 @@ message RobotDynamicsResult {
 
 message RobotRate {
     double speed = 1;
-    double angular_rate = 1;
+    double angular_rate = 2;
 }
 
 message RobotCalibrationRequest {
@@ -99,7 +99,7 @@ message GetServiceStateRequest {
 }
 message GetServiceStateResult {
     string state_name = 1;
-    ServiceState state = 2;
+    StateEstimatorServiceState state = 2;
     ReplyStatus status = 3;
 }
 message StartServiceRequest {
