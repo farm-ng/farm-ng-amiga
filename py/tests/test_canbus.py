@@ -24,4 +24,4 @@ class TestCanbusClient:
     async def test_state(self, config: CanbusClientConfig) -> None:
         client = CanbusClient(config)
         state: CanbusServiceState = await client.get_state()
-        assert state.value == canbus_pb2.CanbusServiceState.STOPPED
+        assert state.value == canbus_pb2.CanbusServiceState.UNKNOWN
