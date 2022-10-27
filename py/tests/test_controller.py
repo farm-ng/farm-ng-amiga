@@ -2,6 +2,7 @@ import pytest
 from farm_ng.controller import controller_pb2
 from farm_ng.controller.controller_client import ControllerClient
 from farm_ng.controller.controller_client import ControllerClientConfig
+from farm_ng.controller.controller_client import ControllerServiceState
 
 
 class TestControllerPb2:
@@ -28,5 +29,5 @@ class TestControllerClient:
     @pytest.mark.asyncio
     async def test_state(self, config: ControllerClientConfig) -> None:
         client = ControllerClient(config)
-        state: controller_pb2.ControllerServiceState = await client.get_state()
-        assert state == controller_pb2.ControllerServiceState.STOPPED
+        state: ControllerServiceState = await client.get_state()
+        assert state.value == controller_pb2.ControllerServiceState.UNAVAILABLE

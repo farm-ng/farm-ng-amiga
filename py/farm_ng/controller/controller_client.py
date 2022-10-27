@@ -22,6 +22,24 @@ class ControllerClientConfig:
     address: str = "localhost"  # the address name of the server
 
 
+class ControllerServiceState:
+    """Controller service state."""
+
+    def __init__(self, proto: controller_pb2.ControllerServiceState = None) -> None:
+        self._proto = proto or controller_pb2.ControllerServiceState.UNAVAILABLE
+
+    @property
+    def value(self) -> int:
+        return self._proto
+
+    @property
+    def name(self) -> str:
+        return controller_pb2.ControllerServiceState.DESCRIPTOR.values[self.value].name
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}: ({self.value}, {self.name})"
+
+
 class ControllerClient:
     def __init__(self, config: ControllerClientConfig) -> None:
         self.config = config
@@ -32,10 +50,10 @@ class ControllerClient:
         self.channel = grpc.aio.insecure_channel(self.server_address)
         self.stub = controller_pb2_grpc.ControllerServiceStub(self.channel)
 
-        self._state = controller_pb2.ControllerServiceState.STOPPED
+        self._state = ControllerServiceState()
 
     @property
-    def state(self) -> controller_pb2.ControllerServiceState:
+    def state(self) -> ControllerServiceState:
         return self._state
 
     @property
@@ -52,27 +70,27 @@ class ControllerClient:
                 self.logger.info("Got Cancelled Error")
                 break
 
-    async def get_state(self) -> controller_pb2.ControllerServiceState:
-        state: controller_pb2.ControllerServiceState
+    async def get_state(self) -> ControllerServiceState:
+        state: ControllerServiceState
         try:
             response: controller_pb2.GetServiceStateResult = await self.stub.getServiceState(
                 controller_pb2.GetServiceStateRequest()
             )
-            state = response.state
+            state = ControllerServiceState(response.state)
         except grpc.RpcError:
-            state = controller_pb2.ControllerServiceState.STOPPED
+            state = ControllerServiceState()
         self.logger.debug("ControllerServiceStub: port -> %i state is: %s", self.config.port, state)
         return state
 
     async def start_service(self) -> None:
-        state: controller_pb2.ControllerServiceState = await self.get_state()
-        if state == controller_pb2.ControllerServiceState.STOPPED:
+        state: ControllerServiceState = await self.get_state()
+        if state.value == controller_pb2.ControllerServiceState.UNAVAILABLE:
             return
         await self.stub.startService(controller_pb2.StartServiceRequest())
 
     async def stop_service(self) -> None:
         state: controller_pb2.ControllerServiceState = await self.get_state()
-        if state == controller_pb2.ControllerServiceState.STOPPED:
+        if state.value == controller_pb2.ControllerServiceState.UNAVAILABLE:
             return
         await self.stub.stopService(controller_pb2.StopServiceRequest())
 
