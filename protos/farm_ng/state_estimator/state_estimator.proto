@@ -2,19 +2,32 @@ syntax = "proto3";
 
 package farm_ng.state_estimator.proto;
 
-// import "farm_ng/amiga/temp_imports.proto";
+import "sophus/linalg.proto";
+import "sophus/lie.proto";
 
-service StateEstimator {
+service StateEstimatorService {
   rpc robotDynamics(RobotDynamicsRequest)
       returns (stream RobotDynamicsResult) {}
 
+    // TODO: Return control signal (request) to state estimator
+    // rpc controlRobotDynamics(stream ControlRobotDynamicsRequest)
+    //     returns (stream ControlRobotDynamicsResult) {}
+
   rpc robotCalibrationResult(RobotCalibrationRequest)
-      returns (stream RobotCalibrationResult) {}
+      returns (RobotCalibrationResult) {}
 
   rpc getServiceState(GetServiceStateRequest) returns (GetServiceStateResult) {}
   rpc startService(StartServiceRequest) returns (StartServiceResult) {}
   rpc stopService(StopServiceRequest) returns (StopServiceResult) {}
 }
+
+// TODO: Return control signal (request) to state estimator
+// message ControlRobotDynamicsRequest {
+//     // AmigaRpdo1 (commands sent to canbus)
+// }
+// message ControlRobotDynamicsResult {
+//     // Pose from state estimator to controller
+// }
 
 message RobotDynamicsRequest {
     string device = 1;
@@ -24,12 +37,22 @@ message RobotDynamicsResult {
     // Timestamp from farm-ng-core
     // SE3d types from Sophus
     Timestamp stamp = 1;  // this contains which clock
-    SE3d world_pose_robot = 2;
+    sophus.proto.Se3F64 odom_pose_robot = 2;
     // Rate of the robot in the robot's frame
-    SE3dLog robot_rate = 3;
+    RobotRate robot_rate = 3;
+}
+
+message RobotRate {
+    double speed = 1;
+    double angular_rate = 2;
 }
 
 message RobotCalibrationRequest {
+    string device = 1;
+}
+
+message RobotCalibrationResult {
+
     Timestamp stamp = 1;  // this contains which clock
     // poses has
     // robot -> oak0/right
@@ -40,15 +63,6 @@ message RobotCalibrationRequest {
     // robot -> wheel/0xD
     repeated NamedPose3d poses = 2;
     repeated NamedWheel wheels = 3;
-}
-
-message RobotCalibrationResult {
-    // Timestamp from farm-ng-core
-    // SE3d types from Sophus
-    Timestamp stamp = 1;  // this contains which clock
-    SE3d world_pose_robot = 2;
-    // Rate of the robot in the robot's frame
-    SE3dLog robot_rate = 3;
 }
 
 message NamedWheel {
@@ -63,17 +77,14 @@ message NamedWheel {
 ////////////////////////////////////////////////
 
 // Geometry/etc. protos
-message SE3d {
-    string foo = 1;
-}
-message SE3dLog {
-    SE3d foo = 1;
-}
+
+
 message NamedPose3d {
     string frame_a = 1;
     string frame_b = 2;
-    SE3d a_pose_b = 3;
+    sophus.proto.Se3F64 a_pose_b = 3;
 }
+
 message Timestamp {
     string clock_name = 1;
     double seconds = 2;
@@ -81,21 +92,26 @@ message Timestamp {
 }
 
 
+
 // Generic service protos
 enum ReplyStatus {
     OK = 0;
     FAILED = 1;
 }
-enum ServiceState {
-    STOPPED = 0;
-    RUNNING = 1;
-  }
+enum StateEstimatorServiceState {
+    UNKNOWN = 0;
+    STOPPED = 1;
+    RUNNING = 2;
+    IDLE = 3;
+    UNAVAILABLE = 4;
+}
+
 message GetServiceStateRequest {
     string message = 1;
 }
 message GetServiceStateResult {
     string state_name = 1;
-    ServiceState state = 2;
+    StateEstimatorServiceState state = 2;
     ReplyStatus status = 3;
 }
 message StartServiceRequest {
