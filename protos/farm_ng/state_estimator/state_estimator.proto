@@ -9,6 +9,10 @@ service StateEstimatorService {
   rpc robotDynamics(RobotDynamicsRequest)
       returns (stream RobotDynamicsResult) {}
 
+    // TODO: Return control signal (request) to state estimator
+    // rpc controlRobotDynamics(stream ControlRobotDynamicsRequest)
+    //     returns (stream ControlRobotDynamicsResult) {}
+
   rpc robotCalibrationResult(RobotCalibrationRequest)
       returns (RobotCalibrationResult) {}
 
@@ -16,6 +20,14 @@ service StateEstimatorService {
   rpc startService(StartServiceRequest) returns (StartServiceResult) {}
   rpc stopService(StopServiceRequest) returns (StopServiceResult) {}
 }
+
+// TODO: Return control signal (request) to state estimator
+// message ControlRobotDynamicsRequest {
+//     // AmigaRpdo1 (commands sent to canbus)
+// }
+// message ControlRobotDynamicsResult {
+//     // Pose from state estimator to controller
+// }
 
 message RobotDynamicsRequest {
     string device = 1;
