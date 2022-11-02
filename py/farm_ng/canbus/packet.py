@@ -1,6 +1,8 @@
+# Copyright (c) farm-ng, inc. All rights reserved.
+import time
+from enum import IntEnum
 from struct import pack
 from struct import unpack
-import time
 
 DASHBOARD_NODE_ID = 0xE
 PENDANT_NODE_ID = 0xF
@@ -8,7 +10,7 @@ BRAIN_NODE_ID = 0x1F
 SDK_NODE_ID = 0x2A
 
 
-class AmigaControlState:
+class AmigaControlState(IntEnum):
     """State of the Amiga vehicle control unit (VCU)"""
 
     STATE_BOOT = 0
@@ -76,12 +78,7 @@ class AmigaRpdo1(Packet):
 
     def encode(self):
         """Returns the data contained by the class encoded as CAN message data."""
-        return pack(
-            self.format,
-            self.state_req,
-            int(self.cmd_speed * 1000.0),
-            int(self.cmd_ang_rate * 1000.0),
-        )
+        return pack(self.format, self.state_req, int(self.cmd_speed * 1000.0), int(self.cmd_ang_rate * 1000.0))
 
     def decode(self, data):
         """Decodes CAN message data and populates the values of the class."""
@@ -115,12 +112,7 @@ class AmigaTpdo1(Packet):
 
     def encode(self):
         """Returns the data contained by the class encoded as CAN message data."""
-        return pack(
-            self.format,
-            self.state,
-            int(self.meas_speed * 1000.0),
-            int(self.meas_ang_rate * 1000.0),
-        )
+        return pack(self.format, self.state, int(self.meas_speed * 1000.0), int(self.meas_ang_rate * 1000.0))
 
     def decode(self, data):
         """Decodes CAN message data and populates the values of the class."""
