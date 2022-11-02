@@ -62,7 +62,7 @@ class CanbusClient:
         """Returns the composed address and port."""
         return f"{self.config.address}:{self.config.port}"
 
-    async def _poll_service_state(self) -> None:
+    async def poll_service_state(self) -> None:
         while True:
             try:
                 self._state = await self.get_state()
@@ -94,10 +94,3 @@ class CanbusClient:
         if state.value == canbus_pb2.CanbusServiceState.UNAVAILABLE:
             return
         await self.stub.stopService(canbus_pb2.StopServiceRequest())
-
-    # async def send_message_request(self, msg: canbus_pb2.SendCanbusMessageRequest) -> None:
-    #     if self._state.value != canbus_pb2.CanbusServiceState.RUNNING:
-    #         print("Not running!")
-    #         return
-    #     response: canbus_pb2.SendCanbusMessageReply = await self.stub.sendCanbusMessage(msg)
-    #     return response
