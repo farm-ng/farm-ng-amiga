@@ -61,7 +61,7 @@ class ControllerClient:
         """Returns the composed address and port."""
         return f"{self.config.address}:{self.config.port}"
 
-    async def _poll_service_state(self) -> None:
+    async def poll_service_state(self) -> None:
         while True:
             try:
                 self._state = await self.get_state()
@@ -93,10 +93,3 @@ class ControllerClient:
         if state.value == controller_pb2.ControllerServiceState.UNAVAILABLE:
             return
         await self.stub.stopService(controller_pb2.StopServiceRequest())
-
-    # def move_to_goal(self):
-    #     """Return the async streaming object.
-    #     Args:
-    #         None
-    #     """
-    #     return self.stub.moveToGoalPose(controller_pb2.MoveToGoalPoseRequest())

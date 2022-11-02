@@ -8,7 +8,6 @@ from typing import List
 from farm_ng.oak import oak_pb2
 from farm_ng.oak.camera_client import OakCameraClient
 from farm_ng.oak.camera_client import OakCameraClientConfig
-from farm_ng.oak.camera_client import OakCameraServiceState
 
 os.environ["KIVY_NO_ARGS"] = "1"
 
@@ -70,7 +69,10 @@ class CameraApp(App):
         self.config = OakCameraClientConfig(address=self.address, port=self.port)
         self.client = OakCameraClient(self.config)
 
-        self.tasks += [asyncio.ensure_future(self.stream_camera(self.client))]
+        # Stream camera frames
+        self.tasks.append(asyncio.ensure_future(self.stream_camera(self.client)))
+        # Continuously monitor camera service state
+        self.tasks.append(asyncio.ensure_future(self.client.poll_service_state()))
 
         return await asyncio.gather(run_wrapper(), *self.tasks)
 
@@ -78,17 +80,17 @@ class CameraApp(App):
         while self.root is None:
             await asyncio.sleep(0.01)
 
-        # get the streaming object
-        response_stream = client.stream_frames(every_n=self.stream_every_n)
-
-        # start the streaming service
-        await client.start_service()
+        response_stream = None
 
         while True:
-            # query the service state
-            state: OakCameraServiceState = await client.get_state()
-
-            if state.value != oak_pb2.OakServiceState.RUNNING:
+            if client.state.value != oak_pb2.OakServiceState.RUNNING:
+                # start the streaming service
+                await client.start_service()
+                await asyncio.sleep(0.01)
+                continue
+            elif response_stream is None:
+                # get the streaming object
+                response_stream = client.stream_frames(every_n=self.stream_every_n)
                 await asyncio.sleep(0.01)
                 continue
 
