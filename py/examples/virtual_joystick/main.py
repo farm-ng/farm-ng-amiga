@@ -93,7 +93,7 @@ class VirtualPendantApp(App):
                 if w.dispatch("on_touch_move", touch):
                     return True
 
-            self.joystick_pose = (-1.0 + 2.0 * (touch.sx - 0.3) / 0.7, -1.0 + 2.0 * touch.sy)
+            self.joystick_pose = (1.0 - 2.0 * (touch.sx - 0.3) / 0.7, -1.0 + 2.0 * touch.sy)
             self.joystick_pose = (min(max(-1, self.joystick_pose[0]), 1), min(max(-1, self.joystick_pose[1]), 1))
 
             return False
@@ -127,8 +127,8 @@ class VirtualPendantApp(App):
             size = (100, 100)
             widget.canvas.add(Color(1.0, 1.0, 0.0, 1.0, mode="rgba"))
             x_abs, y_abs = (
-                widget.center_x + 0.5 * self.joystick_pose[0] * widget.width,
-                widget.center_y + 0.5 * self.joystick_pose[1] * widget.size[1],
+                widget.center_x - 0.5 * self.joystick_pose[0] * widget.width,
+                widget.center_y + 0.5 * self.joystick_pose[1] * widget.height,
             )
             point_obj = Ellipse(pos=(x_abs - size[0] // 2, y_abs - size[1] // 2), size=size)
             widget.canvas.add(point_obj)

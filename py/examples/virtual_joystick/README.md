@@ -3,7 +3,7 @@
 This example creates a simple kivy application to use as an onscreen joystick
 and interfaces the application with the canbus client.
 
-The kivy application is based on [Kivy tutorial 006: Let’s draw something
+The kivy application draws some inspiration [Kivy tutorial 006: Let’s draw something
 ](https://blog.kivy.org/2019/12/kivy-tutorial-006-lets-draw-something/).
 
 The utility of this example application includes:
