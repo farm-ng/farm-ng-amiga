@@ -151,7 +151,7 @@ class VirtualPendantApp(App):
 
         self.tasks.append(asyncio.ensure_future(self.stream_canbus(self.client)))
         self.tasks.append(asyncio.ensure_future(self.send_can_msgs(self.client)))
-        self.tasks.append(asyncio.ensure_future(self.client._poll_service_state()))
+        self.tasks.append(asyncio.ensure_future(self.client.poll_service_state()))
         return await asyncio.gather(run_wrapper(), *self.tasks)
 
     async def send_can_msgs(self, client: CanbusClient) -> None:
