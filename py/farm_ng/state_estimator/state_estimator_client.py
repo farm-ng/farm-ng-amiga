@@ -61,7 +61,7 @@ class StateEstimatorClient:
         """Returns the composed address and port."""
         return f"{self.config.address}:{self.config.port}"
 
-    async def _poll_service_state(self) -> None:
+    async def poll_service_state(self) -> None:
         while True:
             try:
                 self._state = await self.get_state()

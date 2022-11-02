@@ -139,7 +139,7 @@ class OakCameraClient:
             self._mono_camera_settings.CopyFrom(reply.stereo_settings)
             self._rgb_camera_settings.CopyFrom(reply.rgb_settings)
 
-    async def _poll_service_state(self) -> None:
+    async def poll_service_state(self) -> None:
         while True:
             try:
                 self._state = await self.get_state()
