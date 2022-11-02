@@ -25,6 +25,8 @@ async def main(address: str, port: int, stream_every_n: int) -> None:
 
     while True:
         # query the service state
+        # NOTE: This could be done asynchronously with client.poll_service_state()
+        #       as in other examples, such as camera_client_gui
         state: OakCameraServiceState = await client.get_state()
 
         if state.value != oak_pb2.OakServiceState.RUNNING:

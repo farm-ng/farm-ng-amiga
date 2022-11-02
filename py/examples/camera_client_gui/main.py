@@ -70,7 +70,10 @@ class CameraApp(App):
         self.config = OakCameraClientConfig(address=self.address, port=self.port)
         self.client = OakCameraClient(self.config)
 
-        self.tasks += [asyncio.ensure_future(self.stream_camera(self.client))]
+        # Stream camera frames
+        self.tasks.append(asyncio.ensure_future(self.stream_camera(self.client)))
+        # Continuously monitor camera service state
+        self.tasks.append(asyncio.ensure_future(self.client.poll_service_state()))
 
         return await asyncio.gather(run_wrapper(), *self.tasks)
 
@@ -85,10 +88,8 @@ class CameraApp(App):
         await client.start_service()
 
         while True:
-            # query the service state
-            state: OakCameraServiceState = await client.get_state()
-
-            if state.value != oak_pb2.OakServiceState.RUNNING:
+            # check the camera service state
+            if client.state.value != oak_pb2.OakServiceState.RUNNING:
                 await asyncio.sleep(0.01)
                 continue
 
