@@ -3,6 +3,7 @@ import time
 from enum import IntEnum
 from struct import pack
 from struct import unpack
+from typing import Optional
 
 from farm_ng.canbus import canbus_pb2
 from farm_ng.core.stamp import get_monotonic_now
@@ -53,6 +54,8 @@ class Packet:
 def make_amiga_rpdo1_proto(
     state_req: AmigaControlState, cmd_speed: float, cmd_ang_rate: float
 ) -> canbus_pb2.RawCanbusMessage:
+    """Creates a canbus_pb2.RawCanbusMessage, using the AmigaRpdo1 structure and formatting, that can be sent
+    directly to the canbus service to be formatted and send on the CAN bus."""
     return canbus_pb2.RawCanbusMessage(
         id=AmigaRpdo1.cob_id + DASHBOARD_NODE_ID,
         data=AmigaRpdo1(state_req=state_req, cmd_speed=cmd_speed, cmd_ang_rate=cmd_ang_rate).encode(),
@@ -125,3 +128,14 @@ class AmigaTpdo1(Packet):
         return "AMIGA TPDO1 Amiga state {} Measured speed {:0.3f} Measured angular rate {:0.3f} @ time {}".format(
             self.state, self.meas_speed, self.meas_ang_rate, self.stamp.stamp
         )
+
+
+def parse_amiga_tpdo1_proto(message: canbus_pb2.RawCanbusMessage) -> Optional[AmigaTpdo1]:
+    """Parses a canbus_pb2.RawCanbusMessage, IFF the message came from the dashboard and contains AmigaTpdo1
+    structure, formatting, and cobid.
+
+    Otherwise returns None.
+    """
+    if message.id != AmigaTpdo1.cob_id + DASHBOARD_NODE_ID:
+        return None
+    return AmigaTpdo1.from_can_data(message.data)
