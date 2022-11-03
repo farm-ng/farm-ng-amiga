@@ -76,31 +76,28 @@ BoxLayout:
 """
 
 
+def relative_cord_in_widget(
+    widget: Widget, touch: MouseMotionEvent, scale: Tuple[float, float] = (-1.0, 1.0)
+) -> Optional[Tuple[float, float]]:
+    """Returns the coordinates of the touch on the scale IFF it occurs within the bounds of the widget."""
+    x_s = (widget.pos[0], widget.pos[0] + widget.width)
+    y_s = (widget.pos[1], widget.pos[1] + widget.height)
+
+    if not (x_s[0] < touch.x < x_s[1]) or not (y_s[0] < touch.y < y_s[1]):
+        return None
+
+    return (
+        scale[0] + (touch.x - x_s[0]) * (scale[1] - scale[0]) / (widget.width),
+        scale[0] + (touch.y - y_s[0]) * (scale[1] - scale[0]) / (widget.height),
+    )
+
+
 class VirtualJoystickWidget(Widget):
     def __init__(self, **kwargs) -> None:
         super(VirtualJoystickWidget, self).__init__(**kwargs)
 
         self.pose: tuple[float, float] = (0.0, 0.0)
         self.joystick_rad = 100
-
-    @staticmethod
-    def relative_cord_in_widget(
-        widget: Widget, touch: MouseMotionEvent, scale: Tuple[float, float] = (-1.0, 1.0), buffer: float = 0
-    ) -> Optional[Tuple[float, float]]:
-        """Returns the coordinates of the touch on the scale IFF it occurs within the bounds of the widget (plus
-        the buffer).
-
-        The buffer is useful to draw a complete shape within the bounds
-        """
-        x_s = (widget.pos[0] + buffer, widget.pos[0] + widget.width - buffer)
-        y_s = (widget.pos[1] + buffer, widget.pos[1] + widget.height - buffer)
-        if not (x_s[0] < touch.x < x_s[1]) or not (y_s[0] < touch.y < y_s[1]):
-            return None
-
-        return (
-            scale[0] + (touch.x - x_s[0]) * (scale[1] - scale[0]) / (widget.width - 2 * buffer),
-            scale[0] + (touch.y - y_s[0]) * (scale[1] - scale[0]) / (widget.height - 2 * buffer),
-        )
 
     def on_touch_down(self, touch):
         if isinstance(touch, MouseMotionEvent) and int(os.environ.get("DISABLE_KIVY_MOUSE_EVENTS", 0)):
@@ -109,7 +106,7 @@ class VirtualJoystickWidget(Widget):
             if w.dispatch("on_touch_down", touch):
                 return True
         #
-        res = self.relative_cord_in_widget(widget=self, touch=touch)
+        res = relative_cord_in_widget(widget=self, touch=touch)
         if res:
             self.pose = res
         return False
@@ -121,7 +118,7 @@ class VirtualJoystickWidget(Widget):
             if w.dispatch("on_touch_move", touch):
                 return True
 
-        res = self.relative_cord_in_widget(widget=self, touch=touch)
+        res = relative_cord_in_widget(widget=self, touch=touch)
         if res:
             self.pose = res
         return False
