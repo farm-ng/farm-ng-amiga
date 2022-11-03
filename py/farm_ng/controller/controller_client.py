@@ -82,13 +82,13 @@ class ControllerClient:
         self.logger.debug("ControllerServiceStub: port -> %i state is: %s", self.config.port, state)
         return state
 
-    async def start_service(self) -> None:
+    async def connect_to_service(self) -> None:
         state: ControllerServiceState = await self.get_state()
         if state.value == controller_pb2.ControllerServiceState.UNAVAILABLE:
             return
         await self.stub.startService(controller_pb2.StartServiceRequest())
 
-    async def stop_service(self) -> None:
+    async def disconnect_from_service(self) -> None:
         state: controller_pb2.ControllerServiceState = await self.get_state()
         if state.value == controller_pb2.ControllerServiceState.UNAVAILABLE:
             return

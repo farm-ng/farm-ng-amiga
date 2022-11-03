@@ -83,13 +83,13 @@ class CanbusClient:
         self.logger.debug("CanbusServiceStub: port -> %i state is: %s", self.config.port, state.name)
         return state
 
-    async def start_service(self) -> None:
+    async def connect_to_service(self) -> None:
         state: CanbusServiceState = await self.get_state()
         if state.value == canbus_pb2.CanbusServiceState.UNAVAILABLE:
             return
         await self.stub.startService(canbus_pb2.StartServiceRequest())
 
-    async def stop_service(self) -> None:
+    async def disconnect_from_service(self) -> None:
         state: CanbusServiceState = await self.get_state()
         if state.value == canbus_pb2.CanbusServiceState.UNAVAILABLE:
             return
