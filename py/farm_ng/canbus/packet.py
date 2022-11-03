@@ -4,6 +4,7 @@ from enum import IntEnum
 from struct import pack
 from struct import unpack
 
+from farm_ng.canbus import canbus_pb2
 from farm_ng.core.stamp import get_monotonic_now
 from farm_ng.core.timestamp_pb2 import Timestamp
 
@@ -47,6 +48,15 @@ class Packet:
     def age(self):
         """Age of the most recent message."""
         return time.monotonic() - self.stamp.stamp
+
+
+def make_amiga_rpdo1_proto(
+    state_req: AmigaControlState, cmd_speed: float, cmd_ang_rate: float
+) -> canbus_pb2.RawCanbusMessage:
+    return canbus_pb2.RawCanbusMessage(
+        id=AmigaRpdo1.cob_id + DASHBOARD_NODE_ID,
+        data=AmigaRpdo1(state_req=state_req, cmd_speed=cmd_speed, cmd_ang_rate=cmd_ang_rate).encode(),
+    )
 
 
 class AmigaRpdo1(Packet):
