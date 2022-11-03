@@ -92,14 +92,14 @@ class VirtualJoystickWidget(Widget):
 
         The buffer is useful to draw a complete shape within the bounds
         """
-        xs = (widget.pos[0] + buffer, widget.pos[0] + widget.width - buffer)
-        ys = (widget.pos[1] + buffer, widget.pos[1] + widget.height - buffer)
-        if not (xs[0] < touch.x < xs[1]) or not (ys[0] < touch.y < ys[1]):
+        x_s = (widget.pos[0] + buffer, widget.pos[0] + widget.width - buffer)
+        y_s = (widget.pos[1] + buffer, widget.pos[1] + widget.height - buffer)
+        if not (x_s[0] < touch.x < x_s[1]) or not (y_s[0] < touch.y < y_s[1]):
             return None
 
         return (
-            scale[0] + (touch.x - xs[0]) * (scale[1] - scale[0]) / (widget.width - 2 * buffer),
-            scale[0] + (touch.y - ys[0]) * (scale[1] - scale[0]) / (widget.height - 2 * buffer),
+            scale[0] + (touch.x - x_s[0]) * (scale[1] - scale[0]) / (widget.width - 2 * buffer),
+            scale[0] + (touch.y - y_s[0]) * (scale[1] - scale[0]) / (widget.height - 2 * buffer),
         )
 
     def on_touch_down(self, touch):
@@ -109,7 +109,7 @@ class VirtualJoystickWidget(Widget):
             if w.dispatch("on_touch_down", touch):
                 return True
         #
-        res = self.relative_cord_in_widget(widget=self, touch=touch, buffer=self.joystick_rad)
+        res = self.relative_cord_in_widget(widget=self, touch=touch)
         if res:
             self.pose = res
         return False
@@ -121,7 +121,7 @@ class VirtualJoystickWidget(Widget):
             if w.dispatch("on_touch_move", touch):
                 return True
 
-        res = self.relative_cord_in_widget(widget=self, touch=touch, buffer=self.joystick_rad)
+        res = self.relative_cord_in_widget(widget=self, touch=touch)
         if res:
             self.pose = res
         return False
@@ -138,6 +138,12 @@ class VirtualJoystickWidget(Widget):
 
     def draw(self):
         self.canvas.clear()
+
+        self.canvas.add(Color(0.2, 0.2, 0.2, 1.0, mode="rgba"))
+        background = Ellipse(
+            pos=(self.center_x - self.width // 2, self.center_y - self.height // 2), size=(self.width, self.height)
+        )
+        self.canvas.add(background)
 
         x_abs, y_abs = (
             self.center_x + 0.5 * self.pose[0] * (self.width - 2 * self.joystick_rad),
@@ -193,7 +199,7 @@ class VirtualPendantApp(App):
         """Loop over drawing the VirtualJoystickWidget."""
         while self.root is None:
             await asyncio.sleep(0.01)
-        joystick = self.root.ids["joystick"]
+        joystick: VirtualJoystickWidget = self.root.ids["joystick"]
         while True:
             joystick.draw()
             await asyncio.sleep(0.01)
@@ -229,9 +235,8 @@ class VirtualPendantApp(App):
         return await asyncio.gather(run_wrapper(), *self.tasks)
 
     async def stream_camera(self, client: OakCameraClient) -> None:
-        """This task listens to the camera client's stream and populates
-        the tabbed panel with all 4 image streams from the oak camera
-        """
+        """This task listens to the camera client's stream and populates the tabbed panel with all 4 image streams
+        from the oak camera."""
         while self.root is None:
             await asyncio.sleep(0.01)
 
@@ -276,7 +281,7 @@ class VirtualPendantApp(App):
         """The pose generator yields an AmigaAmigaRpdo1 (auto control command) for the canbus client to send on the
         bus at the specified period (recommended 50hz) based on the onscreen joystick position."""
         assert self.root is not None, ""
-        joystick = self.root.ids["joystick"]
+        joystick: VirtualJoystickWidget = self.root.ids["joystick"]
 
         while True:
             rpdo1 = AmigaRpdo1(
