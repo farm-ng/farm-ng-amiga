@@ -22,7 +22,12 @@ from kivy.graphics import Color, Ellipse  # noqa: E402
 from kivy.input.providers.mouse import MouseMotionEvent  # noqa: E402
 from kivy.properties import StringProperty  # noqa: E402
 
+Config.set("graphics", "resizable", False)
+Config.set("graphics", "width", "1280")
+Config.set("graphics", "height", "800")
 Config.set("graphics", "fullscreen", "false")
+Config.set("input", "mouse", "mouse,disable_on_activity")
+Config.set("kivy", "keyboard_mode", "systemanddock")
 
 from kivy.app import App  # noqa: E402
 from kivy.lang.builder import Builder  # noqa: E402
@@ -206,7 +211,7 @@ class VirtualPendantApp(App):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="amiga-camera-app")
+    parser = argparse.ArgumentParser(prog="virtual-joystick")
     parser.add_argument("--address", type=str, default="localhost", help="The camera address")
     parser.add_argument("--port", type=int, required=True, help="The grpc port where the canbus service is running.")
     args = parser.parse_args()

@@ -28,6 +28,8 @@ pip install .
 
 For this app:
 
+#### apps/virtual_joystick/entry.sh will automate this process
+
 ```bash
 cd py/examples/virtual_joystick/
 pip install -r requirements.txt
