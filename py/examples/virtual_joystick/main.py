@@ -4,6 +4,8 @@ import asyncio
 import logging
 import os
 from typing import List
+from typing import Optional
+from typing import Tuple
 
 import grpc
 from farm_ng.canbus import canbus_pb2
@@ -31,11 +33,11 @@ Config.set("kivy", "keyboard_mode", "systemanddock")
 
 from kivy.app import App  # noqa: E402
 from kivy.lang.builder import Builder  # noqa: E402
-from kivy.core.window import Window  # noqa: E402
+from kivy.uix.widget import Widget  # noqa: E402
 
 
 kv = """
-# <VirtualJoystickWidget@Widget>:
+<VirtualJoystickWidget@Widget>:
 BoxLayout:
     BoxLayout:
         size_hint_x: 0.3
@@ -46,9 +48,85 @@ BoxLayout:
             text: "speed:\\n" + str(app.amiga_speed) + " [m/s]"
         Label:
             text: "angular rate:\\n" + str(app.amiga_rate) + " [rad/s]"
-    Widget:
+    VirtualJoystickWidget:
         id: joystick
+
 """
+
+
+class VirtualJoystickWidget(Widget):
+    def __init__(self, **kwargs) -> None:
+        super(VirtualJoystickWidget, self).__init__(**kwargs)
+
+        self.pose: tuple[float, float] = (0.0, 0.0)
+        self.joystick_rad = 100
+
+    @staticmethod
+    def relative_cord_in_widget(
+        widget: Widget, touch: MouseMotionEvent, scale: Tuple[float, float] = (-1.0, 1.0), buffer: float = 0
+    ) -> Optional[Tuple[float, float]]:
+        """Returns the coordinates of the touch on the scale IFF it occurs within the bounds of the widget (plus
+        the buffer).
+
+        The buffer is useful to draw a complete shape within the bounds
+        """
+        xs = (widget.pos[0] + buffer, widget.pos[0] + widget.width - buffer)
+        ys = (widget.pos[1] + buffer, widget.pos[1] + widget.height - buffer)
+        if not (xs[0] < touch.x < xs[1]) or not (ys[0] < touch.y < ys[1]):
+            return None
+
+        return (
+            scale[0] + (touch.x - xs[0]) * (scale[1] - scale[0]) / (widget.width - 2 * buffer),
+            scale[0] + (touch.y - ys[0]) * (scale[1] - scale[0]) / (widget.height - 2 * buffer),
+        )
+
+    def on_touch_down(self, touch):
+        if isinstance(touch, MouseMotionEvent) and int(os.environ.get("DISABLE_KIVY_MOUSE_EVENTS", 0)):
+            return True
+        for w in self.children[:]:
+            if w.dispatch("on_touch_down", touch):
+                return True
+        #
+        res = self.relative_cord_in_widget(widget=self, touch=touch, buffer=self.joystick_rad)
+        if res:
+            self.pose = res
+        return False
+
+    def on_touch_move(self, touch):
+        if isinstance(touch, MouseMotionEvent) and int(os.environ.get("DISABLE_KIVY_MOUSE_EVENTS", 0)):
+            return True
+        for w in self.children[:]:
+            if w.dispatch("on_touch_move", touch):
+                return True
+
+        res = self.relative_cord_in_widget(widget=self, touch=touch, buffer=self.joystick_rad)
+        if res:
+            self.pose = res
+        return False
+
+    def on_touch_up(self, touch):
+        if isinstance(touch, MouseMotionEvent) and int(os.environ.get("DISABLE_KIVY_MOUSE_EVENTS", 0)):
+            return True
+        for w in self.children[:]:
+            if w.dispatch("on_touch_up", touch):
+                return True
+
+        self.pose = (0.0, 0.0)
+        return False
+
+    def draw(self):
+        self.canvas.clear()
+
+        x_abs, y_abs = (
+            self.center_x + 0.5 * self.pose[0] * (self.width - 2 * self.joystick_rad),
+            self.center_y + 0.5 * self.pose[1] * (self.height - 2 * self.joystick_rad),
+        )
+        self.canvas.add(Color(1.0, 1.0, 0.0, 1.0, mode="rgba"))
+        point_obj = Ellipse(
+            pos=(x_abs - self.joystick_rad, y_abs - self.joystick_rad),
+            size=(self.joystick_rad * 2, self.joystick_rad * 2),
+        )
+        self.canvas.add(point_obj)
 
 
 class VirtualPendantApp(App):
@@ -69,9 +147,7 @@ class VirtualPendantApp(App):
         self.amiga_state = "NO CANBUS\nSERVICE DETECTED"
         self.amiga_speed = "???"
         self.amiga_rate = "???"
-        self.app = App.get_running_app()
 
-        self.joystick_pose: tuple[float, float] = (0.0, 0.0)
         self.max_speed = 1.0
         self.max_angular_rate = 1.0
 
@@ -79,43 +155,6 @@ class VirtualPendantApp(App):
         self.config: CanbusClientConfig
 
     def build(self):
-        def on_touch_down(window: Window, touch):
-            if isinstance(touch, MouseMotionEvent) and int(os.environ.get("DISABLE_KIVY_MOUSE_EVENTS", 0)):
-                return True
-            for w in window.children[:]:
-                if w.dispatch("on_touch_down", touch):
-                    return True
-
-            self.joystick_pose = (-1.0 + 2.0 * (touch.sx - 0.3) / 0.7, -1.0 + 2.0 * touch.sy)
-            self.joystick_pose = (min(max(-1, self.joystick_pose[0]), 1), min(max(-1, self.joystick_pose[1]), 1))
-            return False
-
-        def on_touch_move(window: Window, touch):
-
-            if isinstance(touch, MouseMotionEvent) and int(os.environ.get("DISABLE_KIVY_MOUSE_EVENTS", 0)):
-                return True
-            for w in window.children[:]:
-                if w.dispatch("on_touch_move", touch):
-                    return True
-
-            self.joystick_pose = (1.0 - 2.0 * (touch.sx - 0.3) / 0.7, -1.0 + 2.0 * touch.sy)
-            self.joystick_pose = (min(max(-1, self.joystick_pose[0]), 1), min(max(-1, self.joystick_pose[1]), 1))
-
-            return False
-
-        def on_touch_up(window: Window, touch):
-            if isinstance(touch, MouseMotionEvent) and int(os.environ.get("DISABLE_KIVY_MOUSE_EVENTS", 0)):
-                return True
-            for w in window.children[:]:
-                if w.dispatch("on_touch_up", touch):
-                    return True
-
-            self.joystick_pose = (0.0, 0.0)
-            return False
-
-        Window.bind(on_touch_down=on_touch_down)
-        Window.bind(on_touch_move=on_touch_move)
-        Window.bind(on_touch_up=on_touch_up)
         return Builder.load_string(kv)
 
     def update_kivy_strings(self):
@@ -124,20 +163,12 @@ class VirtualPendantApp(App):
         self.amiga_rate = str(self.amiga_tpdo1.meas_ang_rate)
 
     async def draw_joystick(self):
+        """Loop over drawing the VirtualJoystickWidget."""
         while self.root is None:
             await asyncio.sleep(0.01)
-            widget = self.app.root.ids["joystick"]
+        joystick = self.root.ids["joystick"]
         while True:
-            widget.canvas.clear()
-            size = (100, 100)
-            widget.canvas.add(Color(1.0, 1.0, 0.0, 1.0, mode="rgba"))
-            x_abs, y_abs = (
-                widget.center_x - 0.5 * self.joystick_pose[0] * widget.width,
-                widget.center_y + 0.5 * self.joystick_pose[1] * widget.height,
-            )
-            point_obj = Ellipse(pos=(x_abs - size[0] // 2, y_abs - size[1] // 2), size=size)
-            widget.canvas.add(point_obj)
-
+            joystick.draw()
             await asyncio.sleep(0.01)
 
     async def app_func(self):
@@ -162,6 +193,9 @@ class VirtualPendantApp(App):
     async def send_can_msgs(self, client: CanbusClient) -> None:
         """This task ensures the canbus client sendCanbusMessage method has the pose_generator it will use to send
         messages on the can bus."""
+        while self.root is None:
+            await asyncio.sleep(0.01)
+
         while True:
             if client.state.value != canbus_pb2.CanbusServiceState.RUNNING:
                 logging.debug("Controller requires running canbus service")
@@ -171,11 +205,14 @@ class VirtualPendantApp(App):
     async def pose_generator(self, period: float = 0.02):
         """The pose generator yields an AmigaAmigaRpdo1 (auto control command) for the canbus client to send on the
         bus at the specified period (recommended 50hz) based on the onscreen joystick position."""
+        assert self.root is not None, ""
+        joystick = self.root.ids["joystick"]
+
         while True:
             rpdo1 = AmigaRpdo1(
                 state_req=AmigaControlState.STATE_AUTO_ACTIVE,
-                cmd_speed=self.max_speed * self.joystick_pose[1],
-                cmd_ang_rate=self.max_angular_rate * self.joystick_pose[0],
+                cmd_speed=self.max_speed * joystick.pose[1],
+                cmd_ang_rate=self.max_angular_rate * -joystick.pose[0],
             )
             msg = canbus_pb2.RawCanbusMessage(id=rpdo1.cob_id + DASHBOARD_NODE_ID, data=rpdo1.encode())
             yield canbus_pb2.SendCanbusMessageRequest(message=msg)
