@@ -44,36 +44,48 @@ from kivy.core.image import Image as CoreImage  # noqa: E402
 
 kv = """
 <VirtualJoystickWidget@Widget>:
-BoxLayout:
+RelativeLayout:
+    Button:
+        id: back_btn_layout
+        pos_hint: {"x": 0.0, "top": 1.0}
+        background_color: 0, 0, 0, 0
+        size_hint: 0.1, 0.1
+        background_normal: "assets/back_button.png"
+        on_release: app.on_exit_btn()
+        Image:
+            source: "assets/back_button_normal.png" if self.parent.state == "normal" else "assets/back_button_down.png"
+            pos: self.parent.pos
+            size: self.parent.size
     BoxLayout:
-        size_hint_x: 0.3
-        orientation: 'vertical'
-        Label:
-            text: "state:\\n" + str(app.amiga_state)
-        Label:
-            text: "speed:\\n" + str(app.amiga_speed) + " [m/s]"
-        Label:
-            text: "angular rate:\\n" + str(app.amiga_rate) + " [rad/s]"
-    VirtualJoystickWidget:
-        id: joystick
-    TabbedPanel:
-        do_default_tab: False
-        TabbedPanelItem:
-            text: "Rgb"
-            Image:
-                id: rgb
-        TabbedPanelItem:
-            text: "Disparity"
-            Image:
-                id: disparity
-        TabbedPanelItem:
-            text: "Left"
-            Image:
-                id: left
-        TabbedPanelItem:
-            text: "Right"
-            Image:
-                id: right
+        BoxLayout:
+            size_hint_x: 0.3
+            orientation: 'vertical'
+            Label:
+                text: "state:\\n" + str(app.amiga_state)
+            Label:
+                text: "speed:\\n" + str(app.amiga_speed) + "  [m/s]"
+            Label:
+                text: "angular rate:\\n" + str(app.amiga_rate) + "  [rad/s]"
+        VirtualJoystickWidget:
+            id: joystick
+        TabbedPanel:
+            do_default_tab: False
+            TabbedPanelItem:
+                text: "Rgb"
+                Image:
+                    id: rgb
+            TabbedPanelItem:
+                text: "Disparity"
+                Image:
+                    id: disparity
+            TabbedPanelItem:
+                text: "Left"
+                Image:
+                    id: left
+            TabbedPanelItem:
+                text: "Right"
+                Image:
+                    id: right
 """
 
 
@@ -193,9 +205,12 @@ class VirtualPendantApp(App):
         return Builder.load_string(kv)
 
     def update_kivy_strings(self):
-        self.amiga_state = AmigaControlState(self.amiga_tpdo1.state).name
+        self.amiga_state = AmigaControlState(self.amiga_tpdo1.state).name[6:]
         self.amiga_speed = str(self.amiga_tpdo1.meas_speed)
         self.amiga_rate = str(self.amiga_tpdo1.meas_ang_rate)
+
+    def on_exit_btn(self):
+        App.get_running_app().stop()
 
     async def draw_joystick(self):
         """Loop over drawing the VirtualJoystickWidget."""
