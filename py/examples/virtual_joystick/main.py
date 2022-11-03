@@ -4,6 +4,7 @@ import asyncio
 import io
 import logging
 import os
+from math import sqrt
 from typing import List
 from typing import Optional
 from typing import Tuple
@@ -108,7 +109,9 @@ class VirtualJoystickWidget(Widget):
         #
         res = relative_cord_in_widget(widget=self, touch=touch)
         if res:
-            self.pose = res
+            # Clip to unit circle
+            div = max(1.0, sqrt(res[0] ** 2 + res[1] ** 2))
+            self.pose = (res[0] / div, res[1] / div)
         return False
 
     def on_touch_move(self, touch):
@@ -120,7 +123,9 @@ class VirtualJoystickWidget(Widget):
 
         res = relative_cord_in_widget(widget=self, touch=touch)
         if res:
-            self.pose = res
+            # Clip to unit circle
+            div = max(1.0, sqrt(res[0] ** 2 + res[1] ** 2))
+            self.pose = (res[0] / div, res[1] / div)
         return False
 
     def on_touch_up(self, touch):
