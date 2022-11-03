@@ -4,6 +4,9 @@ from enum import IntEnum
 from struct import pack
 from struct import unpack
 
+from farm_ng.core.stamp import get_monotonic_now
+from farm_ng.core.timestamp_pb2 import Timestamp
+
 DASHBOARD_NODE_ID = 0xE
 PENDANT_NODE_ID = 0xF
 BRAIN_NODE_ID = 0x1F
@@ -22,14 +25,6 @@ class AmigaControlState(IntEnum):
     STATE_ESTOPPED = 6
 
 
-def ticks_ms() -> int:
-    return int(time.monotonic() * 1000)
-
-
-def ticks_diff(a, b) -> int:
-    return int(a - b)
-
-
 class Packet:
     """Base class inherited by all CAN message data structures."""
 
@@ -38,20 +33,20 @@ class Packet:
         """Unpack CAN data directly into CAN message data structure."""
         obj = cls()  # Does not call __init__
         obj.decode(data)
-        obj.stamp()
+        obj.stamp_packet()
         return obj
 
-    def stamp(self):
+    def stamp_packet(self):
         """Time most recent message was received."""
-        self.ticks_ms = ticks_ms()
+        self.stamp: Timestamp = get_monotonic_now("canbus")
 
-    def fresh(self, thresh_ms=500):
-        """Returns False if the most recent message is older than ``thresh_ms``"""
-        return self.age() < thresh_ms
+    def fresh(self, thresh_s: float = 0.5):
+        """Returns False if the most recent message is older than ``thresh_s`` in seconds."""
+        return self.age() < thresh_s
 
     def age(self):
         """Age of the most recent message."""
-        return ticks_diff(ticks_ms(), self.ticks_ms)
+        return time.monotonic() - self.stamp.stamp
 
 
 class AmigaRpdo1(Packet):
@@ -70,7 +65,7 @@ class AmigaRpdo1(Packet):
         self.cmd_speed = cmd_speed
         self.cmd_ang_rate = cmd_ang_rate
 
-        self.stamp()
+        self.stamp_packet()
 
     def encode(self):
         """Returns the data contained by the class encoded as CAN message data."""
@@ -104,7 +99,7 @@ class AmigaTpdo1(Packet):
         self.meas_speed = meas_speed
         self.meas_ang_rate = meas_ang_rate
 
-        self.stamp()
+        self.stamp_packet()
 
     def encode(self):
         """Returns the data contained by the class encoded as CAN message data."""
@@ -118,5 +113,5 @@ class AmigaTpdo1(Packet):
 
     def __str__(self):
         return "AMIGA TPDO1 Amiga state {} Measured speed {:0.3f} Measured angular rate {:0.3f} @ time {}".format(
-            self.state, self.meas_speed, self.meas_ang_rate, self.ticks_ms
+            self.state, self.meas_speed, self.meas_ang_rate, self.stamp.stamp
         )
