@@ -161,7 +161,7 @@ class OakCameraClient:
         self.logger.debug("OakServiceStub: port -> %i state is: %s", self.config.port, state.name)
         return state
 
-    async def start_service(self) -> None:
+    async def connect_to_service(self) -> None:
         """Start the camera streaming.
 
         The service state will go from `IDLE` to `RUNNING`.

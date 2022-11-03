@@ -85,7 +85,7 @@ class KorniaProcess(Component):
 
 async def main():
     cam = AmigaCamera("oak1")
-    await cam.client.start_service()
+    await cam.client.connect_to_service()
 
     viz1 = OpencvWindow("viz_raw")
     viz2 = OpencvWindow("viz_img")
