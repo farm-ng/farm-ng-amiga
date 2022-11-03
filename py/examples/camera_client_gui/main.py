@@ -85,7 +85,7 @@ class CameraApp(App):
         while True:
             if client.state.value != oak_pb2.OakServiceState.RUNNING:
                 # start the streaming service
-                await client.start_service()
+                await client.connect_to_service()
                 await asyncio.sleep(0.01)
                 continue
             elif response_stream is None:
