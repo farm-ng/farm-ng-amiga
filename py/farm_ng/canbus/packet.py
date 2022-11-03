@@ -38,7 +38,7 @@ class Packet:
 
     def stamp_packet(self):
         """Time most recent message was received."""
-        self.stamp: Timestamp = get_monotonic_now("canbus")
+        self.stamp: Timestamp = get_monotonic_now("canbus/packet")
 
     def fresh(self, thresh_s: float = 0.5):
         """Returns False if the most recent message is older than ``thresh_s`` in seconds."""
