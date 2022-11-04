@@ -7,8 +7,6 @@ import "sophus/lie.proto";
 
 package farm_ng.controller.proto;
 
-// import "farm_ng/amiga/temp_imports.proto";
-
 service ControllerService {
   // called from the gui
   // Reports progress back to gui until it achieves the goal
