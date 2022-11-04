@@ -1,3 +1,4 @@
+# Copyright (c) farm-ng, inc. Amiga Development Kit License, Version 0.1
 # Copyright (c) farm-ng, inc. All rights reserved.
 import time
 from enum import IntEnum
