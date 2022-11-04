@@ -1,3 +1,4 @@
+# Copyright (c) farm-ng, inc. Amiga Development Kit License, Version 0.1
 import pytest
 from farm_ng.oak import oak_pb2
 from farm_ng.oak.camera_client import OakCameraClient

@@ -1,3 +1,4 @@
+# Copyright (c) farm-ng, inc. Amiga Development Kit License, Version 0.1
 import pytest
 from farm_ng.controller import controller_pb2
 from farm_ng.controller.controller_client import ControllerClient
