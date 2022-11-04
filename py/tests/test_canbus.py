@@ -1,3 +1,4 @@
+# Copyright (c) farm-ng, inc. Amiga Development Kit License, Version 0.1
 import pytest
 from farm_ng.canbus import canbus_pb2
 from farm_ng.canbus.canbus_client import CanbusClient

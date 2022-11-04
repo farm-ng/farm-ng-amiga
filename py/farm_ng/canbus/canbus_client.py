@@ -1,3 +1,4 @@
+# Copyright (c) farm-ng, inc. Amiga Development Kit License, Version 0.1
 import asyncio
 import logging
 from dataclasses import dataclass

@@ -38,3 +38,25 @@ repos:
     hooks:
       - id: docformatter
         args: [--in-place, --wrap-summaries=115, --wrap-descriptions=120]
+
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.1.13
+    hooks:
+      - id: insert-license
+        files: \.(h|hpp|cpp|proto)$
+        args:
+          - --comment-style
+          - //
+          - --license-filepath
+          - license_header.txt
+
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.1.13
+    hooks:
+      - id: insert-license
+        files: \.(py)$
+        args:
+          - --comment-style
+          - "#"
+          - --license-filepath
+          - license_header.txt

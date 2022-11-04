@@ -1,3 +1,4 @@
+# Copyright (c) farm-ng, inc. Amiga Development Kit License, Version 0.1
 import farm_ng
 from farm_ng.canbus import canbus_pb2
 from farm_ng.controller import controller_pb2
