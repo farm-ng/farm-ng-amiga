@@ -9,31 +9,29 @@ The kivy application draws some inspiration [Kivy tutorial 006: Let’s draw som
 The utility of this example application includes:
 - Simple kivy applications
 - GRPC / asyncio application development
+- Camera client usage
 - Canbus client usage
+- Auto control mode of Amiga robot
 
 URL: https://farm-ng.github.io/amiga-dev-kit/docs/examples/virtual_pendant/
 
 
-## To run
+## To run (locally on a development workstation)
 
-As in [Brain install](https://amiga.farm-ng.com/docs/brain/brain-install/)
+Assumes canbus service and oak service are running
 
 ```bash
-cd `amiga-brain-api/`
+cd `amiga-brain-api/py/examples/virtual_joystick`
+
 ## Recommended - create a virtual environment
 python3 -m venv venv
 source venv/bin/activate
-pip install .
-```
 
-For this app:
-
-#### apps/virtual_joystick/entry.sh will automate this process
-
-```bash
-cd py/examples/virtual_joystick/
+# Install requirements
 pip install -r requirements.txt
-python3 main.py --port 50060 # port where canbus service is running
+
+# Run the app
+python main.py --camera-port 50051 --canbus-port 50060
 ```
 
 To exit the `venv`:
