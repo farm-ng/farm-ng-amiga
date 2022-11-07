@@ -175,6 +175,7 @@ class VirtualPendantApp(App):
 
     def build(self):
         def on_touch_down(window: Window, touch: MouseMotionEvent) -> bool:
+            """Handles initial press with mouse click or touchscreen."""
             if isinstance(touch, MouseMotionEvent) and int(os.environ.get("DISABLE_KIVY_MOUSE_EVENTS", 0)):
                 return True
             for w in window.children[:]:
@@ -191,6 +192,7 @@ class VirtualPendantApp(App):
             return False
 
         def on_touch_move(window: Window, touch: MouseMotionEvent) -> bool:
+            """Handles when press is held and dragged with mouse click or touchscreen."""
             if isinstance(touch, MouseMotionEvent) and int(os.environ.get("DISABLE_KIVY_MOUSE_EVENTS", 0)):
                 return True
             for w in window.children[:]:
@@ -207,6 +209,7 @@ class VirtualPendantApp(App):
             return False
 
         def on_touch_up(window: Window, touch: MouseMotionEvent) -> bool:
+            """Handles release of press with mouse click or touchscreen."""
             if isinstance(touch, MouseMotionEvent) and int(os.environ.get("DISABLE_KIVY_MOUSE_EVENTS", 0)):
                 return True
             for w in window.children[:]:
