@@ -15,10 +15,9 @@ from farm_ng.canbus import canbus_pb2
 from farm_ng.canbus.canbus_client import CanbusClient
 from farm_ng.canbus.canbus_client import CanbusClientConfig
 from farm_ng.canbus.packet import AmigaControlState
+from farm_ng.canbus.packet import AmigaTpdo1
 from farm_ng.canbus.packet import make_amiga_rpdo1_proto
 from farm_ng.canbus.packet import parse_amiga_tpdo1_proto
-from farm_ng.canbus.packet import AmigaTpdo1
-from farm_ng.canbus.packet import DASHBOARD_NODE_ID
 from farm_ng.oak import oak_pb2
 from farm_ng.oak.camera_client import OakCameraClient
 from farm_ng.oak.camera_client import OakCameraClientConfig
@@ -42,7 +41,7 @@ from kivy.app import App  # noqa: E402
 from kivy.lang.builder import Builder  # noqa: E402
 from kivy.uix.widget import Widget  # noqa: E402
 from kivy.core.image import Image as CoreImage  # noqa: E402
-from kivy.core.window import Window
+from kivy.core.window import Window  # noqa: E402
 
 kv = """
 <VirtualJoystickWidget@Widget>:
@@ -108,10 +107,9 @@ def relative_cord_in_widget(
 
 
 class Vec2:
-    """
-    Simple container for keeping joystick coords in x & y terms.
-    Defaults to a centered joystick (0,0).
-    Clips values to range [-1.0, 1.0], as with the Amiga pendant.
+    """Simple container for keeping joystick coords in x & y terms.
+
+    Defaults to a centered joystick (0,0). Clips values to range [-1.0, 1.0], as with the Amiga pendant.
     """
 
     def __init__(self, x: float = 0.0, y: float = 0.0) -> None:
@@ -133,17 +131,14 @@ class VirtualJoystickWidget(Widget):
         self.canvas.add(Color(0.2, 0.2, 0.2, 1.0, mode="rgba"))
         self.canvas.add(
             Ellipse(
-                pos=(self.center_x - self.width // 2, self.center_y - self.height // 2),
-                size=(self.width, self.height),
+                pos=(self.center_x - self.width // 2, self.center_y - self.height // 2), size=(self.width, self.height)
             )
         )
 
         # Draw joystick at position
         x_abs, y_abs = (
-            self.center_x
-            + 0.5 * self.joystick_pose.x * (self.width - 2 * self.joystick_rad),
-            self.center_y
-            + 0.5 * self.joystick_pose.y * (self.height - 2 * self.joystick_rad),
+            self.center_x + 0.5 * self.joystick_pose.x * (self.width - 2 * self.joystick_rad),
+            self.center_y + 0.5 * self.joystick_pose.y * (self.height - 2 * self.joystick_rad),
         )
         self.canvas.add(Color(1.0, 1.0, 0.0, 1.0, mode="rgba"))
         self.canvas.add(
@@ -160,9 +155,7 @@ class VirtualPendantApp(App):
     amiga_rate = StringProperty()
     amiga_state = StringProperty()
 
-    def __init__(
-        self, address: str, camera_port: int, canbus_port: int, stream_every_n: int
-    ) -> None:
+    def __init__(self, address: str, camera_port: int, canbus_port: int, stream_every_n: int) -> None:
         super().__init__()
         self.address: int = address
         self.camera_port: int = camera_port
@@ -182,9 +175,7 @@ class VirtualPendantApp(App):
 
     def build(self):
         def on_touch_down(window: Window, touch: MouseMotionEvent) -> bool:
-            if isinstance(touch, MouseMotionEvent) and int(
-                os.environ.get("DISABLE_KIVY_MOUSE_EVENTS", 0)
-            ):
+            if isinstance(touch, MouseMotionEvent) and int(os.environ.get("DISABLE_KIVY_MOUSE_EVENTS", 0)):
                 return True
             for w in window.children[:]:
                 if w.dispatch("on_touch_down", touch):
@@ -192,9 +183,7 @@ class VirtualPendantApp(App):
 
             joystick: VirtualJoystickWidget = self.root.ids["joystick"]
             # joystick =
-            res: Optional[Tuple[float, float]] = relative_cord_in_widget(
-                widget=joystick, touch=touch
-            )
+            res: Optional[Tuple[float, float]] = relative_cord_in_widget(widget=joystick, touch=touch)
             if res:
                 # Clip to unit circle
                 div: float = max(1.0, sqrt(res[0] ** 2 + res[1] ** 2))
@@ -202,9 +191,7 @@ class VirtualPendantApp(App):
             return False
 
         def on_touch_move(window: Window, touch: MouseMotionEvent) -> bool:
-            if isinstance(touch, MouseMotionEvent) and int(
-                os.environ.get("DISABLE_KIVY_MOUSE_EVENTS", 0)
-            ):
+            if isinstance(touch, MouseMotionEvent) and int(os.environ.get("DISABLE_KIVY_MOUSE_EVENTS", 0)):
                 return True
             for w in window.children[:]:
                 if w.dispatch("on_touch_move", touch):
@@ -212,9 +199,7 @@ class VirtualPendantApp(App):
 
             joystick: VirtualJoystickWidget = self.root.ids["joystick"]
 
-            res: Optional[Tuple[float, float]] = relative_cord_in_widget(
-                widget=joystick, touch=touch
-            )
+            res: Optional[Tuple[float, float]] = relative_cord_in_widget(widget=joystick, touch=touch)
             if res:
                 # Clip to unit circle
                 div: float = max(1.0, sqrt(res[0] ** 2 + res[1] ** 2))
@@ -222,9 +207,7 @@ class VirtualPendantApp(App):
             return False
 
         def on_touch_up(window: Window, touch: MouseMotionEvent) -> bool:
-            if isinstance(touch, MouseMotionEvent) and int(
-                os.environ.get("DISABLE_KIVY_MOUSE_EVENTS", 0)
-            ):
+            if isinstance(touch, MouseMotionEvent) and int(os.environ.get("DISABLE_KIVY_MOUSE_EVENTS", 0)):
                 return True
             for w in window.children[:]:
                 if w.dispatch("on_touch_up", touch):
@@ -241,13 +224,13 @@ class VirtualPendantApp(App):
         return Builder.load_string(kv)
 
     def update_kivy_strings(self) -> None:
-        """Updates the `StringProperty` strings displayed as `Label` widgets"""
+        """Updates the `StringProperty` strings displayed as `Label` widgets."""
         self.amiga_state = AmigaControlState(self.amiga_tpdo1.state).name[6:]
         self.amiga_speed = str(self.amiga_tpdo1.meas_speed)
         self.amiga_rate = str(self.amiga_tpdo1.meas_ang_rate)
 
     def on_exit_btn(self) -> None:
-        """Kills the running kivy application"""
+        """Kills the running kivy application."""
         App.get_running_app().stop()
 
     async def app_func(self):
@@ -259,35 +242,21 @@ class VirtualPendantApp(App):
                 task.cancel()
 
         # configure the camera client
-        camera_config: OakCameraClientConfig = OakCameraClientConfig(
-            address=self.address, port=self.camera_port
-        )
+        camera_config: OakCameraClientConfig = OakCameraClientConfig(address=self.address, port=self.camera_port)
         camera_client: OakCameraClient = OakCameraClient(camera_config)
 
         # configure the canbus client
-        canbus_config: CanbusClientConfig = CanbusClientConfig(
-            address=self.address, port=self.canbus_port
-        )
+        canbus_config: CanbusClientConfig = CanbusClientConfig(address=self.address, port=self.canbus_port)
         canbus_client: CanbusClient = CanbusClient(canbus_config)
 
         # Camera task(s)
-        self.async_tasks.append(
-            asyncio.ensure_future(self.stream_camera(camera_client))
-        )
-        self.async_tasks.append(
-            asyncio.ensure_future(camera_client.poll_service_state())
-        )
+        self.async_tasks.append(asyncio.ensure_future(self.stream_camera(camera_client)))
+        self.async_tasks.append(asyncio.ensure_future(camera_client.poll_service_state()))
 
         # Canbus task(s)
-        self.async_tasks.append(
-            asyncio.ensure_future(self.stream_canbus(canbus_client))
-        )
-        self.async_tasks.append(
-            asyncio.ensure_future(self.send_can_msgs(canbus_client))
-        )
-        self.async_tasks.append(
-            asyncio.ensure_future(canbus_client.poll_service_state())
-        )
+        self.async_tasks.append(asyncio.ensure_future(self.stream_canbus(canbus_client)))
+        self.async_tasks.append(asyncio.ensure_future(self.send_can_msgs(canbus_client)))
+        self.async_tasks.append(asyncio.ensure_future(canbus_client.poll_service_state()))
 
         # Drawing task(s)
         self.async_tasks.append(asyncio.ensure_future(self.draw()))
@@ -308,9 +277,7 @@ class VirtualPendantApp(App):
                 await client.connect_to_service()
 
             if response_stream is None:
-                response_stream = client.stub.streamCanbusMessages(
-                    canbus_pb2.StreamCanbusRequest()
-                )
+                response_stream = client.stub.streamCanbusMessages(canbus_pb2.StreamCanbusRequest())
 
             response: canbus_pb2.StreamCanbusReply = await response_stream.read()
             if response == grpc.aio.EOF:
@@ -367,8 +334,8 @@ class VirtualPendantApp(App):
             await asyncio.sleep(0.25)
 
     async def pose_generator(self, period: float = 0.02):
-        """The pose generator yields an AmigaRpdo1 (auto control command) for the canbus client to send on the
-        bus at the specified period (recommended 50hz) based on the onscreen joystick position."""
+        """The pose generator yields an AmigaRpdo1 (auto control command) for the canbus client to send on the bus
+        at the specified period (recommended 50hz) based on the onscreen joystick position."""
         while self.root is None:
             await asyncio.sleep(0.01)
 
@@ -395,36 +362,21 @@ class VirtualPendantApp(App):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="virtual-joystick")
+    parser.add_argument("--address", type=str, default="localhost", help="The camera address")
     parser.add_argument(
-        "--address", type=str, default="localhost", help="The camera address"
+        "--camera-port", type=int, required=True, help="The grpc port where the camera service is running."
     )
     parser.add_argument(
-        "--camera-port",
-        type=int,
-        required=True,
-        help="The grpc port where the camera service is running.",
+        "--canbus-port", type=int, required=True, help="The grpc port where the canbus service is running."
     )
-    parser.add_argument(
-        "--canbus-port",
-        type=int,
-        required=True,
-        help="The grpc port where the canbus service is running.",
-    )
-    parser.add_argument(
-        "--stream-every-n",
-        type=int,
-        default=1,
-        help="Streaming frequency (used to skip frames)",
-    )
+    parser.add_argument("--stream-every-n", type=int, default=1, help="Streaming frequency (used to skip frames)")
 
     args = parser.parse_args()
 
     loop = asyncio.get_event_loop()
     try:
         loop.run_until_complete(
-            VirtualPendantApp(
-                args.address, args.camera_port, args.canbus_port, args.stream_every_n
-            ).app_func()
+            VirtualPendantApp(args.address, args.camera_port, args.canbus_port, args.stream_every_n).app_func()
         )
     except asyncio.CancelledError:
         pass
