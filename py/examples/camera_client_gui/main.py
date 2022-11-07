@@ -1,3 +1,4 @@
+# Copyright (c) farm-ng, inc. Amiga Development Kit License, Version 0.1
 # Copyright (c) farm-ng, inc. All rights reserved.
 import argparse
 import asyncio
@@ -85,7 +86,7 @@ class CameraApp(App):
         while True:
             if client.state.value != oak_pb2.OakServiceState.RUNNING:
                 # start the streaming service
-                await client.start_service()
+                await client.connect_to_service()
                 await asyncio.sleep(0.01)
                 continue
             elif response_stream is None:

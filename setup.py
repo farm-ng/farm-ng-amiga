@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
+# Copyright (c) farm-ng, inc. Amiga Development Kit License, Version 0.1
 from pathlib import Path
 
-from farm_ng.core.package import build_package_protos
-from farm_ng.core.package import clean_protos
+from farm_ng.package.package import build_package_protos
+from farm_ng.package.package import clean_protos
 from setuptools import Command
 from setuptools import setup
 from setuptools.command.develop import develop

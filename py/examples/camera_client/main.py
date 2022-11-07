@@ -1,3 +1,4 @@
+# Copyright (c) farm-ng, inc. Amiga Development Kit License, Version 0.1
 # Copyright (c) farm-ng, inc. All rights reserved.
 from __future__ import annotations
 
@@ -21,7 +22,7 @@ async def main(address: str, port: int, stream_every_n: int) -> None:
     response_stream = client.stream_frames(every_n=stream_every_n)
 
     # start the streaming service
-    await client.start_service()
+    await client.connect_to_service()
 
     while True:
         # query the service state

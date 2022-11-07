@@ -1,3 +1,4 @@
+# Copyright (c) farm-ng, inc. Amiga Development Kit License, Version 0.1
 import pytest
 from farm_ng.state_estimator import state_estimator_pb2
 from farm_ng.state_estimator.state_estimator_client import StateEstimatorClient

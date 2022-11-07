@@ -1,3 +1,4 @@
+# Copyright (c) farm-ng, inc. Amiga Development Kit License, Version 0.1
 import asyncio
 import logging
 from dataclasses import dataclass
@@ -82,13 +83,13 @@ class StateEstimatorClient:
         self.logger.debug("StateEstimatorServiceStub: port -> %i state is: %s", self.config.port, state)
         return state
 
-    async def start_service(self) -> None:
+    async def connect_to_service(self) -> None:
         state: StateEstimatorServiceState = await self.get_state()
         if state.value == state_estimator_pb2.StateEstimatorServiceState.UNAVAILABLE:
             return
         await self.stub.startService(state_estimator_pb2.StartServiceRequest())
 
-    async def stop_service(self) -> None:
+    async def disconnect_from_service(self) -> None:
         state: StateEstimatorServiceState = await self.get_state()
         if state.value == state_estimator_pb2.StateEstimatorServiceState.UNAVAILABLE:
             return

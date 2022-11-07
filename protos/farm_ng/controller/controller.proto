@@ -1,11 +1,11 @@
+// Copyright (c) farm-ng, inc. Amiga Development Kit License, Version 0.1
+
 syntax = "proto3";
 
 import "sophus/linalg.proto";
 import "sophus/lie.proto";
 
 package farm_ng.controller.proto;
-
-// import "farm_ng/amiga/temp_imports.proto";
 
 service ControllerService {
   // called from the gui
