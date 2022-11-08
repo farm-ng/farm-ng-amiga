@@ -162,12 +162,13 @@ class VirtualJoystickApp(App):
         self.canbus_port: int = canbus_port
         self.stream_every_n: int = stream_every_n
 
-        # Received
+        # Received values
         self.amiga_tpdo1: AmigaTpdo1 = AmigaTpdo1()
         self.amiga_state: str = "NO CANBUS\nSERVICE DETECTED"
         self.amiga_speed: str = "???"
         self.amiga_rate: str = "???"
 
+        # Parameters
         self.max_speed: float = 1.0
         self.max_angular_rate: float = 1.0
 
@@ -183,7 +184,6 @@ class VirtualJoystickApp(App):
                     return True
 
             joystick: VirtualJoystickWidget = self.root.ids["joystick"]
-            # joystick =
             res: Optional[Tuple[float, float]] = relative_cord_in_widget(widget=joystick, touch=touch)
             if res:
                 # Clip to unit circle
@@ -273,6 +273,9 @@ class VirtualJoystickApp(App):
         - filters for AmigaTpdo1 messages
         - extracts useful values from AmigaTpdo1 messages
         """
+        while self.root is None:
+            await asyncio.sleep(0.01)
+
         response_stream: Optional[Generator[canbus_pb2.StreamCanbusReply]] = None
 
         while True:
@@ -365,7 +368,7 @@ class VirtualJoystickApp(App):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="virtual-joystick")
-    parser.add_argument("--address", type=str, default="localhost", help="The camera address")
+    parser.add_argument("--address", type=str, default="localhost", help="The server address")
     parser.add_argument(
         "--camera-port", type=int, required=True, help="The grpc port where the camera service is running."
     )
