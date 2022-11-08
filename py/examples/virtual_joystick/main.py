@@ -109,7 +109,7 @@ def relative_cord_in_widget(
 class Vec2:
     """Simple container for keeping joystick coords in x & y terms.
 
-    Defaults to a centered joystick (0,0). Clips values to range [-1.0, 1.0], as with the Amiga pendant.
+    Defaults to a centered joystick (0,0). Clips values to range [-1.0, 1.0], as with the Amiga joystick.
     """
 
     def __init__(self, x: float = 0.0, y: float = 0.0) -> None:
@@ -149,7 +149,7 @@ class VirtualJoystickWidget(Widget):
         )
 
 
-class VirtualPendantApp(App):
+class VirtualJoystickApp(App):
     # For kivy labels
     amiga_speed = StringProperty()
     amiga_rate = StringProperty()
@@ -379,7 +379,7 @@ if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     try:
         loop.run_until_complete(
-            VirtualPendantApp(args.address, args.camera_port, args.canbus_port, args.stream_every_n).app_func()
+            VirtualJoystickApp(args.address, args.camera_port, args.canbus_port, args.stream_every_n).app_func()
         )
     except asyncio.CancelledError:
         pass
