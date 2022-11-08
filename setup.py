@@ -1,71 +1,26 @@
-#!/usr/bin/env python3
 # Copyright (c) farm-ng, inc. Amiga Development Kit License, Version 0.1
-from pathlib import Path
-
-from farm_ng.package.package import build_package_protos
-from farm_ng.package.package import clean_protos
-from setuptools import Command
+from farm_ng.package.commands import BuildProtosDevelop
+from farm_ng.package.commands import BuildProtosEggInfo
+from farm_ng.package.commands import BuildProtosInstall
+from farm_ng.package.commands import CleanFilesCommand
 from setuptools import setup
-from setuptools.command.develop import develop
-from setuptools.command.egg_info import egg_info
-from setuptools.command.install import install
 
+PROTO_ROOT: str = "protos"
+PACKAGE_ROOT: str = "py"
 
-class BuildProtosCommand(Command):
-    user_options = []  # type: ignore
+BuildProtosDevelop.user_options.append(("proto-root=", None, PROTO_ROOT))
+BuildProtosDevelop.user_options.append(("package-root=", None, PACKAGE_ROOT))
 
-    def initialize_options(self):
-        pass
+BuildProtosInstall.user_options.append(("proto-root=", None, PROTO_ROOT))
+BuildProtosInstall.user_options.append(("package-root=", None, PACKAGE_ROOT))
 
-    def finalize_options(self):
-        pass
+BuildProtosEggInfo.user_options.append(("proto-root=", None, PROTO_ROOT))
+BuildProtosEggInfo.user_options.append(("package-root=", None, PACKAGE_ROOT))
 
-    def run(self):
-        build_package_protos(proto_root=Path("protos"), package_root=Path("py"))
-
-
-class CleanFilesCommand(Command):
-    user_options = []  # type: ignore
-
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        clean_protos(package_root=Path("py"))
-
-
-class BuildProtosInstall(install):
-    def run(self):
-        # 1. Build the protobufs
-        BuildProtosCommand.run(self)
-        # 2. Run the installation
-        install.run(self)
-        # 3. Clean the generated protobufs
-        CleanFilesCommand.run(self)
-
-
-class BuildProtosDevelop(develop):
-    def run(self):
-        # 1. Build the protobufs
-        BuildProtosCommand.run(self)
-        # 2. Run the installation
-        develop.run(self)
-
-
-class BuildProtosEggInfo(egg_info):
-    def run(self):
-        # 1. Build the protobufs
-        BuildProtosCommand.run(self)
-        # 2. Run the installation
-        egg_info.run(self)
-
+CleanFilesCommand.user_options.append(("package-root=", None, PACKAGE_ROOT))
 
 setup(
     cmdclass={
-        "build_package_protos": BuildProtosCommand,
         "install": BuildProtosInstall,
         "develop": BuildProtosDevelop,
         "egg_info": BuildProtosEggInfo,
