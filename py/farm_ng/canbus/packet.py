@@ -7,7 +7,7 @@ from struct import unpack
 from typing import Optional
 
 from farm_ng.canbus import canbus_pb2
-from farm_ng.core.stamp import get_monotonic_now
+from farm_ng.core.stamp import timestamp_from_monotonic
 from farm_ng.core.timestamp_pb2 import Timestamp
 
 DASHBOARD_NODE_ID = 0xE
@@ -32,16 +32,16 @@ class Packet:
     """Base class inherited by all CAN message data structures."""
 
     @classmethod
-    def from_can_data(cls, data):
+    def from_can_data(cls, data, stamp: float):
         """Unpack CAN data directly into CAN message data structure."""
         obj = cls()  # Does not call __init__
         obj.decode(data)
-        obj.stamp_packet()
+        obj.stamp_packet(stamp)
         return obj
 
-    def stamp_packet(self):
+    def stamp_packet(self, stamp: float):
         """Time most recent message was received."""
-        self.stamp: Timestamp = get_monotonic_now("canbus/packet")
+        self.stamp: Timestamp = timestamp_from_monotonic("canbus/packet", stamp)
 
     def fresh(self, thresh_s: float = 0.5):
         """Returns False if the most recent message is older than ``thresh_s`` in seconds."""
@@ -79,7 +79,7 @@ class AmigaRpdo1(Packet):
         self.cmd_speed = cmd_speed
         self.cmd_ang_rate = cmd_ang_rate
 
-        self.stamp_packet()
+        self.stamp_packet(time.monotonic())
 
     def encode(self):
         """Returns the data contained by the class encoded as CAN message data."""
@@ -113,7 +113,7 @@ class AmigaTpdo1(Packet):
         self.meas_speed = meas_speed
         self.meas_ang_rate = meas_ang_rate
 
-        self.stamp_packet()
+        self.stamp_packet(time.monotonic())
 
     def encode(self):
         """Returns the data contained by the class encoded as CAN message data."""
@@ -139,4 +139,4 @@ def parse_amiga_tpdo1_proto(message: canbus_pb2.RawCanbusMessage) -> Optional[Am
     """
     if message.id != AmigaTpdo1.cob_id + DASHBOARD_NODE_ID:
         return None
-    return AmigaTpdo1.from_can_data(message.data)
+    return AmigaTpdo1.from_can_data(message.data, stamp=message.stamp)
