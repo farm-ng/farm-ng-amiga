@@ -1,6 +1,16 @@
 # farm-ng Brain SDK
 
+[![PyPI version](https://badge.fury.io/py/farm-ng-amiga.svg)](https://pypi.org/project/farm-ng-amiga)
+
 ## Install
+
+### From pip
+
+```bash
+pip install farm-ng-amiga
+```
+
+### From source
 
 We recommend running the brain SDK applications in a virtual environment to avoid conflicts with other packages / versions installed on your system.
 Though this is not a requirement and you are welcome to decide how/where to install.
