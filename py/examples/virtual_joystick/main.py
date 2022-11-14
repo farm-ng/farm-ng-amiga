@@ -295,9 +295,6 @@ class VirtualJoystickApp(App):
                     if amiga_tpdo1:
                         self.amiga_tpdo1 = amiga_tpdo1
 
-            # Shorter sleep than typical 10ms since canbus is very high rate
-            await asyncio.sleep(0.001)
-
     async def stream_camera(self, client: OakCameraClient) -> None:
         """This task listens to the camera client's stream and populates the tabbed panel with all 4 image streams
         from the oak camera."""
@@ -325,7 +322,6 @@ class VirtualJoystickApp(App):
                     self.root.ids[view_name].texture = CoreImage(
                         io.BytesIO(getattr(frame, view_name).image_data), ext="jpg"
                     ).texture
-            await asyncio.sleep(0.01)
 
     async def send_can_msgs(self, client: CanbusClient) -> None:
         """This task ensures the canbus client sendCanbusMessage method has the pose_generator it will use to send

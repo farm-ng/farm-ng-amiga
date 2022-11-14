@@ -144,7 +144,7 @@ class OakCameraClient:
         while True:
             try:
                 self._state = await self.get_state()
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(0.1)
             except asyncio.CancelledError:
                 self.logger.info("Got CancellededError")
                 break
