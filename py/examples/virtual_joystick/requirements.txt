@@ -1,2 +1,2 @@
 kivy
-farm_ng_amiga @ git+https://github.com/farm-ng/amiga-brain-api@main
+farm-ng-amiga
