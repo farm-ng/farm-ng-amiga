@@ -64,6 +64,6 @@ def main(file_name: str) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="Event file reader example.")
-    parser.add_argument("--file-name", type=str, required=True, help="Path to the `events.log` file.")
+    parser.add_argument("--file-name", type=str, required=True, help="Path to the `events.bin` file.")
     args = parser.parse_args()
     main(args.file_name)
