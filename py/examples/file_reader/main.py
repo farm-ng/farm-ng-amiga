@@ -17,7 +17,7 @@ def main(file_name: str) -> None:
     reader = EventsFileReader(Path(file_name))
     assert reader.open()
 
-    # main window to visualize image
+    # get a list with all the existing uri
     uris: List[uri_pb2.Uri] = reader.uris()
 
     # choose the Uri stream to seek in file
