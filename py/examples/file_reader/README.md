@@ -1,4 +1,6 @@
-# Setup
+# farm-ng-amiga file read example
+
+## Setup
 
 Create first a virtual environment
 
@@ -7,33 +9,14 @@ python3 -m venv venv
 source venv/bin/activate
 ```
 
-# Install
-
-Clone the repo
-
-```bash
-git clone https://github.com/farm-ng/amiga-dev-kit.git
-```
-
-Go to the brain sdk directory and install
-
-```bash
-cd amiga-dev-kit/brain
-pip install -e .
-```
-
-Check the version
-
-```bash
-python -c "import farm_ng; print(farm_ng.__version__)"
-```
-
-# Run example
+## Install
 
 ```bash
 cd examples/file_reader
 pip install -r requirements.txt
 ```
+
+## Run example
 
 Specify the file (download before)
 
