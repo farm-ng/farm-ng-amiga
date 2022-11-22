@@ -85,8 +85,8 @@ class CanbusClient:
         return state
 
     async def connect_to_service(self) -> None:
-        """
-        Starts the canbus streaming.
+        """Starts the canbus streaming.
+
         The service state will go to `RUNNING`.
         """
         state: CanbusServiceState = await self.get_state()
@@ -101,8 +101,8 @@ class CanbusClient:
         await self.stub.stopService(canbus_pb2.StopServiceRequest())
 
     async def pause_service(self) -> None:
-        """
-        Pauses the canbus streaming.
+        """Pauses the canbus streaming.
+
         The service state will go from `RUNNING` to `IDLE`.
         """
         state: CanbusServiceState = await self.get_state()
