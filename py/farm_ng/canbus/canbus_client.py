@@ -85,6 +85,10 @@ class CanbusClient:
         return state
 
     async def connect_to_service(self) -> None:
+        """
+        Starts the canbus streaming.
+        The service state will go to `RUNNING`.
+        """
         state: CanbusServiceState = await self.get_state()
         if state.value == canbus_pb2.CanbusServiceState.UNAVAILABLE:
             return
@@ -95,3 +99,13 @@ class CanbusClient:
         if state.value == canbus_pb2.CanbusServiceState.UNAVAILABLE:
             return
         await self.stub.stopService(canbus_pb2.StopServiceRequest())
+
+    async def pause_service(self) -> None:
+        """
+        Pauses the canbus streaming.
+        The service state will go from `RUNNING` to `IDLE`.
+        """
+        state: CanbusServiceState = await self.get_state()
+        if state.value == canbus_pb2.CanbusServiceState.UNAVAILABLE:
+            return
+        await self.stub.pauseService(canbus_pb2.PauseServiceRequest())
