@@ -27,7 +27,9 @@ class ControllerServiceState:
     """Controller service state."""
 
     def __init__(self, proto: controller_pb2.ControllerServiceState = None) -> None:
-        self._proto = proto or controller_pb2.ControllerServiceState.UNAVAILABLE
+        self._proto = controller_pb2.ControllerServiceState.UNAVAILABLE
+        if proto is not None:
+            self._proto = proto
 
     @property
     def value(self) -> int:

@@ -76,7 +76,9 @@ class OakCameraServiceState:
     """
 
     def __init__(self, proto: oak_pb2.OakServiceState = None) -> None:
-        self._proto = proto or oak_pb2.OakServiceState.UNAVAILABLE
+        self._proto = oak_pb2.OakServiceState.UNAVAILABLE
+        if proto is not None:
+            self._proto = proto
 
     @property
     def value(self) -> int:
