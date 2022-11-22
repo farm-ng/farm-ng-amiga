@@ -25,6 +25,7 @@ enum CanbusServiceState {
   RUNNING = 2;
   IDLE = 3;
   UNAVAILABLE = 4;
+  ERROR = 5;
 }
 
 message StopServiceRequest {
