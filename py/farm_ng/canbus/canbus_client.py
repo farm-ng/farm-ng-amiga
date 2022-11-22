@@ -28,7 +28,9 @@ class CanbusServiceState:
     """Canbus service state."""
 
     def __init__(self, proto: canbus_pb2.CanbusServiceState = None) -> None:
-        self._proto = proto or canbus_pb2.CanbusServiceState.UNAVAILABLE
+        self._proto = canbus_pb2.CanbusServiceState.UNAVAILABLE
+        if proto is not None:
+            self._proto = proto
 
     @property
     def value(self) -> int:

@@ -27,7 +27,9 @@ class StateEstimatorServiceState:
     """State estimator service state."""
 
     def __init__(self, proto: state_estimator_pb2.StateEstimatorServiceState = None) -> None:
-        self._proto = proto or state_estimator_pb2.StateEstimatorServiceState.UNAVAILABLE
+        self._proto = state_estimator_pb2.StateEstimatorServiceState.UNAVAILABLE
+        if proto is not None:
+            self._proto = proto
 
     @property
     def value(self) -> int:
