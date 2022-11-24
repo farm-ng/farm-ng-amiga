@@ -23,21 +23,7 @@ service CanbusService {
       returns (stream ReadCanbusMessagesReply) {}
   rpc sendCanbusMessages(stream SendCanbusMessagesRequest)
       returns (SendCanbusMessagesReply) {}
-  rpc getServiceState(GetServiceStateRequest) returns (GetServiceStateResult) {}
-}
-
-enum ReplyStatus {
-  OK = 0;
-  FAILED = 1;
-}
-
-enum CanbusServiceState {
-  UNKNOWN = 0;
-  STOPPED = 1;
-  RUNNING = 2;
-  IDLE = 3;
-  UNAVAILABLE = 4;
-  ERROR = 5;
+  rpc getIfaceState(GetIfaceStateRequest) returns (GetIfaceStateReply) {}
 }
 
 enum CanbusIfaceState {
@@ -49,13 +35,11 @@ enum CanbusIfaceState {
 }
 
 message ReadCanbusMessagesRequest {
-  string message = 1;
 }
 
 message ReadCanbusMessagesReply {
-  ReplyStatus status = 1;
   // Messages may be batched by server to reduce gRPC latency
-  RawCanbusMessages messages = 2;
+  RawCanbusMessages messages = 1;
 }
 
 message SendCanbusMessagesRequest {
@@ -64,7 +48,6 @@ message SendCanbusMessagesRequest {
 }
 
 message SendCanbusMessagesReply {
-  ReplyStatus status = 1;
 }
 
 message RawCanbusMessage {
@@ -81,14 +64,10 @@ message RawCanbusMessages {
   repeated RawCanbusMessage messages = 1;
 }
 
-message GetServiceStateRequest {
-  string message = 1;
+message GetIfaceStateRequest {
 }
 
-message GetServiceStateResult {
-  string state_name = 1;
-  CanbusServiceState state = 2;
-  ReplyStatus status = 3;
+message GetIfaceStateReply {
   string can_iface = 4;
   int32 bit_rate = 5;
   CanbusIfaceState iface_state = 6;

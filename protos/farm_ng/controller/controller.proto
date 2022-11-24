@@ -22,19 +22,8 @@ import "sophus/lie.proto";
 package farm_ng.controller.proto;
 
 service ControllerService {
-  // called from the gui
-  // Reports progress back to gui until it achieves the goal
-  // TODO how to cancel the request (possibly by cancelling the response stream? or using the input as a stream)
   rpc moveToGoalPose(MoveToGoalPoseRequest)
-      returns (stream MoveToGoalPoseResult) {}
-
-  // Next week
-  // rpc followTrajectory(stream FollowTrajectorRequest)
-  //    returns (stream FollowTrajectorResult) {}
-
-  rpc getServiceState(GetServiceStateRequest) returns (GetServiceStateResult) {}
-  rpc startService(StartServiceRequest) returns (StartServiceResult) {}
-  rpc stopService(StopServiceRequest) returns (StopServiceResult) {}
+      returns (stream MoveToGoalPoseReply) {}
 }
 
 
@@ -54,7 +43,7 @@ message MoveToGoalPoseRequest {
     double max_angular_rate = 4;
 }
 
-message MoveToGoalPoseResult {
+message MoveToGoalPoseReply {
     sophus.proto.Se3F64 world_pose_goal = 1;
     sophus.proto.Se3F64 world_pose_robot = 2;
     // estimated time of arrival at the robot
@@ -66,52 +55,4 @@ message MoveToGoalPoseResult {
         ACHIEVED = 3;
     }
     State state = 4;
-    ReplyStatus status = 5;
-
-}
-
-// message MoveToGoalPoseResults {
-//     repeated MoveToGoalPoseResult results = 1;
-// }
-
-
-////////////////////////////////////////////////
-// From here down should be imported from elsewhere
-// Need to understand desired protos architecture
-////////////////////////////////////////////////
-
-// Generic service protos
-enum ReplyStatus {
-    OK = 0;
-    FAILED = 1;
-}
-enum ControllerServiceState {
-    UNKNOWN = 0;
-    STOPPED = 1;
-    RUNNING = 2;
-    IDLE = 3;
-    UNAVAILABLE = 4;
-}
-
-message GetServiceStateRequest {
-    string message = 1;
-}
-message GetServiceStateResult {
-    string state_name = 1;
-    ControllerServiceState state = 2;
-    ReplyStatus status = 3;
-}
-message StartServiceRequest {
-    string message = 1;
-}
-message StartServiceResult {
-    string message = 1;
-    ReplyStatus status = 2;
-}
-message StopServiceRequest {
-    string message = 1;
-}
-message StopServiceResult {
-    string message = 1;
-    ReplyStatus status = 2;
 }
