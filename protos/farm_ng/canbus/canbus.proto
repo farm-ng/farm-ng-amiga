@@ -19,14 +19,11 @@ syntax = "proto3";
 package farm_ng.canbus.proto;
 
 service CanbusService {
-  rpc streamCanbusMessages(StreamCanbusRequest)
-      returns (stream StreamCanbusReply) {}
-  rpc sendCanbusMessage(stream SendCanbusMessageRequest)
-      returns (SendCanbusMessageReply) {}
+  rpc readCanbusMessages(ReadCanbusMessagesRequest)
+      returns (stream ReadCanbusMessagesReply) {}
+  rpc sendCanbusMessages(stream SendCanbusMessagesRequest)
+      returns (SendCanbusMessagesReply) {}
   rpc getServiceState(GetServiceStateRequest) returns (GetServiceStateResult) {}
-  rpc startService(StartServiceRequest) returns (StartServiceResult) {}
-  rpc stopService(StopServiceRequest) returns (StopServiceResult) {}
-  rpc pauseService(PauseServiceRequest) returns (PauseServiceResult) {}
 }
 
 enum ReplyStatus {
@@ -43,20 +40,30 @@ enum CanbusServiceState {
   ERROR = 5;
 }
 
-message StreamCanbusRequest {
+enum CanbusIfaceState {
+  UNKNOWN = 0;
+  BUS_OFF = 1;
+  ERROR_PASSIVE = 2;
+  ERROR_ACTIVE = 3;
+  IFACE_NOT_FOUND = 4;
+}
+
+message ReadCanbusMessagesRequest {
   string message = 1;
 }
 
-message StreamCanbusReply {
+message ReadCanbusMessagesReply {
   ReplyStatus status = 1;
+  // Messages may be batched by server to reduce gRPC latency
   RawCanbusMessages messages = 2;
 }
 
-message SendCanbusMessageRequest {
-  RawCanbusMessage message = 1;
+message SendCanbusMessagesRequest {
+  // Client may batch messages if necessary to reduce gRPC latency
+  RawCanbusMessages messages = 1;
 }
 
-message SendCanbusMessageReply {
+message SendCanbusMessagesReply {
   ReplyStatus status = 1;
 }
 
@@ -74,33 +81,6 @@ message RawCanbusMessages {
   repeated RawCanbusMessage messages = 1;
 }
 
-message StartServiceRequest {
-  string message = 1;
-}
-
-message StopServiceRequest {
-  string message = 1;
-}
-
-message PauseServiceRequest {
-  string message = 1;
-}
-
-message StartServiceResult {
-  string message = 1;
-  ReplyStatus status = 2;
-}
-
-message StopServiceResult {
-  string message = 1;
-  ReplyStatus status = 2;
-}
-
-message PauseServiceResult {
-  string message = 1;
-  ReplyStatus status = 2;
-}
-
 message GetServiceStateRequest {
   string message = 1;
 }
@@ -109,4 +89,10 @@ message GetServiceStateResult {
   string state_name = 1;
   CanbusServiceState state = 2;
   ReplyStatus status = 3;
+  string can_iface = 4;
+  int32 bit_rate = 5;
+  CanbusIfaceState iface_state = 6;
+  int32 tec = 7;
+  int32 rec = 8;
+  float bus_load = 9;
 }
