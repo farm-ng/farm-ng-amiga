@@ -17,7 +17,7 @@ from typing import List
 
 import cv2
 import numpy as np
-from farm_ng.core import event_pb2
+from farm_ng.core.events_file_reader import EventLogPosition
 from farm_ng.core.events_file_reader import EventsFileReader
 from farm_ng.core.uri import uri_pb2
 from farm_ng.oak import oak_pb2
@@ -28,25 +28,18 @@ def main(file_name: str) -> None:
     reader = EventsFileReader(Path(file_name))
     assert reader.open()
 
-    # get a list with all the existing uri
-    uris: List[uri_pb2.Uri] = reader.uris()
+    # main window to visualize image
+    uris: List[uri_pb2.Uri] = reader.get_uris()
 
     # choose the Uri stream to seek in file
     uri: uri_pb2.Uri = uris[1]
 
-    num_events: int = reader.num_events(uri)
-    current_event: int = 0
+    events: List[EventLogPosition] = reader.get_events(uri)
 
-    while current_event < num_events - 1:
-        # read frame by frame
-        # get the event and offset
-        event: event_pb2.Event
-        offset: int
-        event, offset = reader.get_event(uri, current_event)
-
+    for event_log in events:
         # seek and parse the message
         sample: oak_pb2.OakDataSample
-        sample = reader.read_message(event, offset)
+        sample = reader.read_message(event_log)
         frame: oak_pb2.OakSyncFrame = sample.frame
 
         # cast image data bytes to numpy and decode
@@ -57,8 +50,8 @@ def main(file_name: str) -> None:
         # visualize the image
         disparity_color = cv2.applyColorMap(disparity * 2, cv2.COLORMAP_HOT)
 
-        rgb_window_name = "rgb:" + event.uri.query
-        disparity_window_name = "depth:" + event.uri.query
+        rgb_window_name = "rgb:" + event_log.event.uri.query
+        disparity_window_name = "depth:" + event_log.event.uri.query
 
         # we use opencv for convenience, use kivy, pangolin or you preferred viz tool :)
         cv2.namedWindow(disparity_window_name, cv2.WINDOW_NORMAL)
@@ -67,8 +60,6 @@ def main(file_name: str) -> None:
         cv2.imshow(disparity_window_name, disparity_color)
         cv2.imshow(rgb_window_name, rgb)
         cv2.waitKey(30)
-
-        current_event += 1
 
     assert reader.close()
 
