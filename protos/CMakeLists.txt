@@ -1,5 +1,5 @@
 farm_ng_add_protobufs(amiga_brain_api_proto_defs
-    NAMESPACE amiga_brain_api
+    NAMESPACE farm_ng_amiga
     INCLUDE_DIRS
       ${Sophus_PROTO_DIR}
     PROTO_FILES
