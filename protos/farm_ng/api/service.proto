@@ -34,7 +34,7 @@ message GetServiceStateRequest {
 
 message GetServiceStateReply {
   ServiceState state = 1;
-  int pid = 2;
+  int pid = 2; // process id
   double uptime = 3;
 }
 
