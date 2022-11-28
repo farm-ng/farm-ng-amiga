@@ -1,4 +1,16 @@
-# Copyright (c) farm-ng, inc. Amiga Development Kit License, Version 0.1
+# Copyright (c) farm-ng, inc.
+#
+# Licensed under the Amiga Development Kit License (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://github.com/farm-ng/amiga-dev-kit/blob/main/LICENSE
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import asyncio
 import logging
 from dataclasses import dataclass
@@ -28,7 +40,9 @@ class CanbusServiceState:
     """Canbus service state."""
 
     def __init__(self, proto: canbus_pb2.CanbusServiceState = None) -> None:
-        self._proto = proto or canbus_pb2.CanbusServiceState.UNAVAILABLE
+        self._proto = canbus_pb2.CanbusServiceState.UNAVAILABLE
+        if proto is not None:
+            self._proto = proto
 
     @property
     def value(self) -> int:
@@ -85,6 +99,10 @@ class CanbusClient:
         return state
 
     async def connect_to_service(self) -> None:
+        """Starts the canbus streaming.
+
+        The service state will go to `RUNNING`.
+        """
         state: CanbusServiceState = await self.get_state()
         if state.value == canbus_pb2.CanbusServiceState.UNAVAILABLE:
             return
@@ -95,3 +113,13 @@ class CanbusClient:
         if state.value == canbus_pb2.CanbusServiceState.UNAVAILABLE:
             return
         await self.stub.stopService(canbus_pb2.StopServiceRequest())
+
+    async def pause_service(self) -> None:
+        """Pauses the canbus streaming.
+
+        The service state will go from `RUNNING` to `IDLE`.
+        """
+        state: CanbusServiceState = await self.get_state()
+        if state.value == canbus_pb2.CanbusServiceState.UNAVAILABLE:
+            return
+        await self.stub.pauseService(canbus_pb2.PauseServiceRequest())

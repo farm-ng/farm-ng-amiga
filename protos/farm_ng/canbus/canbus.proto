@@ -1,4 +1,18 @@
-// Copyright (c) farm-ng, inc. Amiga Development Kit License, Version 0.1
+// Copyright (c) farm-ng, inc.
+//
+// Licensed under the Amiga Development Kit License (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://github.com/farm-ng/amiga-dev-kit/blob/main/LICENSE
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+
 
 syntax = "proto3";
 
@@ -12,6 +26,7 @@ service CanbusService {
   rpc getServiceState(GetServiceStateRequest) returns (GetServiceStateResult) {}
   rpc startService(StartServiceRequest) returns (StartServiceResult) {}
   rpc stopService(StopServiceRequest) returns (StopServiceResult) {}
+  rpc pauseService(PauseServiceRequest) returns (PauseServiceResult) {}
 }
 
 enum ReplyStatus {
@@ -25,15 +40,7 @@ enum CanbusServiceState {
   RUNNING = 2;
   IDLE = 3;
   UNAVAILABLE = 4;
-}
-
-message StopServiceRequest {
-  string message = 1;
-}
-
-message StopServiceResult {
-  string message = 1;
-  ReplyStatus status = 2;
+  ERROR = 5;
 }
 
 message StreamCanbusRequest {
@@ -71,7 +78,25 @@ message StartServiceRequest {
   string message = 1;
 }
 
+message StopServiceRequest {
+  string message = 1;
+}
+
+message PauseServiceRequest {
+  string message = 1;
+}
+
 message StartServiceResult {
+  string message = 1;
+  ReplyStatus status = 2;
+}
+
+message StopServiceResult {
+  string message = 1;
+  ReplyStatus status = 2;
+}
+
+message PauseServiceResult {
   string message = 1;
   ReplyStatus status = 2;
 }

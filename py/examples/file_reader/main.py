@@ -1,5 +1,16 @@
-# Copyright (c) farm-ng, inc. Amiga Development Kit License, Version 0.1
-# Copyright (c) farm-ng, inc. All rights reserved.
+# Copyright (c) farm-ng, inc.
+#
+# Licensed under the Amiga Development Kit License (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://github.com/farm-ng/amiga-dev-kit/blob/main/LICENSE
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import argparse
 from pathlib import Path
 from typing import List
@@ -55,6 +66,6 @@ def main(file_name: str) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="Event file reader example.")
-    parser.add_argument("--file-name", type=str, required=True, help="Path to the `events.log` file.")
+    parser.add_argument("--file-name", type=str, required=True, help="Path to the `events.bin` file.")
     args = parser.parse_args()
     main(args.file_name)
