@@ -34,12 +34,13 @@ def main(file_name: str) -> None:
     # choose the Uri stream to seek in file
     uri: uri_pb2.Uri = uris[1]
 
-    events: List[EventLogPosition] = reader.get_events(uri)
+    events: List[EventLogPosition] = [x for x in reader.get_index() if x.event.uri == uri]
 
     for event_log in events:
-        # seek and parse the message
+        # parse the message
         sample: oak_pb2.OakDataSample
-        sample = reader.read_message(event_log)
+        sample = event_log.read_message()
+
         frame: oak_pb2.OakSyncFrame = sample.frame
 
         # cast image data bytes to numpy and decode
@@ -51,7 +52,7 @@ def main(file_name: str) -> None:
         disparity_color = cv2.applyColorMap(disparity * 2, cv2.COLORMAP_HOT)
 
         rgb_window_name = "rgb:" + event_log.event.uri.query
-        disparity_window_name = "depth:" + event_log.event.uri.query
+        disparity_window_name = "disparity:" + event_log.event.uri.query
 
         # we use opencv for convenience, use kivy, pangolin or you preferred viz tool :)
         cv2.namedWindow(disparity_window_name, cv2.WINDOW_NORMAL)
@@ -59,7 +60,7 @@ def main(file_name: str) -> None:
 
         cv2.imshow(disparity_window_name, disparity_color)
         cv2.imshow(rgb_window_name, rgb)
-        cv2.waitKey(30)
+        cv2.waitKey(3)
 
     assert reader.close()
 
