@@ -18,35 +18,34 @@ from typing import List
 import cv2
 import numpy as np
 from farm_ng.core import event_pb2
+from farm_ng.core.events_file_reader import EventLogPosition
 from farm_ng.core.events_file_reader import EventsFileReader
-from farm_ng.core.uri import uri_pb2
 from farm_ng.oak import oak_pb2
 
 
-def main(file_name: str) -> None:
+# helper function to filter valid events given a message type
+def event_has_message(event: event_pb2.Event, msg_type) -> bool:
+    return event.uri.query.split("&")[0].split(".")[-1] == msg_type.__name__
+
+
+def main(file_name: str, camera_name: str) -> None:
     # create the file reader
     reader = EventsFileReader(Path(file_name))
     assert reader.open()
 
-    # get a list with all the existing uri
-    uris: List[uri_pb2.Uri] = reader.uris()
+    # filter the events containing `oak_pb2.OakDataSample`
+    events: List[EventLogPosition] = [
+        x for x in reader.get_index() if event_has_message(x.event, oak_pb2.OakDataSample)
+    ]
 
-    # choose the Uri stream to seek in file
-    uri: uri_pb2.Uri = uris[1]
+    # filter the image based events by camera name
+    cam_events: List[EventLogPosition] = [x for x in events if x.event.uri.path == f"{camera_name}/video"]
 
-    num_events: int = reader.num_events(uri)
-    current_event: int = 0
-
-    while current_event < num_events - 1:
-        # read frame by frame
-        # get the event and offset
-        event: event_pb2.Event
-        offset: int
-        event, offset = reader.get_event(uri, current_event)
-
-        # seek and parse the message
+    for event_log in cam_events:
+        # parse the message
         sample: oak_pb2.OakDataSample
-        sample = reader.read_message(event, offset)
+        sample = event_log.read_message()
+
         frame: oak_pb2.OakSyncFrame = sample.frame
 
         # cast image data bytes to numpy and decode
@@ -57,8 +56,8 @@ def main(file_name: str) -> None:
         # visualize the image
         disparity_color = cv2.applyColorMap(disparity * 2, cv2.COLORMAP_HOT)
 
-        rgb_window_name = "rgb:" + event.uri.query
-        disparity_window_name = "depth:" + event.uri.query
+        rgb_window_name = "rgb:" + event_log.event.uri.query
+        disparity_window_name = "disparity:" + event_log.event.uri.query
 
         # we use opencv for convenience, use kivy, pangolin or you preferred viz tool :)
         cv2.namedWindow(disparity_window_name, cv2.WINDOW_NORMAL)
@@ -66,9 +65,7 @@ def main(file_name: str) -> None:
 
         cv2.imshow(disparity_window_name, disparity_color)
         cv2.imshow(rgb_window_name, rgb)
-        cv2.waitKey(30)
-
-        current_event += 1
+        cv2.waitKey(3)
 
     assert reader.close()
 
@@ -76,5 +73,8 @@ def main(file_name: str) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="Event file reader example.")
     parser.add_argument("--file-name", type=str, required=True, help="Path to the `events.bin` file.")
+    parser.add_argument(
+        "--camera-name", type=str, default="oak0", help="The name of the camera to visualize. Default: oak0."
+    )
     args = parser.parse_args()
-    main(args.file_name)
+    main(args.file_name, args.camera_name)
