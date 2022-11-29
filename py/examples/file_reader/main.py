@@ -17,26 +17,31 @@ from typing import List
 
 import cv2
 import numpy as np
+from farm_ng.core import event_pb2
 from farm_ng.core.events_file_reader import EventLogPosition
 from farm_ng.core.events_file_reader import EventsFileReader
-from farm_ng.core.uri import uri_pb2
 from farm_ng.oak import oak_pb2
 
 
-def main(file_name: str) -> None:
+# helper function to filter valid events given a message type
+def event_has_message(event: event_pb2.Event, msg_type) -> bool:
+    return event.uri.query.split("&")[0].split(".")[-1] == msg_type.__name__
+
+
+def main(file_name: str, camera_name: str) -> None:
     # create the file reader
     reader = EventsFileReader(Path(file_name))
     assert reader.open()
 
-    # main window to visualize image
-    uris: List[uri_pb2.Uri] = reader.get_uris()
+    # filter the events containing `oak_pb2.OakDataSample`
+    events: List[EventLogPosition] = [
+        x for x in reader.get_index() if event_has_message(x.event, oak_pb2.OakDataSample)
+    ]
 
-    # choose the Uri stream to seek in file
-    uri: uri_pb2.Uri = uris[1]
+    # filter the image based events by camera name
+    cam_events: List[EventLogPosition] = [x for x in events if x.event.uri.path == f"{camera_name}/video"]
 
-    events: List[EventLogPosition] = [x for x in reader.get_index() if x.event.uri == uri]
-
-    for event_log in events:
+    for event_log in cam_events:
         # parse the message
         sample: oak_pb2.OakDataSample
         sample = event_log.read_message()
@@ -68,5 +73,8 @@ def main(file_name: str) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="Event file reader example.")
     parser.add_argument("--file-name", type=str, required=True, help="Path to the `events.bin` file.")
+    parser.add_argument(
+        "--camera-name", type=str, default="oak0", help="The name of the camera to visualize. Default: oak0."
+    )
     args = parser.parse_args()
-    main(args.file_name)
+    main(args.file_name, args.camera_name)
