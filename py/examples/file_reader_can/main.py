@@ -40,7 +40,7 @@ def main(file_name: str, can_interface: str) -> None:
         x
         for x in reader.get_index()
         if event_has_message(x.event, canbus_pb2.RawCanbusMessages)
-        and x.event.uri.path == f"canbus{can_interface}/stream"
+        and x.event.uri.path == f"{can_interface}/messages"
     ]
 
     for event_log in can_events:
