@@ -66,18 +66,19 @@ class TestEventsReader:
 
         # check frame based
         with EventsFileReader(log_file) as reader:
-            oak0, oak1 = reader.uris()
-            assert reader.num_events(oak0) == 3
-            assert reader.num_events(oak1) == 1
+            events = reader.get_index()
+            oak0, oak1 = sorted([*{x.event.uri.path for x in events}])
+            oak0_events = [x for x in events if x.event.uri.path == oak0]
+            oak1_events = [x for x in events if x.event.uri.path == oak1]
+            assert len(oak0_events) == 3
+            assert len(oak1_events) == 1
+
             # frame 1
-            event, offset = reader.get_event(oak0, 0)
-            msg = reader.read_message(event, offset)
+            msg = oak0_events[0].read_message()
             assert msg.image_data == frames[0].image_data
             # frame 2
-            event, offset = reader.get_event(oak0, 1)
-            msg = reader.read_message(event, offset)
+            msg = oak0_events[1].read_message()
             assert msg.image_data == frames[2].image_data
             # frame 3
-            event, offset = reader.get_event(oak0, 2)
-            msg = reader.read_message(event, offset)
+            msg = oak0_events[2].read_message()
             assert msg.image_data == frames[3].image_data
