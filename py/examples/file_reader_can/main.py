@@ -39,8 +39,7 @@ def main(file_name: str, can_interface: str) -> None:
     can_events: List[EventLogPosition] = [
         x
         for x in reader.get_index()
-        if event_has_message(x.event, canbus_pb2.RawCanbusMessages)
-        and x.event.uri.path == f"{can_interface}/messages"
+        if event_has_message(x.event, canbus_pb2.RawCanbusMessages) and x.event.uri.path == f"{can_interface}/messages"
     ]
 
     for event_log in can_events:
