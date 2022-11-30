@@ -66,7 +66,7 @@ class TestEventsReader:
 
         # check frame based
         with EventsFileReader(log_file) as reader:
-            oak0, oak1 = reader.uris()
+            oak0, oak1 = reader.get_index()
             assert reader.num_events(oak0) == 3
             assert reader.num_events(oak1) == 1
             # frame 1
