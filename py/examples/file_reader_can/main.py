@@ -42,6 +42,8 @@ def main(file_name: str, can_interface: str) -> None:
         if event_has_message(x.event, canbus_pb2.RawCanbusMessages) and x.event.uri.path == f"{can_interface}/messages"
     ]
 
+    print(f"Found {len(can_events)} packets of canbus_pb2.RawCanbusMessages")
+
     for event_log in can_events:
 
         # parse the message
