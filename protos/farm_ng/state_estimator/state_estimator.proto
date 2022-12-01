@@ -12,36 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-
 syntax = "proto3";
 
 package farm_ng.state_estimator.proto;
 
+import "farm_ng/core/timestamp.proto";
 import "sophus/linalg.proto";
 import "sophus/lie.proto";
 
 service StateEstimatorService {
   rpc robotDynamics(RobotDynamicsRequest)
-      returns (stream RobotDynamicsResult) {}
+      returns (stream RobotDynamicsReply) {}
 
     // TODO: Return control signal (request) to state estimator
     // rpc controlRobotDynamics(stream ControlRobotDynamicsRequest)
-    //     returns (stream ControlRobotDynamicsResult) {}
+    //     returns (stream ControlRobotDynamicsReply) {}
 
-  rpc robotCalibrationResult(RobotCalibrationRequest)
-      returns (RobotCalibrationResult) {}
+  rpc robotCalibrationReply(RobotCalibrationRequest)
+      returns (RobotCalibrationReply) {}
 
-  rpc getServiceState(GetServiceStateRequest) returns (GetServiceStateResult) {}
-  rpc startService(StartServiceRequest) returns (StartServiceResult) {}
-  rpc stopService(StopServiceRequest) returns (StopServiceResult) {}
 }
 
 // TODO: Return control signal (request) to state estimator
 // message ControlRobotDynamicsRequest {
 //     // AmigaRpdo1 (commands sent to canbus)
 // }
-// message ControlRobotDynamicsResult {
+// message ControlRobotDynamicsReply {
 //     // Pose from state estimator to controller
 // }
 
@@ -49,10 +45,10 @@ message RobotDynamicsRequest {
     string device = 1;
 }
 
-message RobotDynamicsResult {
+message RobotDynamicsReply {
     // Timestamp from farm-ng-core
     // SE3d types from Sophus
-    Timestamp stamp = 1;  // this contains which clock
+    farm_ng.core.proto.Timestamp stamp = 1;  // this contains which clock
     sophus.proto.Se3F64 odom_pose_robot = 2;
     // Rate of the robot in the robot's frame
     RobotRate robot_rate = 3;
@@ -67,9 +63,9 @@ message RobotCalibrationRequest {
     string device = 1;
 }
 
-message RobotCalibrationResult {
+message RobotCalibrationReply {
 
-    Timestamp stamp = 1;  // this contains which clock
+    farm_ng.core.proto.Timestamp stamp = 1;  // this contains which clock
     // poses has
     // robot -> oak0/right
     // robot -> oak1/right
@@ -87,60 +83,8 @@ message NamedWheel {
     double radius = 2;
 }
 
-////////////////////////////////////////////////
-// From here down should be imported from elsewhere
-// Need to understand desired protos architecture
-////////////////////////////////////////////////
-
-// Geometry/etc. protos
-
-
 message NamedPose3d {
     string frame_a = 1;
     string frame_b = 2;
     sophus.proto.Se3F64 a_pose_b = 3;
-}
-
-message Timestamp {
-    string clock_name = 1;
-    double seconds = 2;
-    string clock_type = 3;
-}
-
-
-
-// Generic service protos
-enum ReplyStatus {
-    OK = 0;
-    FAILED = 1;
-}
-enum StateEstimatorServiceState {
-    UNKNOWN = 0;
-    STOPPED = 1;
-    RUNNING = 2;
-    IDLE = 3;
-    UNAVAILABLE = 4;
-}
-
-message GetServiceStateRequest {
-    string message = 1;
-}
-message GetServiceStateResult {
-    string state_name = 1;
-    StateEstimatorServiceState state = 2;
-    ReplyStatus status = 3;
-}
-message StartServiceRequest {
-    string message = 1;
-}
-message StartServiceResult {
-    string message = 1;
-    ReplyStatus status = 2;
-}
-message StopServiceRequest {
-    string message = 1;
-}
-message StopServiceResult {
-    string message = 1;
-    ReplyStatus status = 2;
 }
