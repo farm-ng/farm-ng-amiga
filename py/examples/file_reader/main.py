@@ -17,10 +17,38 @@ from typing import List
 
 import cv2
 import numpy as np
-from farm_ng.core import event_pb2
-from farm_ng.core.events_file_reader import EventLogPosition
-from farm_ng.core.events_file_reader import EventsFileReader
-from farm_ng.oak import oak_pb2
+
+
+"""Check used farm_ng package versions."""
+import farm_ng.core  # noreorder # noqa: E402
+import farm_ng.oak  # noqa: E402
+
+known_core_versions = ['0.1.3']
+if farm_ng.core.__version__ not in known_core_versions:
+    print("--")
+    print(f"WARNING: Installed farm_ng.core version ({farm_ng.core.__version__}) not in known compatible versions")
+    print(", ".join(known_core_versions))
+    print("If example crashes, either:")
+    print("  - Update examples: `git pull`")
+    print("  - Install a compatible version #.#.#: `pip install farm-ng-core==v#.#.#`")
+    print("--")
+
+known_oak_versions = ['0.0.3']
+if farm_ng.oak.__version__ not in known_oak_versions:
+    print("--")
+    print(f"WARNING: Installed farm_ng.oak version ({farm_ng.oak.__version__}) not in known compatible versions")
+    print(", ".join(known_oak_versions))
+    print("If example crashes, either:")
+    print("  - Update examples: `git pull`")
+    print("  - Install a compatible version #.#.#: `pip install farm-ng-oak==v#.#.#`")
+    print("--")
+""" Check used farm_ng package versions """
+
+
+from farm_ng.core import event_pb2  # noqa: E402
+from farm_ng.core.events_file_reader import EventLogPosition  # noqa: E402
+from farm_ng.core.events_file_reader import EventsFileReader  # noqa: E402
+from farm_ng.oak import oak_pb2  # noqa: E402
 
 
 # helper function to filter valid events given a message type
