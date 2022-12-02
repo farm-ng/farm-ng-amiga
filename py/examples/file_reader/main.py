@@ -19,30 +19,23 @@ import cv2
 import numpy as np
 
 
-"""Check used farm_ng package versions."""
-import farm_ng.core  # noreorder # noqa: E402
-import farm_ng.oak  # noqa: E402
+def check_version_compatability(package, package_str: str, known_versions: List[str]):
+    if package.__version__ not in known_versions:
+        print("-- WARNING --")
+        print(f"Installed {package.__name__} version ({package.__version__}) not in known compatible versions")
+        print(", ".join(known_versions))
+        print("If example fails or behaves unexpectedly, either:")
+        print(f"  - Install a compatible version #.#.#: `pip install {package_str}==v#.#.#`")
+        print("  - Update examples: `git pull`")
+        print("--")
 
-known_core_versions = ['0.1.3']
-if farm_ng.core.__version__ not in known_core_versions:
-    print("--")
-    print(f"WARNING: Installed farm_ng.core version ({farm_ng.core.__version__}) not in known compatible versions")
-    print(", ".join(known_core_versions))
-    print("If example crashes, either:")
-    print("  - Update examples: `git pull`")
-    print("  - Install a compatible version #.#.#: `pip install farm-ng-core==v#.#.#`")
-    print("--")
 
-known_oak_versions = ['0.0.3']
-if farm_ng.oak.__version__ not in known_oak_versions:
-    print("--")
-    print(f"WARNING: Installed farm_ng.oak version ({farm_ng.oak.__version__}) not in known compatible versions")
-    print(", ".join(known_oak_versions))
-    print("If example crashes, either:")
-    print("  - Update examples: `git pull`")
-    print("  - Install a compatible version #.#.#: `pip install farm-ng-oak==v#.#.#`")
-    print("--")
-""" Check used farm_ng package versions """
+# Check farm_ng package versions
+import farm_ng.core as farm_ng_core  # noqa: E402
+import farm_ng.oak as farm_ng_oak  # noqa: E402
+
+check_version_compatability(farm_ng_core, "farm-ng-core", ['0.1.3'])
+check_version_compatability(farm_ng_oak, "farm-ng-oak", ['0.0.3'])
 
 
 from farm_ng.core import event_pb2  # noqa: E402
