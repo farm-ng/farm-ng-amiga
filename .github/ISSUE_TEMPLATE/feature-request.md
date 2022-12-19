@@ -27,10 +27,5 @@ assignees: ''
 
 ______________________________________________________________________
 
-#### Consider also to contribute to Kornia universe projects :)
+#### Consider also to contribute to farm-ng future projects :)
 
-<sub>
-
-- [**Tutorials**](https://github.com/kornia/tutorials): our repository containing the tutorials.
-
-</sub>
