@@ -28,4 +28,3 @@ assignees: ''
 ______________________________________________________________________
 
 #### Consider also to contribute to farm-ng future projects :)
-
