@@ -39,7 +39,6 @@ source venv/bin/activate
 Create and install the ``farm_ng``\s (brain) Python package
 
 ```bash
-cd py
 # install to system
 pip3 install .
 ```
