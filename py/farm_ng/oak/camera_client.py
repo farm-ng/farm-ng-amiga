@@ -125,16 +125,10 @@ class OakCameraClient:
         self.channel = grpc.aio.insecure_channel(self.server_address)
         self.stub = oak_pb2_grpc.OakServiceStub(self.channel)
 
-        self._state = OakCameraServiceState()
-
         self._mono_camera_settings = oak_pb2.CameraSettings(auto_exposure=True)
         self._rgb_camera_settings = oak_pb2.CameraSettings(auto_exposure=True)
 
         self.needs_update = False
-
-    @property
-    def state(self) -> OakCameraServiceState:
-        return self._state
 
     @property
     def server_address(self) -> str:
@@ -154,15 +148,6 @@ class OakCameraClient:
             self._mono_camera_settings.CopyFrom(reply.stereo_settings)
             self._rgb_camera_settings.CopyFrom(reply.rgb_settings)
 
-    async def poll_service_state(self) -> None:
-        while True:
-            try:
-                self._state = await self.get_state()
-                await asyncio.sleep(0.1)
-            except asyncio.CancelledError:
-                self.logger.info("Got CancellededError")
-                break
-
     async def get_state(self) -> OakCameraServiceState:
         """Async call to retrieve the state of the connected service."""
         state: OakCameraServiceState
@@ -175,28 +160,6 @@ class OakCameraClient:
             state = OakCameraServiceState()
         self.logger.debug("OakServiceStub: port -> %i state is: %s", self.config.port, state.name)
         return state
-
-    async def connect_to_service(self) -> None:
-        """Start the camera streaming.
-
-        The service state will go from `IDLE` to `RUNNING`.
-        """
-        state: OakCameraServiceState = await self.get_state()
-        if state.value == oak_pb2.OakServiceState.UNAVAILABLE:
-            return
-        reply = await self.stub.cameraControl(oak_pb2.CameraControlRequest())
-        self.settings_reply(reply)
-        await self.stub.startService(oak_pb2.StartServiceRequest())
-
-    async def pause_service(self) -> None:
-        """Pauses the camera streaming.
-
-        The service state will go from `RUNNING` to `IDLE`.
-        """
-        state: OakCameraServiceState = await self.get_state()
-        if state.value == oak_pb2.OakServiceState.UNAVAILABLE:
-            return
-        await self.stub.pauseService(oak_pb2.PauseServiceRequest())
 
     async def send_settings(self) -> oak_pb2.CameraControlReply:
         request = oak_pb2.CameraControlRequest()

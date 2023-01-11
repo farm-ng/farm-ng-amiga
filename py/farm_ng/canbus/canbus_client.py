@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import asyncio
 import logging
 from dataclasses import dataclass
 
@@ -66,25 +65,10 @@ class CanbusClient:
         self.channel = grpc.aio.insecure_channel(self.server_address)
         self.stub = canbus_pb2_grpc.CanbusServiceStub(self.channel)
 
-        self._state = CanbusServiceState()
-
-    @property
-    def state(self) -> CanbusServiceState:
-        return self._state
-
     @property
     def server_address(self) -> str:
         """Returns the composed address and port."""
         return f"{self.config.address}:{self.config.port}"
-
-    async def poll_service_state(self) -> None:
-        while True:
-            try:
-                self._state = await self.get_state()
-                await asyncio.sleep(0.1)
-            except asyncio.CancelledError:
-                self.logger.info("Got Cancelled Error")
-                break
 
     async def get_state(self) -> CanbusServiceState:
         state: CanbusServiceState
@@ -97,29 +81,3 @@ class CanbusClient:
             state = CanbusServiceState()
         self.logger.debug("CanbusServiceStub: port -> %i state is: %s", self.config.port, state.name)
         return state
-
-    async def connect_to_service(self) -> None:
-        """Starts the canbus streaming.
-
-        The service state will go to `RUNNING`.
-        """
-        state: CanbusServiceState = await self.get_state()
-        if state.value == canbus_pb2.CanbusServiceState.UNAVAILABLE:
-            return
-        await self.stub.startService(canbus_pb2.StartServiceRequest())
-
-    async def disconnect_from_service(self) -> None:
-        state: CanbusServiceState = await self.get_state()
-        if state.value == canbus_pb2.CanbusServiceState.UNAVAILABLE:
-            return
-        await self.stub.stopService(canbus_pb2.StopServiceRequest())
-
-    async def pause_service(self) -> None:
-        """Pauses the canbus streaming.
-
-        The service state will go from `RUNNING` to `IDLE`.
-        """
-        state: CanbusServiceState = await self.get_state()
-        if state.value == canbus_pb2.CanbusServiceState.UNAVAILABLE:
-            return
-        await self.stub.pauseService(canbus_pb2.PauseServiceRequest())

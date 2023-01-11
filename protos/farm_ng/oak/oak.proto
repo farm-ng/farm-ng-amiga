@@ -22,9 +22,6 @@ service OakService {
   rpc cameraControl(CameraControlRequest) returns (CameraControlReply) {}
   rpc streamFrames(StreamFramesRequest) returns (stream StreamFramesReply) {}
   rpc getServiceState(GetServiceStateRequest) returns (GetServiceStateResult) {}
-  rpc startService(StartServiceRequest) returns (StartServiceResult) {}
-  rpc stopService(StopServiceRequest) returns (StopServiceResult) {}
-  rpc pauseService(PauseServiceRequest) returns (PauseServiceResult) {}
   rpc getCalibration(GetCalibrationRequest) returns (GetCalibrationResult) {}
 }
 
@@ -47,33 +44,6 @@ message GetCalibrationRequest {
 
 message GetCalibrationResult {
   OakCalibration calibration = 1;
-  ReplyStatus status = 2;
-}
-
-message StopServiceRequest {
-  string message = 1;
-}
-
-message StopServiceResult {
-  string message = 1;
-  ReplyStatus status = 2;
-}
-
-message StartServiceRequest {
-  string message = 1;
-}
-
-message StartServiceResult {
-  string message = 1;
-  ReplyStatus status = 2;
-}
-
-message PauseServiceRequest {
-  string message = 1;
-}
-
-message PauseServiceResult {
-  string message = 1;
   ReplyStatus status = 2;
 }
 

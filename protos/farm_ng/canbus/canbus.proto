@@ -24,9 +24,6 @@ service CanbusService {
   rpc sendCanbusMessage(stream SendCanbusMessageRequest)
       returns (SendCanbusMessageReply) {}
   rpc getServiceState(GetServiceStateRequest) returns (GetServiceStateResult) {}
-  rpc startService(StartServiceRequest) returns (StartServiceResult) {}
-  rpc stopService(StopServiceRequest) returns (StopServiceResult) {}
-  rpc pauseService(PauseServiceRequest) returns (PauseServiceResult) {}
 }
 
 enum ReplyStatus {
@@ -43,6 +40,7 @@ enum CanbusServiceState {
   ERROR = 5;
 }
 
+// NOTE: `message` not really necessary
 message StreamCanbusRequest {
   string message = 1;
 }
@@ -72,33 +70,6 @@ message RawCanbusMessage {
 
 message RawCanbusMessages {
   repeated RawCanbusMessage messages = 1;
-}
-
-message StartServiceRequest {
-  string message = 1;
-}
-
-message StopServiceRequest {
-  string message = 1;
-}
-
-message PauseServiceRequest {
-  string message = 1;
-}
-
-message StartServiceResult {
-  string message = 1;
-  ReplyStatus status = 2;
-}
-
-message StopServiceResult {
-  string message = 1;
-  ReplyStatus status = 2;
-}
-
-message PauseServiceResult {
-  string message = 1;
-  ReplyStatus status = 2;
 }
 
 message GetServiceStateRequest {
