@@ -19,53 +19,58 @@ from farm_ng.core.events_file_writer import EventsFileWriter
 from farm_ng.oak import oak_pb2
 
 
-@pytest.fixture(name="log_file")
+@pytest.fixture(name="log_base")
 def fixture_log_file(tmpdir) -> Path:
-    return Path(tmpdir) / "event.log"
+    return Path(tmpdir) / "event"
+
+
+@pytest.fixture(name="reader_log_file")
+def fixture_reader_log_file(tmpdir) -> Path:
+    return Path(tmpdir) / "event.0000.bin"
 
 
 class TestEventsWriter:
-    def test_smoke(self, log_file: Path) -> None:
-        with EventsFileWriter(log_file) as writer:
+    def test_smoke(self, log_base: Path) -> None:
+        with EventsFileWriter(log_base) as writer:
             assert writer.is_open()
 
-    def test_write(self, log_file: Path) -> None:
-        with EventsFileWriter(log_file) as writer:
+    def test_write(self, log_base: Path) -> None:
+        with EventsFileWriter(log_base) as writer:
             frame = oak_pb2.OakFrame()
             frame.image_data = bytes([1, 2, 3, 4, 5, 6, 7, 8, 9])
             writer.write(path="oak/frame", message=frame)
 
 
 class TestEventsReader:
-    def test_smoke(self, log_file: Path) -> None:
+    def test_smoke(self, log_base: Path, reader_log_file: Path) -> None:
         # touch file
-        with EventsFileWriter(log_file) as _:
+        with EventsFileWriter(log_base) as _:
             pass
-        with EventsFileReader(log_file) as reader:
+        with EventsFileReader(reader_log_file) as reader:
             assert reader.is_open()
 
-    def test_write_read(self, log_file: Path) -> None:
+    def test_write_read(self, log_base: Path, reader_log_file: Path) -> None:
         def _make_frame(i):
             frame = oak_pb2.OakFrame()
             frame.image_data = bytes(i * [1, 2, 3, 4, 5, 6, 7, 8, 9])
             return frame
 
         frames = [_make_frame(i + 1) for i in range(4)]
-        with EventsFileWriter(log_file) as writer:
+        with EventsFileWriter(log_base) as writer:
             writer.write(path="oak0/frame", message=frames[0])
             writer.write(path="oak1/frame", message=frames[1])
             writer.write(path="oak0/frame", message=frames[2])
             writer.write(path="oak0/frame", message=frames[3])
 
         # check time based
-        with EventsFileReader(log_file) as reader:
+        with EventsFileReader(reader_log_file) as reader:
             messages_stream = reader.read_messages()
             for i, (event, msg) in enumerate(messages_stream):
                 assert msg.image_data == frames[i].image_data
                 assert any(x in event.uri.path for x in ["oak0", "oak1"])
 
         # check frame based
-        with EventsFileReader(log_file) as reader:
+        with EventsFileReader(reader_log_file) as reader:
             events = reader.get_index()
             oak0, oak1 = sorted([*{x.event.uri.path for x in events}])
             oak0_events = [x for x in events if x.event.uri.path == oak0]
