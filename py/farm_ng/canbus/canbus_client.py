@@ -81,3 +81,7 @@ class CanbusClient:
             state = CanbusServiceState()
         self.logger.debug("CanbusServiceStub: port -> %i state is: %s", self.config.port, state.name)
         return state
+
+    def stream(self):
+        """Return the async streaming object."""
+        return self.stub.streamCanbusMessages(canbus_pb2.StreamCanbusRequest())
