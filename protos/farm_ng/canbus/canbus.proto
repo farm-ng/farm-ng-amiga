@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-
 syntax = "proto3";
+
+import "farm_ng/service/service.proto";
 
 package farm_ng.canbus.proto;
 
@@ -23,31 +23,15 @@ service CanbusService {
       returns (stream StreamCanbusReply) {}
   rpc sendCanbusMessage(stream SendCanbusMessageRequest)
       returns (SendCanbusMessageReply) {}
-  rpc getServiceState(GetServiceStateRequest) returns (GetServiceStateResult) {}
+  rpc getServiceState(farm_ng.service.proto.GetServiceStateRequest)
+      returns (farm_ng.service.proto.GetServiceStateReply) {}
 }
 
-enum ReplyStatus {
-  OK = 0;
-  FAILED = 1;
-}
-
-enum CanbusServiceState {
-  UNKNOWN = 0;
-  STOPPED = 1;
-  RUNNING = 2;
-  IDLE = 3;
-  UNAVAILABLE = 4;
-  ERROR = 5;
-}
-
-// NOTE: `message` not really necessary
 message StreamCanbusRequest {
-  string message = 1;
 }
 
 message StreamCanbusReply {
-  ReplyStatus status = 1;
-  RawCanbusMessages messages = 2;
+  RawCanbusMessages messages = 1;
 }
 
 message SendCanbusMessageRequest {
@@ -55,7 +39,7 @@ message SendCanbusMessageRequest {
 }
 
 message SendCanbusMessageReply {
-  ReplyStatus status = 1;
+  farm_ng.service.proto.ReplyStatus status = 1;
 }
 
 message RawCanbusMessage {
@@ -70,14 +54,4 @@ message RawCanbusMessage {
 
 message RawCanbusMessages {
   repeated RawCanbusMessage messages = 1;
-}
-
-message GetServiceStateRequest {
-  string message = 1;
-}
-
-message GetServiceStateResult {
-  string state_name = 1;
-  CanbusServiceState state = 2;
-  ReplyStatus status = 3;
 }

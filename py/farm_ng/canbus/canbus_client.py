@@ -17,7 +17,8 @@ from dataclasses import dataclass
 import grpc
 from farm_ng.canbus import canbus_pb2
 from farm_ng.canbus import canbus_pb2_grpc
-
+from farm_ng.service import service_pb2
+from farm_ng.service.service import ServiceState
 
 logging.basicConfig(level=logging.INFO)
 
@@ -35,26 +36,6 @@ class CanbusClientConfig:
     address: str = "localhost"  # the address name of the server
 
 
-class CanbusServiceState:
-    """Canbus service state."""
-
-    def __init__(self, proto: canbus_pb2.CanbusServiceState = None) -> None:
-        self._proto = canbus_pb2.CanbusServiceState.UNAVAILABLE
-        if proto is not None:
-            self._proto = proto
-
-    @property
-    def value(self) -> int:
-        return self._proto
-
-    @property
-    def name(self) -> str:
-        return canbus_pb2.CanbusServiceState.DESCRIPTOR.values[self.value].name
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}: ({self.value}, {self.name})"
-
-
 class CanbusClient:
     def __init__(self, config: CanbusClientConfig) -> None:
         self.config = config
@@ -70,15 +51,15 @@ class CanbusClient:
         """Returns the composed address and port."""
         return f"{self.config.address}:{self.config.port}"
 
-    async def get_state(self) -> CanbusServiceState:
-        state: CanbusServiceState
+    async def get_state(self) -> ServiceState:
+        state: ServiceState
         try:
-            response: canbus_pb2.GetServiceStateResponse = await self.stub.getServiceState(
-                canbus_pb2.GetServiceStateRequest()
+            response: service_pb2.GetServiceStateReply = await self.stub.getServiceState(
+                service_pb2.GetServiceStateRequest()
             )
-            state = CanbusServiceState(response.state)
+            state = ServiceState(response.state)
         except grpc.RpcError:
-            state = CanbusServiceState()
+            state = ServiceState()
         self.logger.debug("CanbusServiceStub: port -> %i state is: %s", self.config.port, state.name)
         return state
 

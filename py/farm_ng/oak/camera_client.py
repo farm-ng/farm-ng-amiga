@@ -19,8 +19,11 @@ from dataclasses import dataclass
 import grpc
 from farm_ng.oak import oak_pb2
 from farm_ng.oak import oak_pb2_grpc
+from farm_ng.service import service_pb2
+from farm_ng.service.service import ServiceState
 
-__all__ = ["OakCameraClientConfig", "OakCameraClient", "OakCameraServiceState"]
+
+__all__ = ["OakCameraClientConfig", "OakCameraClient"]
 
 logging.basicConfig(level=logging.INFO)
 
@@ -74,38 +77,6 @@ class OakCameraClientConfig:
     address: str = "localhost"  # the address name of the server
 
 
-class OakCameraServiceState:
-    """Camera service state.
-
-    Possible state values:
-        - UNKNOWN: undefined state.
-        - RUNNING: the service is up AND streaming.
-        - IDLE: the service is up AND NOT streaming.
-        - UNAVAILABLE: the service is not available.
-
-    Args:
-        proto (oak_pb2.OakServiceState): protobuf message containing the camera state.
-    """
-
-    def __init__(self, proto: oak_pb2.OakServiceState = None) -> None:
-        self._proto = oak_pb2.OakServiceState.UNAVAILABLE
-        if proto is not None:
-            self._proto = proto
-
-    @property
-    def value(self) -> int:
-        """Returns the state enum value."""
-        return self._proto
-
-    @property
-    def name(self) -> str:
-        """Return the state name."""
-        return oak_pb2.OakServiceState.DESCRIPTOR.values[self.value].name
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}: ({self.value}, {self.name})"
-
-
 class OakCameraClient:
     """Oak-D camera client.
 
@@ -144,20 +115,20 @@ class OakCameraClient:
         return self._mono_camera_settings
 
     def settings_reply(self, reply) -> None:
-        if reply.status == oak_pb2.ReplyStatus.OK:
+        if reply.status == service_pb2.ReplyStatus.OK:
             self._mono_camera_settings.CopyFrom(reply.stereo_settings)
             self._rgb_camera_settings.CopyFrom(reply.rgb_settings)
 
-    async def get_state(self) -> OakCameraServiceState:
+    async def get_state(self) -> ServiceState:
         """Async call to retrieve the state of the connected service."""
-        state: OakCameraServiceState
+        state: ServiceState
         try:
-            response: oak_pb2.GetServiceStateResponse = await self.stub.getServiceState(
-                oak_pb2.GetServiceStateRequest()
+            response: service_pb2.GetServiceStateReply = await self.stub.getServiceState(
+                service_pb2.GetServiceStateRequest()
             )
-            state = OakCameraServiceState(response.state)
+            state = ServiceState(response.state)
         except grpc.RpcError:
-            state = OakCameraServiceState()
+            state = ServiceState()
         self.logger.debug("OakServiceStub: port -> %i state is: %s", self.config.port, state.name)
         return state
 
