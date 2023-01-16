@@ -100,5 +100,5 @@ class ServiceClient:
             state = ServiceState(response.state)
         except grpc.RpcError:
             state = ServiceState()
-        self.logger.info(f" {self.__class__.__name__} on port: %s state is: %s", self.config.port, state.name)
+        self.logger.debug(f" {self.__class__.__name__} on port: %s state is: %s", self.config.port, state.name)
         return state
