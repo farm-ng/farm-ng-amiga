@@ -22,12 +22,6 @@ service Service {
   rpc getServiceState(GetServiceStateRequest) returns (GetServiceStateReply) {}
 }
 
-// TODO: Just use a bool where this is used?
-enum ReplyStatus {
-  OK = 0;
-  FAILED = 1;
-}
-
 enum ServiceState {
   // Service state is not known
   UNKNOWN = 0;

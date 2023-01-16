@@ -38,7 +38,7 @@ message CameraControlRequest {
 }
 
 message CameraControlReply {
-  farm_ng.service.proto.ReplyStatus status = 1;
+  bool success = 1;
   CameraSettings stereo_settings = 2;
   CameraSettings rgb_settings = 3;
 }
