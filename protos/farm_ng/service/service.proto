@@ -14,6 +14,8 @@
 
 syntax = "proto3";
 
+import "farm_ng/core/timestamp.proto";
+
 package farm_ng.service.proto;
 
 // TODO: Just use a bool where this is used?
@@ -42,4 +44,5 @@ message GetServiceStateReply {
   ServiceState state = 1;
   uint32 pid = 2; // process id
   double uptime = 3;
+  repeated farm_ng.core.proto.Timestamp timestamps = 4;
 }
