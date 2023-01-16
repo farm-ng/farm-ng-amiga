@@ -12,59 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-from dataclasses import dataclass
 
-import grpc
 from farm_ng.canbus import canbus_pb2
 from farm_ng.canbus import canbus_pb2_grpc
-from farm_ng.service import service_pb2
-from farm_ng.service import service_pb2_grpc
-from farm_ng.service.service import ServiceState
+from farm_ng.service.service_client import ClientConfig
+from farm_ng.service.service_client import ServiceClient
 
 logging.basicConfig(level=logging.INFO)
 
 
-@dataclass
-class CanbusClientConfig:
-    """Canbus client configuration.
+class CanbusClient(ServiceClient):
+    """Amiga canbus client.
 
-    Attributes:
-        port (int): the port to connect to the server.
-        address (str): the address to connect to the server.
+    Client class to connect with the Amiga brain canbus service.
+    Inherits from ServiceClient.
+
+    Args:
+        config (ClientConfig): the grpc configuration data structure.
     """
 
-    port: int  # the port of the server address
-    address: str = "localhost"  # the address name of the server
-
-
-class CanbusClient:
-    def __init__(self, config: CanbusClientConfig) -> None:
-        self.config = config
-
-        self.logger = logging.getLogger(self.__class__.__name__)
-
+    def __init__(self, config: ClientConfig) -> None:
+        super().__init__(config)
         # create a async connection with the server
-        self.channel = grpc.aio.insecure_channel(self.server_address)
         self.stub = canbus_pb2_grpc.CanbusServiceStub(self.channel)
-        self.state_stub = service_pb2_grpc.ServiceStub(self.channel)
-
-    @property
-    def server_address(self) -> str:
-        """Returns the composed address and port."""
-        return f"{self.config.address}:{self.config.port}"
-
-    # TODO: Defined by ServiceMonitorClient
-    async def get_state(self) -> ServiceState:
-        state: ServiceState
-        try:
-            response: service_pb2.GetServiceStateReply = await self.state_stub.getServiceState(
-                service_pb2.GetServiceStateRequest()
-            )
-            state = ServiceState(response.state)
-        except grpc.RpcError:
-            state = ServiceState()
-        self.logger.debug("CanbusServiceStub: port -> %i state is: %s", self.config.port, state.name)
-        return state
 
     def stream(self):
         """Return the async streaming object."""

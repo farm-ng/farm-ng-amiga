@@ -14,17 +14,13 @@
 import asyncio
 import logging
 import time
-from dataclasses import dataclass
 
-import grpc
 from farm_ng.oak import oak_pb2
 from farm_ng.oak import oak_pb2_grpc
-from farm_ng.service import service_pb2
-from farm_ng.service import service_pb2_grpc
-from farm_ng.service.service import ServiceState
+from farm_ng.service.service_client import ClientConfig
+from farm_ng.service.service_client import ServiceClient
 
-
-__all__ = ["OakCameraClientConfig", "OakCameraClient"]
+__all__ = ["OakCameraClient"]
 
 logging.basicConfig(level=logging.INFO)
 
@@ -65,48 +61,26 @@ class RateLimiter:
         return self.period - (time.monotonic() - self.last_call)
 
 
-@dataclass
-class OakCameraClientConfig:
-    """Camera client configuration.
-
-    Attributes:
-        port (int): the port to connect to the server.
-        address (str): the address to connect to the server.
-    """
-
-    port: int  # the port of the server address
-    address: str = "localhost"  # the address name of the server
-
-
-class OakCameraClient:
+class OakCameraClient(ServiceClient):
     """Oak-D camera client.
 
     Client class to connect with the Amiga brain camera services.
-    Internally implements an `asyncio` gRPC channel.
+    Inherits from ServiceClient.
 
     Args:
-        config (OakCameraClientConfig): the camera configuration data structure.
+        config (ClientConfig): the grpc configuration data structure.
     """
 
-    def __init__(self, config: OakCameraClientConfig) -> None:
-        self.config = config
-
-        self.logger = logging.getLogger(self.__class__.__name__)
+    def __init__(self, config: ClientConfig) -> None:
+        super().__init__(config)
 
         # create an async connection with the server
-        self.channel = grpc.aio.insecure_channel(self.server_address)
         self.stub = oak_pb2_grpc.OakServiceStub(self.channel)
-        self.state_stub = service_pb2_grpc.ServiceStub(self.channel)
 
         self._mono_camera_settings = oak_pb2.CameraSettings(auto_exposure=True)
         self._rgb_camera_settings = oak_pb2.CameraSettings(auto_exposure=True)
 
         self.needs_update = False
-
-    @property
-    def server_address(self) -> str:
-        """Returns the composed address and port."""
-        return f"{self.config.address}:{self.config.port}"
 
     @property
     def rgb_settings(self) -> str:
@@ -120,21 +94,6 @@ class OakCameraClient:
         if reply.success:
             self._mono_camera_settings.CopyFrom(reply.stereo_settings)
             self._rgb_camera_settings.CopyFrom(reply.rgb_settings)
-
-    # TODO: Defined by ServiceMonitorClient
-    async def get_state(self) -> ServiceState:
-
-        """Async call to retrieve the state of the connected service."""
-        state: ServiceState
-        try:
-            response: service_pb2.GetServiceStateReply = await self.state_stub.getServiceState(
-                service_pb2.GetServiceStateRequest()
-            )
-            state = ServiceState(response.state)
-        except grpc.RpcError:
-            state = ServiceState()
-        self.logger.debug("OakServiceStub: port -> %i state is: %s", self.config.port, state.name)
-        return state
 
     async def send_settings(self) -> oak_pb2.CameraControlReply:
         request = oak_pb2.CameraControlRequest()
