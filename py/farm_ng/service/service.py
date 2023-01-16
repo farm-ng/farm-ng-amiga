@@ -19,7 +19,6 @@ class ServiceState:
 
     Possible state values:
         - UNKNOWN: undefined state.
-        - STOPPED: the service is stopped
         - RUNNING: the service is up AND streaming.
         - IDLE: the service is up AND NOT streaming.
         - UNAVAILABLE: the service is not available.

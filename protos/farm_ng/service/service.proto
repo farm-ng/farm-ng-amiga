@@ -25,16 +25,14 @@ enum ReplyStatus {
 enum ServiceState {
   // Service state is not known
   UNKNOWN = 0;
-  // Stopped
-  STOPPED = 1;
   // Running, and actively serving data
-  RUNNING = 2;
+  RUNNING = 1;
   // Idle, waiting for clients
-  IDLE = 3;
+  IDLE = 2;
   // Service isn't running at all
-  UNAVAILABLE = 4;
+  UNAVAILABLE = 3;
   // Service is in some error state
-  ERROR = 5;
+  ERROR = 4;
 }
 
 message GetServiceStateRequest {

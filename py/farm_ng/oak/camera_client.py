@@ -92,7 +92,7 @@ class OakCameraClient:
 
         self.logger = logging.getLogger(self.__class__.__name__)
 
-        # create a async connection with the server
+        # create an async connection with the server
         self.channel = grpc.aio.insecure_channel(self.server_address)
         self.stub = oak_pb2_grpc.OakServiceStub(self.channel)
 
