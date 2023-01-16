@@ -20,6 +20,7 @@ import grpc
 from farm_ng.oak import oak_pb2
 from farm_ng.oak import oak_pb2_grpc
 from farm_ng.service import service_pb2
+from farm_ng.service import service_pb2_grpc
 from farm_ng.service.service import ServiceState
 
 
@@ -95,6 +96,7 @@ class OakCameraClient:
         # create an async connection with the server
         self.channel = grpc.aio.insecure_channel(self.server_address)
         self.stub = oak_pb2_grpc.OakServiceStub(self.channel)
+        self.state_stub = service_pb2_grpc.ServiceStub(self.channel)
 
         self._mono_camera_settings = oak_pb2.CameraSettings(auto_exposure=True)
         self._rgb_camera_settings = oak_pb2.CameraSettings(auto_exposure=True)
@@ -115,15 +117,17 @@ class OakCameraClient:
         return self._mono_camera_settings
 
     def settings_reply(self, reply) -> None:
-        if reply.status == service_pb2.ReplyStatus.OK:
+        if reply.success:
             self._mono_camera_settings.CopyFrom(reply.stereo_settings)
             self._rgb_camera_settings.CopyFrom(reply.rgb_settings)
 
+    # TODO: Defined by ServiceMonitorClient
     async def get_state(self) -> ServiceState:
+
         """Async call to retrieve the state of the connected service."""
         state: ServiceState
         try:
-            response: service_pb2.GetServiceStateReply = await self.stub.getServiceState(
+            response: service_pb2.GetServiceStateReply = await self.state_stub.getServiceState(
                 service_pb2.GetServiceStateRequest()
             )
             state = ServiceState(response.state)

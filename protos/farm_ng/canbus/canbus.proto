@@ -14,8 +14,6 @@
 
 syntax = "proto3";
 
-import "farm_ng/service/service.proto";
-
 package farm_ng.canbus.proto;
 
 service CanbusService {
@@ -23,8 +21,6 @@ service CanbusService {
       returns (stream StreamCanbusReply) {}
   rpc sendCanbusMessage(stream SendCanbusMessageRequest)
       returns (SendCanbusMessageReply) {}
-  rpc getServiceState(farm_ng.service.proto.GetServiceStateRequest)
-      returns (farm_ng.service.proto.GetServiceStateReply) {}
 }
 
 message StreamCanbusRequest {

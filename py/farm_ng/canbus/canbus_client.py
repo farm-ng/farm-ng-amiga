@@ -18,6 +18,7 @@ import grpc
 from farm_ng.canbus import canbus_pb2
 from farm_ng.canbus import canbus_pb2_grpc
 from farm_ng.service import service_pb2
+from farm_ng.service import service_pb2_grpc
 from farm_ng.service.service import ServiceState
 
 logging.basicConfig(level=logging.INFO)
@@ -45,16 +46,18 @@ class CanbusClient:
         # create a async connection with the server
         self.channel = grpc.aio.insecure_channel(self.server_address)
         self.stub = canbus_pb2_grpc.CanbusServiceStub(self.channel)
+        self.state_stub = service_pb2_grpc.ServiceStub(self.channel)
 
     @property
     def server_address(self) -> str:
         """Returns the composed address and port."""
         return f"{self.config.address}:{self.config.port}"
 
+    # TODO: Defined by ServiceMonitorClient
     async def get_state(self) -> ServiceState:
         state: ServiceState
         try:
-            response: service_pb2.GetServiceStateReply = await self.stub.getServiceState(
+            response: service_pb2.GetServiceStateReply = await self.state_stub.getServiceState(
                 service_pb2.GetServiceStateRequest()
             )
             state = ServiceState(response.state)

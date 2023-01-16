@@ -18,6 +18,10 @@ import "farm_ng/core/timestamp.proto";
 
 package farm_ng.service.proto;
 
+service Service {
+  rpc getServiceState(GetServiceStateRequest) returns (GetServiceStateReply) {}
+}
+
 // TODO: Just use a bool where this is used?
 enum ReplyStatus {
   OK = 0;

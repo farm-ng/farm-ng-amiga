@@ -22,8 +22,6 @@ service OakService {
   rpc cameraControl(CameraControlRequest) returns (CameraControlReply) {}
   rpc streamFrames(StreamFramesRequest) returns (stream StreamFramesReply) {}
   rpc getCalibration(GetCalibrationRequest) returns (GetCalibrationReply) {}
-  rpc getServiceState(farm_ng.service.proto.GetServiceStateRequest)
-      returns (farm_ng.service.proto.GetServiceStateReply) {}
 }
 
 message GetCalibrationRequest {
