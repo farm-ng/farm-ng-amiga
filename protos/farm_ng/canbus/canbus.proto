@@ -20,7 +20,7 @@ service CanbusService {
   rpc streamCanbusMessages(StreamCanbusRequest)
       returns (stream StreamCanbusReply) {}
   rpc sendCanbusMessage(stream SendCanbusMessageRequest)
-      returns (SendCanbusMessageReply) {}
+      returns (stream SendCanbusMessageReply) {}
 }
 
 message StreamCanbusRequest {
