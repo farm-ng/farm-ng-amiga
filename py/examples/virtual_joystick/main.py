@@ -14,7 +14,6 @@
 import argparse
 import asyncio
 import io
-import logging
 import os
 from math import sqrt
 from typing import Generator
@@ -25,14 +24,15 @@ from typing import Tuple
 import grpc
 from farm_ng.canbus import canbus_pb2
 from farm_ng.canbus.canbus_client import CanbusClient
-from farm_ng.canbus.canbus_client import CanbusClientConfig
 from farm_ng.canbus.packet import AmigaControlState
 from farm_ng.canbus.packet import AmigaTpdo1
 from farm_ng.canbus.packet import make_amiga_rpdo1_proto
 from farm_ng.canbus.packet import parse_amiga_tpdo1_proto
 from farm_ng.oak import oak_pb2
 from farm_ng.oak.camera_client import OakCameraClient
-from farm_ng.oak.camera_client import OakCameraClientConfig
+from farm_ng.service import service_pb2
+from farm_ng.service.service_client import ClientConfig
+
 
 # Must come before kivy imports
 os.environ["KIVY_NO_ARGS"] = "1"
@@ -257,21 +257,19 @@ class VirtualJoystickApp(App):
                 task.cancel()
 
         # configure the camera client
-        camera_config: OakCameraClientConfig = OakCameraClientConfig(address=self.address, port=self.camera_port)
+        camera_config: ClientConfig = ClientConfig(address=self.address, port=self.camera_port)
         camera_client: OakCameraClient = OakCameraClient(camera_config)
 
         # configure the canbus client
-        canbus_config: CanbusClientConfig = CanbusClientConfig(address=self.address, port=self.canbus_port)
+        canbus_config: ClientConfig = ClientConfig(address=self.address, port=self.canbus_port)
         canbus_client: CanbusClient = CanbusClient(canbus_config)
 
         # Camera task(s)
         self.async_tasks.append(asyncio.ensure_future(self.stream_camera(camera_client)))
-        self.async_tasks.append(asyncio.ensure_future(camera_client.poll_service_state()))
 
         # Canbus task(s)
         self.async_tasks.append(asyncio.ensure_future(self.stream_canbus(canbus_client)))
-        self.async_tasks.append(asyncio.ensure_future(self.send_can_msgs(canbus_client)))
-        self.async_tasks.append(asyncio.ensure_future(canbus_client.poll_service_state()))
+        canbus_client.stub.sendCanbusMessage(self.pose_generator())
 
         # Drawing task(s)
         self.async_tasks.append(asyncio.ensure_future(self.draw()))
@@ -291,21 +289,36 @@ class VirtualJoystickApp(App):
         response_stream: Optional[Generator[canbus_pb2.StreamCanbusReply]] = None
 
         while True:
-            while client.state.value != canbus_pb2.CanbusServiceState.RUNNING:
-                await client.connect_to_service()
+            # check the state of the service
+            state = await client.get_state()
 
-            if response_stream is None:
-                response_stream = client.stub.streamCanbusMessages(canbus_pb2.StreamCanbusRequest())
+            if state.value not in [service_pb2.ServiceState.IDLE, service_pb2.ServiceState.RUNNING]:
+                if response_stream is not None:
+                    response_stream.cancel()
+                    response_stream = None
 
-            response: canbus_pb2.StreamCanbusReply = await response_stream.read()
-            if response == grpc.aio.EOF:
-                # Checks for end of stream
-                break
-            if response and response.status == canbus_pb2.ReplyStatus.OK:
-                for proto in response.messages.messages:
-                    amiga_tpdo1: Optional[AmigaTpdo1] = parse_amiga_tpdo1_proto(proto)
-                    if amiga_tpdo1:
-                        self.amiga_tpdo1 = amiga_tpdo1
+                print("Canbus service is not streaming or ready to stream")
+                await asyncio.sleep(0.1)
+                continue
+
+            if response_stream is None and state.value != service_pb2.ServiceState.UNAVAILABLE:
+                # get the streaming object
+                response_stream = client.stream()
+
+            try:
+                # try/except so app doesn't crash on killed service
+                response: canbus_pb2.StreamCanbusReply = await response_stream.read()
+                assert response and response != grpc.aio.EOF, "End of stream"
+            except Exception as e:
+                print(e)
+                response_stream.cancel()
+                response_stream = None
+                continue
+
+            for proto in response.messages.messages:
+                amiga_tpdo1: Optional[AmigaTpdo1] = parse_amiga_tpdo1_proto(proto)
+                if amiga_tpdo1:
+                    self.amiga_tpdo1 = amiga_tpdo1
 
     async def stream_camera(self, client: OakCameraClient) -> None:
         """This task listens to the camera client's stream and populates the tabbed panel with all 4 image streams
@@ -313,39 +326,45 @@ class VirtualJoystickApp(App):
         while self.root is None:
             await asyncio.sleep(0.01)
 
-        response_stream: Optional[Generator[oak_pb2.StreamFramesReply]] = None
+        response_stream = None
 
         while True:
-            while client.state.value != oak_pb2.OakServiceState.RUNNING:
-                # start the streaming service
-                await client.connect_to_service()
+            # check the state of the service
+            state = await client.get_state()
 
+            if state.value not in [service_pb2.ServiceState.IDLE, service_pb2.ServiceState.RUNNING]:
+                # Cancel existing stream, if it exists
+                if response_stream is not None:
+                    response_stream.cancel()
+                    response_stream = None
+                print("Camera service is not streaming or ready to stream")
+                await asyncio.sleep(0.1)
+                continue
+
+            # Create the stream
             if response_stream is None:
-                # get the streaming object
-                response_stream = client.stream_frames(every_n=self.stream_every_n)
+                response_stream = client.stream_frames(every_n=1)
 
-            response: oak_pb2.StreamFramesReply = await response_stream.read()
-            if response and response.status == oak_pb2.ReplyStatus.OK:
-                # get the sync frame
-                frame: oak_pb2.OakSyncFrame = response.frame
+            try:
+                # try/except so app doesn't crash on killed service
+                response: oak_pb2.StreamFramesReply = await response_stream.read()
+                assert response and response != grpc.aio.EOF, "End of stream"
+            except Exception as e:
+                print(e)
+                response_stream.cancel()
+                response_stream = None
+                continue
 
-                # get image and show
-                for view_name in ["rgb", "disparity", "left", "right"]:
+            # get the sync frame
+            frame: oak_pb2.OakSyncFrame = response.frame
+
+            # get image and show
+            for view_name in ["rgb", "disparity", "left", "right"]:
+                # Skip if view_name was not included in frame
+                if hasattr(frame, view_name):
                     self.root.ids[view_name].texture = CoreImage(
                         io.BytesIO(getattr(frame, view_name).image_data), ext="jpg"
                     ).texture
-
-    async def send_can_msgs(self, client: CanbusClient) -> None:
-        """This task ensures the canbus client sendCanbusMessage method has the pose_generator it will use to send
-        messages on the can bus."""
-        while self.root is None:
-            await asyncio.sleep(0.01)
-
-        while True:
-            if client.state.value != canbus_pb2.CanbusServiceState.RUNNING:
-                logging.debug("Controller requires running canbus service")
-                client.stub.sendCanbusMessage(self.pose_generator())
-            await asyncio.sleep(0.25)
 
     async def pose_generator(self, period: float = 0.02):
         """The pose generator yields an AmigaRpdo1 (auto control command) for the canbus client to send on the bus

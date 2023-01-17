@@ -86,6 +86,8 @@ class CameraApp(App):
         return await asyncio.gather(run_wrapper(), *self.tasks)
 
     async def stream_camera(self, client: OakCameraClient) -> None:
+        """This task listens to the camera client's stream and populates the tabbed panel with all 4 image streams
+        from the oak camera."""
         while self.root is None:
             await asyncio.sleep(0.01)
 
@@ -112,7 +114,8 @@ class CameraApp(App):
                 # try/except so app doesn't crash on killed service
                 response: oak_pb2.StreamFramesReply = await response_stream.read()
                 assert response and response != grpc.aio.EOF, "End of stream"
-            except Exception:
+            except Exception as e:
+                print(e)
                 response_stream.cancel()
                 response_stream = None
                 continue
@@ -123,11 +126,10 @@ class CameraApp(App):
             # get image and show
             for view_name in ["rgb", "disparity", "left", "right"]:
                 # Skip if view_name was not included in frame
-                if not hasattr(frame, view_name):
-                    continue
-                self.root.ids[view_name].texture = CoreImage(
-                    io.BytesIO(getattr(frame, view_name).image_data), ext="jpg"
-                ).texture
+                if hasattr(frame, view_name):
+                    self.root.ids[view_name].texture = CoreImage(
+                        io.BytesIO(getattr(frame, view_name).image_data), ext="jpg"
+                    ).texture
 
 
 if __name__ == "__main__":
