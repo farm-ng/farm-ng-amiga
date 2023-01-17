@@ -126,10 +126,12 @@ class CameraApp(App):
             # get image and show
             for view_name in ["rgb", "disparity", "left", "right"]:
                 # Skip if view_name was not included in frame
-                if hasattr(frame, view_name):
+                try:
                     self.root.ids[view_name].texture = CoreImage(
                         io.BytesIO(getattr(frame, view_name).image_data), ext="jpg"
                     ).texture
+                except Exception as e:
+                    print(e)
 
 
 if __name__ == "__main__":
