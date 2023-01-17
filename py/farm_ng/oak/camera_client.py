@@ -102,6 +102,14 @@ class OakCameraClient(ServiceClient):
         self.needs_update = False
         return await self.stub.cameraControl(request)
 
+    async def get_calibration(self) -> oak_pb2.GetCalibrationReply:
+        """Return the oak calibration as oak_pb2.GetCalibrationReply.
+
+        Args:
+            request: proto defined request for oak calibration (oak_pb2.GetCalibrationRequest)
+        """
+        return await self.stub.getCalibration(oak_pb2.GetCalibrationRequest())
+
     @RateLimiter(period=1)
     def update_rgb_settings(self, rgb_settings):
         self.needs_update = True

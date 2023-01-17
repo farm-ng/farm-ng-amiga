@@ -25,7 +25,6 @@ service OakService {
 }
 
 message GetCalibrationRequest {
-  string message = 1;
 }
 
 message GetCalibrationReply {
