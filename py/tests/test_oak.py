@@ -37,4 +37,4 @@ class TestOakClient:
     async def test_state(self, config: ClientConfig) -> None:
         client = OakCameraClient(config)
         state: ServiceState = await client.get_state()
-        assert state.value == service_pb2.OakServiceState.UNAVAILABLE
+        assert state.value == service_pb2.ServiceState.UNAVAILABLE
