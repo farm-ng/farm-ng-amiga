@@ -49,19 +49,18 @@ async def main(address: str, port: int, stream_every_n: int) -> None:
             print(f"Timestamp: {frame.rgb.meta.timestamp}")
             print("#################################\n")
 
-            # Check that rgb frame is in OakSyncFrame response
-            # NOTE: explore frame.[rgb, disparity, left, right]
-            if not hasattr(frame, 'rgb'):
-                continue
+            try:
+                # cast image data bytes to numpy and decode
+                # NOTE: explore frame.[rgb, disparity, left, right]
+                image = np.frombuffer(frame.rgb.image_data, dtype="uint8")
+                image = cv2.imdecode(image, cv2.IMREAD_UNCHANGED)
 
-            # cast image data bytes to numpy and decode
-            image = np.frombuffer(frame.rgb.image_data, dtype="uint8")
-            image = cv2.imdecode(image, cv2.IMREAD_UNCHANGED)
-
-            # visualize the image
-            cv2.namedWindow("image", cv2.WINDOW_NORMAL)
-            cv2.imshow("image", image)
-            cv2.waitKey(1)
+                # visualize the image
+                cv2.namedWindow("image", cv2.WINDOW_NORMAL)
+                cv2.imshow("image", image)
+                cv2.waitKey(1)
+            except Exception as e:
+                print(e)
 
 
 if __name__ == "__main__":
