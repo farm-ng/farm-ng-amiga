@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-from typing import List
 
 from farm_ng.canbus import canbus_pb2
 from farm_ng.canbus import canbus_pb2_grpc
@@ -40,7 +39,3 @@ class CanbusClient(ServiceClient):
     def stream(self):
         """Return the async streaming object."""
         return self.stub.streamCanbusMessages(canbus_pb2.StreamCanbusRequest())
-
-    def send_can_messages(self, request_iterator: List[canbus_pb2.SendCanbusMessageRequest]):
-        """Passes the request_iterator to the canbus service to format and send can messages to the Amiga."""
-        return self.stub.sendCanbusMessage(request_iterator)
