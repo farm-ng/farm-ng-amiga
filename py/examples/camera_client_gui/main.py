@@ -13,7 +13,6 @@
 # limitations under the License.
 import argparse
 import asyncio
-import io
 import os
 from typing import List
 
@@ -22,6 +21,7 @@ from farm_ng.oak import oak_pb2
 from farm_ng.oak.camera_client import OakCameraClient
 from farm_ng.service import service_pb2
 from farm_ng.service.service_client import ClientConfig
+from turbojpeg import TurboJPEG
 
 os.environ["KIVY_NO_ARGS"] = "1"
 
@@ -32,7 +32,7 @@ Config.set("graphics", "fullscreen", "false")
 
 from kivy.app import App  # noqa: E402
 from kivy.lang.builder import Builder  # noqa: E402
-from kivy.core.image import Image as CoreImage  # noqa: E402
+from kivy.graphics.texture import Texture  # noqa: E402
 
 kv = """
 TabbedPanel:
@@ -63,6 +63,7 @@ class CameraApp(App):
         self.port = port
         self.stream_every_n = stream_every_n
 
+        self.image_decoder = TurboJPEG()
         self.tasks: List[asyncio.Task] = []
 
     def build(self):
@@ -127,9 +128,13 @@ class CameraApp(App):
             for view_name in ["rgb", "disparity", "left", "right"]:
                 # Skip if view_name was not included in frame
                 try:
-                    self.root.ids[view_name].texture = CoreImage(
-                        io.BytesIO(getattr(frame, view_name).image_data), ext="jpg"
-                    ).texture
+                    # Decode the image and render it in the correct kivy texture
+                    img = self.image_decoder.decode(getattr(frame, view_name).image_data)
+                    texture = Texture.create(size=(img.shape[1], img.shape[0]), icolorfmt="bgr")
+                    texture.flip_vertical()
+                    texture.blit_buffer(img.tobytes(), colorfmt="bgr", bufferfmt="ubyte", mipmap_generation=False)
+                    self.root.ids[view_name].texture = texture
+
                 except Exception as e:
                     print(e)
 

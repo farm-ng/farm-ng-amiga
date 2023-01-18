@@ -13,7 +13,6 @@
 # limitations under the License.
 import argparse
 import asyncio
-import io
 import os
 from math import sqrt
 from typing import Generator
@@ -32,6 +31,7 @@ from farm_ng.oak import oak_pb2
 from farm_ng.oak.camera_client import OakCameraClient
 from farm_ng.service import service_pb2
 from farm_ng.service.service_client import ClientConfig
+from turbojpeg import TurboJPEG
 
 
 # Must come before kivy imports
@@ -47,12 +47,12 @@ Config.set("input", "mouse", "mouse,disable_on_activity")
 Config.set("kivy", "keyboard_mode", "systemanddock")
 
 from kivy.graphics import Color, Ellipse  # noqa: E402
+from kivy.graphics.texture import Texture  # noqa: E402
 from kivy.input.providers.mouse import MouseMotionEvent  # noqa: E402
 from kivy.properties import StringProperty  # noqa: E402
 from kivy.app import App  # noqa: E402
 from kivy.lang.builder import Builder  # noqa: E402
 from kivy.uix.widget import Widget  # noqa: E402
-from kivy.core.image import Image as CoreImage  # noqa: E402
 from kivy.core.window import Window  # noqa: E402
 
 kv = """
@@ -163,9 +163,9 @@ class VirtualJoystickWidget(Widget):
 
 class VirtualJoystickApp(App):
     # For kivy labels
-    amiga_speed = StringProperty()
-    amiga_rate = StringProperty()
-    amiga_state = StringProperty()
+    amiga_speed = StringProperty("???")
+    amiga_rate = StringProperty("???")
+    amiga_state = StringProperty("NO CANBUS\nSERVICE DETECTED")
 
     def __init__(self, address: str, camera_port: int, canbus_port: int, stream_every_n: int) -> None:
         super().__init__()
@@ -176,13 +176,12 @@ class VirtualJoystickApp(App):
 
         # Received values
         self.amiga_tpdo1: AmigaTpdo1 = AmigaTpdo1()
-        self.amiga_state: str = "NO CANBUS\nSERVICE DETECTED"
-        self.amiga_speed: str = "???"
-        self.amiga_rate: str = "???"
 
         # Parameters
         self.max_speed: float = 1.0
         self.max_angular_rate: float = 1.0
+
+        self.image_decoder = TurboJPEG()
 
         self.async_tasks: List[asyncio.Task] = []
 
@@ -362,9 +361,12 @@ class VirtualJoystickApp(App):
             for view_name in ["rgb", "disparity", "left", "right"]:
                 # Skip if view_name was not included in frame
                 try:
-                    self.root.ids[view_name].texture = CoreImage(
-                        io.BytesIO(getattr(frame, view_name).image_data), ext="jpg"
-                    ).texture
+                    # Decode the image and render it in the correct kivy texture
+                    img = self.image_decoder.decode(getattr(frame, view_name).image_data)
+                    texture = Texture.create(size=(img.shape[1], img.shape[0]), icolorfmt="bgr")
+                    texture.flip_vertical()
+                    texture.blit_buffer(img.tobytes(), colorfmt="bgr", bufferfmt="ubyte", mipmap_generation=False)
+                    self.root.ids[view_name].texture = texture
                 except Exception as e:
                     print(e)
 
