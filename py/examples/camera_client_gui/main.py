@@ -13,13 +13,15 @@
 # limitations under the License.
 import argparse
 import asyncio
-import io
 import os
 from typing import List
 
+import grpc
 from farm_ng.oak import oak_pb2
 from farm_ng.oak.camera_client import OakCameraClient
-from farm_ng.oak.camera_client import OakCameraClientConfig
+from farm_ng.service import service_pb2
+from farm_ng.service.service_client import ClientConfig
+from turbojpeg import TurboJPEG
 
 os.environ["KIVY_NO_ARGS"] = "1"
 
@@ -30,7 +32,7 @@ Config.set("graphics", "fullscreen", "false")
 
 from kivy.app import App  # noqa: E402
 from kivy.lang.builder import Builder  # noqa: E402
-from kivy.core.image import Image as CoreImage  # noqa: E402
+from kivy.graphics.texture import Texture  # noqa: E402
 
 kv = """
 TabbedPanel:
@@ -61,10 +63,8 @@ class CameraApp(App):
         self.port = port
         self.stream_every_n = stream_every_n
 
+        self.image_decoder = TurboJPEG()
         self.tasks: List[asyncio.Task] = []
-
-        self.client: OakCameraClient
-        self.config: OakCameraClientConfig
 
     def build(self):
         return Builder.load_string(kv)
@@ -78,44 +78,65 @@ class CameraApp(App):
                 task.cancel()
 
         # configure the camera client
-        self.config = OakCameraClientConfig(address=self.address, port=self.port)
-        self.client = OakCameraClient(self.config)
+        config = ClientConfig(address=self.address, port=self.port)
+        client = OakCameraClient(config)
 
         # Stream camera frames
-        self.tasks.append(asyncio.ensure_future(self.stream_camera(self.client)))
-        # Continuously monitor camera service state
-        self.tasks.append(asyncio.ensure_future(self.client.poll_service_state()))
+        self.tasks.append(asyncio.ensure_future(self.stream_camera(client)))
 
         return await asyncio.gather(run_wrapper(), *self.tasks)
 
     async def stream_camera(self, client: OakCameraClient) -> None:
+        """This task listens to the camera client's stream and populates the tabbed panel with all 4 image streams
+        from the oak camera."""
         while self.root is None:
             await asyncio.sleep(0.01)
 
         response_stream = None
 
         while True:
-            if client.state.value != oak_pb2.OakServiceState.RUNNING:
-                # start the streaming service
-                await client.connect_to_service()
-                await asyncio.sleep(0.01)
-                continue
-            elif response_stream is None:
-                # get the streaming object
-                response_stream = client.stream_frames(every_n=self.stream_every_n)
-                await asyncio.sleep(0.01)
+            # check the state of the service
+            state = await client.get_state()
+
+            if state.value not in [service_pb2.ServiceState.IDLE, service_pb2.ServiceState.RUNNING]:
+                # Cancel existing stream, if it exists
+                if response_stream is not None:
+                    response_stream.cancel()
+                    response_stream = None
+                print("Camera service is not streaming or ready to stream")
+                await asyncio.sleep(0.1)
                 continue
 
-            response: oak_pb2.StreamFramesReply = await response_stream.read()
-            if response and response.status == oak_pb2.ReplyStatus.OK:
-                # get the sync frame
-                frame: oak_pb2.OakSyncFrame = response.frame
+            # Create the stream
+            if response_stream is None:
+                response_stream = client.stream_frames(every_n=1)
 
-                # get image and show
-                for view_name in ["rgb", "disparity", "left", "right"]:
-                    self.root.ids[view_name].texture = CoreImage(
-                        io.BytesIO(getattr(frame, view_name).image_data), ext="jpg"
-                    ).texture
+            try:
+                # try/except so app doesn't crash on killed service
+                response: oak_pb2.StreamFramesReply = await response_stream.read()
+                assert response and response != grpc.aio.EOF, "End of stream"
+            except Exception as e:
+                print(e)
+                response_stream.cancel()
+                response_stream = None
+                continue
+
+            # get the sync frame
+            frame: oak_pb2.OakSyncFrame = response.frame
+
+            # get image and show
+            for view_name in ["rgb", "disparity", "left", "right"]:
+                # Skip if view_name was not included in frame
+                try:
+                    # Decode the image and render it in the correct kivy texture
+                    img = self.image_decoder.decode(getattr(frame, view_name).image_data)
+                    texture = Texture.create(size=(img.shape[1], img.shape[0]), icolorfmt="bgr")
+                    texture.flip_vertical()
+                    texture.blit_buffer(img.tobytes(), colorfmt="bgr", bufferfmt="ubyte", mipmap_generation=False)
+                    self.root.ids[view_name].texture = texture
+
+                except Exception as e:
+                    print(e)
 
 
 if __name__ == "__main__":

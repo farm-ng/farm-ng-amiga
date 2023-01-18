@@ -1,2 +1,3 @@
 kivy
 farm-ng-amiga
+PyTurboJPEG
