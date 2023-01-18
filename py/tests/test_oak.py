@@ -12,29 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import pytest
-from farm_ng.oak import oak_pb2
 from farm_ng.oak.camera_client import OakCameraClient
-from farm_ng.oak.camera_client import OakCameraClientConfig
-from farm_ng.oak.camera_client import OakCameraServiceState
+from farm_ng.service import service_pb2
+from farm_ng.service.service_client import ClientConfig
+from farm_ng.service.service_client import ServiceState
 
 
 @pytest.fixture(name="config")
-def fixture_config() -> OakCameraClientConfig:
-    return OakCameraClientConfig(port=50051)
+def fixture_config() -> ClientConfig:
+    return ClientConfig(port=50051)
 
 
 class TestOakClient:
-    def test_smoke_config(self, config: OakCameraClientConfig) -> None:
+    def test_smoke_config(self, config: ClientConfig) -> None:
         assert config.port == 50051
         assert config.address == "localhost"
 
-    def test_smoke(self, config: OakCameraClientConfig) -> None:
+    def test_smoke(self, config: ClientConfig) -> None:
         client = OakCameraClient(config)
         assert client is not None
         assert client.server_address == "localhost:50051"
 
     @pytest.mark.asyncio
-    async def test_state(self, config: OakCameraClientConfig) -> None:
+    async def test_state(self, config: ClientConfig) -> None:
         client = OakCameraClient(config)
-        state: OakCameraServiceState = await client.get_state()
-        assert state.value == oak_pb2.OakServiceState.UNAVAILABLE
+        state: ServiceState = await client.get_state()
+        assert state.value == service_pb2.ServiceState.UNAVAILABLE

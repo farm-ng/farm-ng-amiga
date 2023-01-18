@@ -12,79 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-
 syntax = "proto3";
+
+import "farm_ng/service/service.proto";
 
 package farm_ng.oak.proto;
 
 service OakService {
   rpc cameraControl(CameraControlRequest) returns (CameraControlReply) {}
   rpc streamFrames(StreamFramesRequest) returns (stream StreamFramesReply) {}
-  rpc getServiceState(GetServiceStateRequest) returns (GetServiceStateResult) {}
-  rpc startService(StartServiceRequest) returns (StartServiceResult) {}
-  rpc stopService(StopServiceRequest) returns (StopServiceResult) {}
-  rpc pauseService(PauseServiceRequest) returns (PauseServiceResult) {}
-  rpc getCalibration(GetCalibrationRequest) returns (GetCalibrationResult) {}
-}
-
-enum ReplyStatus {
-  OK = 0;
-  FAILED = 1;
-}
-
-enum OakServiceState {
-  UNKNOWN = 0;
-  STOPPED = 1;
-  RUNNING = 2;
-  IDLE = 3;
-  UNAVAILABLE = 4;
+  rpc getCalibration(GetCalibrationRequest) returns (GetCalibrationReply) {}
 }
 
 message GetCalibrationRequest {
-  string message = 1;
 }
 
-message GetCalibrationResult {
+message GetCalibrationReply {
   OakCalibration calibration = 1;
-  ReplyStatus status = 2;
-}
-
-message StopServiceRequest {
-  string message = 1;
-}
-
-message StopServiceResult {
-  string message = 1;
-  ReplyStatus status = 2;
-}
-
-message StartServiceRequest {
-  string message = 1;
-}
-
-message StartServiceResult {
-  string message = 1;
-  ReplyStatus status = 2;
-}
-
-message PauseServiceRequest {
-  string message = 1;
-}
-
-message PauseServiceResult {
-  string message = 1;
-  ReplyStatus status = 2;
-}
-
-message GetServiceStateRequest {
-  string message = 1;
-}
-
-message GetServiceStateResult {
-  string state_name = 1;
-  OakServiceState state = 2;
-  ReplyStatus status = 3;
 }
 
 message CameraControlRequest {
@@ -92,11 +36,10 @@ message CameraControlRequest {
   CameraSettings rgb_settings = 2;
 }
 
-
 message CameraControlReply {
-   ReplyStatus status = 1;
-   CameraSettings stereo_settings = 2;
-   CameraSettings rgb_settings = 3;
+  bool success = 1;
+  CameraSettings stereo_settings = 2;
+  CameraSettings rgb_settings = 3;
 }
 
 message StreamFramesRequest {
@@ -104,8 +47,7 @@ message StreamFramesRequest {
 }
 
 message StreamFramesReply {
-  ReplyStatus status = 1;
-  OakSyncFrame frame = 2;
+  OakSyncFrame frame = 1;
 }
 
 message Vec3F32 {
@@ -124,7 +66,7 @@ message CameraSettings {
 message OakImageMeta {
   int64 category = 1; // DepthAI catetory
   int64 instance_num = 2;  //DepthAI instance number
-  int64 sequence_num = 3;   // for synchronization between left, right and stereo
+  int64 sequence_num = 3;  // for synchronization between left, right and stereo
   double timestamp = 4; // seconds, synchronized with host monotonic
   double timestamp_device = 5; // seconds, device monotonic clock
   CameraSettings settings = 6;
@@ -215,7 +157,6 @@ message Extrinsics {
   int32 to_camera_socket = 3;
   Vector3d translation = 4;
 }
-
 
 message CameraData {
   uint32 camera_number = 1;

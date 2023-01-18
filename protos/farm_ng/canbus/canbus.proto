@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-
 syntax = "proto3";
 
 package farm_ng.canbus.proto;
@@ -22,34 +20,14 @@ service CanbusService {
   rpc streamCanbusMessages(StreamCanbusRequest)
       returns (stream StreamCanbusReply) {}
   rpc sendCanbusMessage(stream SendCanbusMessageRequest)
-      returns (SendCanbusMessageReply) {}
-  rpc getServiceState(GetServiceStateRequest) returns (GetServiceStateResult) {}
-  rpc startService(StartServiceRequest) returns (StartServiceResult) {}
-  rpc stopService(StopServiceRequest) returns (StopServiceResult) {}
-  rpc pauseService(PauseServiceRequest) returns (PauseServiceResult) {}
-}
-
-enum ReplyStatus {
-  OK = 0;
-  FAILED = 1;
-}
-
-enum CanbusServiceState {
-  UNKNOWN = 0;
-  STOPPED = 1;
-  RUNNING = 2;
-  IDLE = 3;
-  UNAVAILABLE = 4;
-  ERROR = 5;
+      returns (stream SendCanbusMessageReply) {}
 }
 
 message StreamCanbusRequest {
-  string message = 1;
 }
 
 message StreamCanbusReply {
-  ReplyStatus status = 1;
-  RawCanbusMessages messages = 2;
+  RawCanbusMessages messages = 1;
 }
 
 message SendCanbusMessageRequest {
@@ -57,7 +35,7 @@ message SendCanbusMessageRequest {
 }
 
 message SendCanbusMessageReply {
-  ReplyStatus status = 1;
+  bool success = 1;
 }
 
 message RawCanbusMessage {
@@ -72,41 +50,4 @@ message RawCanbusMessage {
 
 message RawCanbusMessages {
   repeated RawCanbusMessage messages = 1;
-}
-
-message StartServiceRequest {
-  string message = 1;
-}
-
-message StopServiceRequest {
-  string message = 1;
-}
-
-message PauseServiceRequest {
-  string message = 1;
-}
-
-message StartServiceResult {
-  string message = 1;
-  ReplyStatus status = 2;
-}
-
-message StopServiceResult {
-  string message = 1;
-  ReplyStatus status = 2;
-}
-
-message PauseServiceResult {
-  string message = 1;
-  ReplyStatus status = 2;
-}
-
-message GetServiceStateRequest {
-  string message = 1;
-}
-
-message GetServiceStateResult {
-  string state_name = 1;
-  CanbusServiceState state = 2;
-  ReplyStatus status = 3;
 }
