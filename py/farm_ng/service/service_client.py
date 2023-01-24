@@ -84,7 +84,7 @@ class ServiceClient:
 
         # create an async connection with the server
         self.channel = grpc.aio.insecure_channel(self.server_address)
-        self.state_stub = service_pb2_grpc.ServiceStub(self.channel)
+        self.state_stub = service_pb2_grpc.ServiceBaseStub(self.channel)
 
     @property
     def server_address(self) -> str:
