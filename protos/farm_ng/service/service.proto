@@ -18,7 +18,7 @@ import "farm_ng/core/timestamp.proto";
 
 package farm_ng.service.proto;
 
-service Service {
+service ServiceBase {
   rpc getServiceState(GetServiceStateRequest) returns (GetServiceStateReply) {}
 }
 
