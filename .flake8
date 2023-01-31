@@ -4,5 +4,3 @@ ignore =
     W503  # Ignore "Line break occurred before a binary operator"
     E203  # Ignore "whitespace before ':'"
 exclude = .git,__pycache__,node_modules
-per-file-ignores =
-    examples/camera_client_gui/main.py: E402
