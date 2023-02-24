@@ -80,7 +80,7 @@ class PeopleDetector(Component):
 
     @staticmethod
     def register_outputs(outputs: OutputParams) -> None:
-        outputs.declare("detections", list[Detection])
+        outputs.declare("detections", List[Detection])
 
     async def forward(self):
         # get the image
