@@ -1,0 +1,4 @@
+farm-ng-amiga
+opencv-python==4.6.0.66
+numpy==1.23.2
+limbus

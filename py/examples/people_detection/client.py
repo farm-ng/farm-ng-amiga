@@ -13,14 +13,15 @@
 # limitations under the License.
 import argparse
 import asyncio
-from dataclasses import dataclass
-from pathlib import Path
 from typing import List
 
 import cv2
+import grpc
 import numpy as np
 from farm_ng.oak import oak_pb2
 from farm_ng.oak.camera_client import OakCameraClient
+from farm_ng.people_detection import people_detection_pb2
+from farm_ng.people_detection import people_detection_pb2_grpc
 from farm_ng.service.service_client import ClientConfig
 from limbus.core import Component
 from limbus.core import ComponentState
@@ -29,13 +30,20 @@ from limbus.core import OutputParams
 from limbus.core.pipeline import Pipeline
 
 
-@dataclass
-class Detection:
-    x: int
-    y: int
-    w: int
-    h: int
-    confidence: float
+class PeopleDetectorClient:
+    def __init__(self, config: ClientConfig) -> None:
+        self.channel = grpc.aio.insecure_channel(f"{config.address}:{config.port}")
+        self.stub = people_detection_pb2_grpc.PeopleDetectionServiceStub(self.channel)
+
+    async def detect_people(self, image: np.ndarray, score_threshold: float) -> List[people_detection_pb2.Detection]:
+        response = await self.stub.detectPeople(
+            people_detection_pb2.DetectPeopleRequest(
+                config=people_detection_pb2.DetectPeopleConfig(confidence_threshold=score_threshold),
+                image_size=people_detection_pb2.ImageSize(width=image.shape[1], height=image.shape[0]),
+                image_data=image.tobytes(),
+            )
+        )
+        return response.detections
 
 
 class AmigaCamera(Component):
@@ -66,13 +74,31 @@ class AmigaCamera(Component):
         return ComponentState.OK
 
 
-class PeopleDetector(Component):
-    def __init__(self, name: str, models_dir: Path, score_thershold: float) -> None:
+class OpenCvCamera(Component):
+    def __init__(self, name: str) -> None:
         super().__init__(name)
-        self.score_threshold = score_thershold
-        self.model = cv2.dnn.readNetFromTensorflow(
-            str(models_dir / "frozen_inference_graph.pb"), str(models_dir / "ssd_mobilenet_v2_coco_2018_03_29.pbtxt")
-        )
+        # configure the camera client
+        self.grabber = cv2.VideoCapture(0)
+
+    @staticmethod
+    def register_outputs(outputs: OutputParams) -> None:
+        outputs.declare("rgb", np.ndarray)
+
+    async def forward(self):
+        ret, frame = self.grabber.read()
+        if not ret:
+            return ComponentState.STOPPED
+
+        await self.outputs.rgb.send(frame)
+
+        return ComponentState.OK
+
+
+class PeopleDetector(Component):
+    def __init__(self, name: str, config: ClientConfig, confidence_threshold: float) -> None:
+        super().__init__(name)
+        self.confidence_threshold = confidence_threshold
+        self.detector_client = PeopleDetectorClient(config)
 
     @staticmethod
     def register_inputs(inputs: InputParams) -> None:
@@ -80,30 +106,16 @@ class PeopleDetector(Component):
 
     @staticmethod
     def register_outputs(outputs: OutputParams) -> None:
-        outputs.declare("detections", List[Detection])
+        outputs.declare("detections", List[people_detection_pb2.Detection])
 
     async def forward(self):
         # get the image
         image: np.ndarray = await self.inputs.rgb.receive()
         image_height, image_width = image.shape[:2]
 
-        # run the model
-        self.model.setInput(cv2.dnn.blobFromImage(image, size=(300, 300), swapRB=True))
-        output = self.model.forward()
-
-        # postprocess the output
-        detections: List[Detection] = []
-        for detection in output[0, 0, :, :]:
-            class_id = detection[1]
-            if class_id != 1:  # person
-                continue
-            score = float(detection[2])
-            if score > self.score_threshold:
-                left = detection[3] * image_width
-                top = detection[4] * image_height
-                right = detection[5] * image_width
-                bottom = detection[6] * image_height
-                detections.append(Detection(left, top, right - left, bottom - top, score))
+        # send data to the server
+        detections_iter = await self.detector_client.detect_people(image, self.confidence_threshold)
+        detections: List[people_detection_pb2.Detection] = [d for d in detections_iter]
 
         # send the detections
         await self.outputs.detections.send(detections)
@@ -114,7 +126,7 @@ class Visualization(Component):
     @staticmethod
     def register_inputs(inputs: InputParams) -> None:
         inputs.declare("rgb", np.ndarray)
-        inputs.declare("detections", List[Detection])
+        inputs.declare("detections", List[people_detection_pb2.Detection])
 
     async def forward(self):
         image, detections = await asyncio.gather(self.inputs.rgb.receive(), self.inputs.detections.receive())
@@ -122,7 +134,7 @@ class Visualization(Component):
         image_vis = image.copy()
         for det in detections:
             image_vis = cv2.rectangle(
-                image_vis, (int(det.x), int(det.y)), (int(det.x + det.w), int(det.y + det.h)), (0, 255, 0), 2
+                image_vis, (int(det.x), int(det.y)), (int(det.x + det.width), int(det.y + det.height)), (0, 255, 0), 2
             )
 
         cv2.namedWindow("image", cv2.WINDOW_NORMAL)
@@ -130,10 +142,11 @@ class Visualization(Component):
         cv2.waitKey(1)
 
 
-async def main(address: str, port: int, stream_every_n: int, models_dir: Path) -> None:
+async def main(config_camera: ClientConfig, config_detector: ClientConfig) -> None:
 
-    cam = AmigaCamera("amiga-camera", address, port, stream_every_n)
-    detector = PeopleDetector("people-detector", models_dir, score_thershold=0.5)
+    # cam = AmigaCamera("amiga-camera", config_camera, stream_every_n=1)
+    cam = OpenCvCamera("opencv-camera")
+    detector = PeopleDetector("people-detector", config_detector, confidence_threshold=0.5)
     viz = Visualization("visualization")
 
     cam.outputs.rgb >> detector.inputs.rgb
@@ -148,13 +161,18 @@ async def main(address: str, port: int, stream_every_n: int, models_dir: Path) -
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="amiga-people-detector")
-    parser.add_argument("--port", type=int, required=True, help="The camera port.")
-    parser.add_argument("--address", type=str, default="localhost", help="The camera address")
+    parser.add_argument("--port-camera", type=int, required=True, help="The camera port.")
+    parser.add_argument("--address-camera", type=str, default="localhost", help="The camera address")
+    parser.add_argument("--port-detector", type=int, required=True, help="The camera port.")
+    parser.add_argument("--address-detector", type=str, default="localhost", help="The camera address")
     parser.add_argument("--stream-every-n", type=int, default=1, help="Streaming frequency")
-    parser.add_argument("--models-dir", type=str, required=True, help="The path to the models directory")
     args = parser.parse_args()
 
-    models_path = Path(args.models_dir).absolute()
-    assert models_path.exists(), f"Models directory {models_path} does not exist."
+    # create the config for the clients
+    config_camera = ClientConfig(port=args.port_camera, address=args.address_camera)
+    config_camera.stream_every_n = args.stream_every_n
 
-    asyncio.run(main(args.address, args.port, args.stream_every_n, models_path))
+    config_detector = ClientConfig(port=args.port_detector, address=args.address_detector)
+
+    # run the main
+    asyncio.run(main(config_camera, config_detector))
