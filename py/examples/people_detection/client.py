@@ -43,7 +43,7 @@ class PeopleDetectorClient:
                 image_data=image.tobytes(),
             )
         )
-        return response.detections
+        return [d for d in response.detections]
 
 
 class AmigaCamera(Component):
@@ -114,8 +114,9 @@ class PeopleDetector(Component):
         image_height, image_width = image.shape[:2]
 
         # send data to the server
-        detections_iter = await self.detector_client.detect_people(image, self.confidence_threshold)
-        detections: List[people_detection_pb2.Detection] = [d for d in detections_iter]
+        detections: List[people_detection_pb2.Detection] = await self.detector_client.detect_people(
+            image, self.confidence_threshold
+        )
 
         # send the detections
         await self.outputs.detections.send(detections)
