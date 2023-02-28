@@ -29,8 +29,12 @@ class PeopleDetectorClient:
         response = await self.stub.detectPeople(
             people_detection_pb2.DetectPeopleRequest(
                 config=people_detection_pb2.DetectPeopleConfig(confidence_threshold=score_threshold),
-                image_size=people_detection_pb2.ImageSize(width=image.shape[1], height=image.shape[0]),
-                image_data=image.tobytes(),
+                image=people_detection_pb2.Image(
+                    data=image.tobytes(),
+                    size=people_detection_pb2.ImageSize(width=image.shape[1], height=image.shape[0]),
+                    num_channels=image.shape[2],
+                    dtype="uint8",
+                ),
             )
         )
         return list(response.detections)

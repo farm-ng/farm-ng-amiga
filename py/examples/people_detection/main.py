@@ -48,7 +48,7 @@ class AmigaCamera(Component):
         image = cv2.imdecode(image, cv2.IMREAD_UNCHANGED)
         return image
 
-    async def forward(self):
+    async def forward(self) -> ComponentState:
         response = await self.stream.read()
         frame: oak_pb2.OakSyncFrame = response.frame
 
@@ -67,7 +67,7 @@ class OpenCvCamera(Component):
     def register_outputs(outputs: OutputParams) -> None:
         outputs.declare("rgb", np.ndarray)
 
-    async def forward(self):
+    async def forward(self) -> ComponentState:
         ret, frame = self.grabber.read()
         if not ret:
             return ComponentState.STOPPED
@@ -91,7 +91,7 @@ class PeopleDetector(Component):
     def register_outputs(outputs: OutputParams) -> None:
         outputs.declare("detections", List[people_detection_pb2.Detection])
 
-    async def forward(self):
+    async def forward(self) -> ComponentState:
         # get the image
         image: np.ndarray = await self.inputs.rgb.receive()
 
@@ -111,7 +111,7 @@ class Visualization(Component):
         inputs.declare("rgb", np.ndarray)
         inputs.declare("detections", List[people_detection_pb2.Detection])
 
-    async def forward(self):
+    async def forward(self) -> ComponentState:
         image, detections = await asyncio.gather(self.inputs.rgb.receive(), self.inputs.detections.receive())
 
         image_vis = image.copy()

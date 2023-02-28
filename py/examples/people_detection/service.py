@@ -39,8 +39,8 @@ class PeopleDetectionService(people_detection_pb2_grpc.PeopleDetectionServiceSer
         self, request: people_detection_pb2.DetectPeopleRequest, context: grpc.aio.ServicerContext
     ) -> people_detection_pb2.DetectPeopleReply:
         # decode the image
-        image: np.ndarray = np.frombuffer(request.image_data, dtype="uint8")
-        image = np.reshape(image, (request.image_size.height, request.image_size.width, 3))
+        image: np.ndarray = np.frombuffer(request.image.data, dtype=request.image.dtype)
+        image = np.reshape(image, (request.image.size.height, request.image.size.width, request.image.num_channels))
 
         logger.debug("Detecting people in image of size %s", image.shape)
 
@@ -59,10 +59,10 @@ class PeopleDetectionService(people_detection_pb2_grpc.PeopleDetectionServiceSer
                 continue
             confidence: float = detections[0, 0, i, 2]
             if confidence > request.config.confidence_threshold:
-                x = int(detections[0, 0, i, 3] * request.image_size.width)
-                y = int(detections[0, 0, i, 4] * request.image_size.height)
-                w = int(detections[0, 0, i, 5] * request.image_size.width) - x
-                h = int(detections[0, 0, i, 6] * request.image_size.height) - y
+                x = int(detections[0, 0, i, 3] * request.image.size.width)
+                y = int(detections[0, 0, i, 4] * request.image.size.height)
+                w = int(detections[0, 0, i, 5] * request.image.size.width) - x
+                h = int(detections[0, 0, i, 6] * request.image.size.height) - y
                 response.detections.append(
                     people_detection_pb2.Detection(x=x, y=y, width=w, height=h, confidence=confidence)
                 )
