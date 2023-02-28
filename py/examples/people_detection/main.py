@@ -30,18 +30,17 @@ from limbus.core.pipeline import Pipeline
 
 
 class AmigaCamera(Component):
-    def __init__(self, name: str, address: str, port: int, stream_every_n: int) -> None:
+    def __init__(self, name: str, config: ClientConfig, stream_every_n: int) -> None:
         super().__init__(name)
         # configure the camera client
-        self.config = ClientConfig(address=address, port=port)
-        self.client = OakCameraClient(self.config)
+        self.client = OakCameraClient(config)
 
         # create a stream
         self.stream = self.client.stream_frames(every_n=stream_every_n)
 
     @staticmethod
     def register_outputs(outputs: OutputParams) -> None:
-        outputs.declare("rgb", np.ndarray)
+        outputs.declare("image", np.ndarray)
 
     def _decode_image(self, image_data: bytes) -> np.ndarray:
         image: np.ndarray = np.frombuffer(image_data, dtype="uint8")
@@ -52,7 +51,7 @@ class AmigaCamera(Component):
         response = await self.stream.read()
         frame: oak_pb2.OakSyncFrame = response.frame
 
-        await self.outputs.rgb.send(self._decode_image(frame.rgb.image_data))
+        await self.outputs.image.send(self._decode_image(frame.left.image_data))
 
         return ComponentState.OK
 
@@ -85,7 +84,7 @@ class PeopleDetector(Component):
 
     @staticmethod
     def register_inputs(inputs: InputParams) -> None:
-        inputs.declare("rgb", np.ndarray)
+        inputs.declare("image", np.ndarray)
 
     @staticmethod
     def register_outputs(outputs: OutputParams) -> None:
@@ -93,7 +92,7 @@ class PeopleDetector(Component):
 
     async def forward(self) -> ComponentState:
         # get the image
-        image: np.ndarray = await self.inputs.rgb.receive()
+        image: np.ndarray = await self.inputs.image.receive()
 
         # send data to the server
         detections: List[people_detection_pb2.Detection] = await self.detector_client.detect_people(
@@ -108,11 +107,11 @@ class PeopleDetector(Component):
 class Visualization(Component):
     @staticmethod
     def register_inputs(inputs: InputParams) -> None:
-        inputs.declare("rgb", np.ndarray)
+        inputs.declare("image", np.ndarray)
         inputs.declare("detections", List[people_detection_pb2.Detection])
 
     async def forward(self) -> ComponentState:
-        image, detections = await asyncio.gather(self.inputs.rgb.receive(), self.inputs.detections.receive())
+        image, detections = await asyncio.gather(self.inputs.image.receive(), self.inputs.detections.receive())
 
         image_vis = image.copy()
         for det in detections:
@@ -127,13 +126,14 @@ class Visualization(Component):
 
 async def main(config_camera: ClientConfig, config_detector: ClientConfig) -> None:
 
-    # cam = AmigaCamera("amiga-camera", config_camera, stream_every_n=1)
-    cam = OpenCvCamera("opencv-camera")
+    cam = AmigaCamera("amiga-camera", config_camera, stream_every_n=config_camera.stream_every_n)
+    # NOTE: use the OpenCvCamera if you want to use a webcam
+    # cam = OpenCvCamera("opencv-camera")
     detector = PeopleDetector("people-detector", config_detector, confidence_threshold=0.5)
     viz = Visualization("visualization")
 
-    cam.outputs.rgb >> detector.inputs.rgb
-    cam.outputs.rgb >> viz.inputs.rgb
+    cam.outputs.image >> detector.inputs.image
+    cam.outputs.image >> viz.inputs.image
     detector.outputs.detections >> viz.inputs.detections
 
     pipeline = Pipeline()
@@ -148,7 +148,7 @@ if __name__ == "__main__":
     parser.add_argument("--address-camera", type=str, default="localhost", help="The camera address")
     parser.add_argument("--port-detector", type=int, required=True, help="The camera port.")
     parser.add_argument("--address-detector", type=str, default="localhost", help="The camera address")
-    parser.add_argument("--stream-every-n", type=int, default=1, help="Streaming frequency")
+    parser.add_argument("--stream-every-n", type=int, default=5, help="Streaming frequency")
     args = parser.parse_args()
 
     # create the config for the clients
