@@ -42,13 +42,13 @@ class PeopleDetectionService(people_detection_pb2_grpc.PeopleDetectionServiceSer
         image: np.ndarray = np.frombuffer(request.image_data, dtype="uint8")
         image = np.reshape(image, (request.image_size.height, request.image_size.width, 3))
 
-        logger.info("Detecting people in image of size %s", image.shape)
+        logger.debug("Detecting people in image of size %s", image.shape)
 
         # detect people
         self.model.setInput(cv2.dnn.blobFromImage(image, size=(300, 300), swapRB=True))
         detections = self.model.forward()
 
-        logger.info("Num detections %d", detections.shape[2])
+        logger.debug("Num detections %d", detections.shape[2])
 
         # create the reply
         response = people_detection_pb2.DetectPeopleReply()
@@ -67,7 +67,7 @@ class PeopleDetectionService(people_detection_pb2_grpc.PeopleDetectionServiceSer
                     people_detection_pb2.Detection(x=x, y=y, width=w, height=h, confidence=confidence)
                 )
 
-        logger.info("Num detections filtered %d", len(response.detections))
+        logger.debug("Num detections filtered %d", len(response.detections))
 
         return response
 
