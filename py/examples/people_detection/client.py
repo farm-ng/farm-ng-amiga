@@ -13,16 +13,17 @@
 # limitations under the License.
 from typing import List
 
-import grpc
 import numpy as np
 from farm_ng.people_detection import people_detection_pb2
 from farm_ng.people_detection import people_detection_pb2_grpc
 from farm_ng.service.service_client import ClientConfig
+from farm_ng.service.service_client import ServiceClient
 
 
-class PeopleDetectorClient:
+class PeopleDetectorClient(ServiceClient):
     def __init__(self, config: ClientConfig) -> None:
-        self.channel = grpc.aio.insecure_channel(f"{config.address}:{config.port}")
+        super().__init__(config)
+
         self.stub = people_detection_pb2_grpc.PeopleDetectionServiceStub(self.channel)
 
     async def detect_people(self, image: np.ndarray, score_threshold: float) -> List[people_detection_pb2.Detection]:
