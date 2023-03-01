@@ -21,6 +21,8 @@ service CanbusService {
       returns (stream StreamCanbusReply) {}
   rpc sendCanbusMessage(stream SendCanbusMessageRequest)
       returns (stream SendCanbusMessageReply) {}
+  rpc streamMotorStates(StreamMotorStatesRequest)
+      returns (stream StreamMotorStatesReply) {}
 }
 
 message StreamCanbusRequest {
@@ -50,4 +52,21 @@ message RawCanbusMessage {
 
 message RawCanbusMessages {
   repeated RawCanbusMessage messages = 1;
+}
+
+message StreamMotorStatesRequest {
+}
+
+message MotorState {
+    double stamp = 1;
+    uint32 id = 2;
+    uint32 status = 3;
+    int32 rpm = 4;
+    double voltage = 5;
+    double current = 6;
+    int32 temperature = 7;
+}
+
+message StreamMotorStatesReply {
+  repeated MotorState motors = 1;
 }

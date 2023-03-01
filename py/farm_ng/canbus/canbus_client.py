@@ -36,6 +36,18 @@ class CanbusClient(ServiceClient):
         # create a async connection with the server
         self.stub = canbus_pb2_grpc.CanbusServiceStub(self.channel)
 
-    def stream(self):
-        """Return the async streaming object."""
+    def stream_raw(self):
+        """Return the async streaming object of raw canbus messages."""
         return self.stub.streamCanbusMessages(canbus_pb2.StreamCanbusRequest())
+
+    def stream_motors(self):
+        """Return the async streaming object of motor states."""
+        return self.stub.streamMotorStates(canbus_pb2.StreamMotorStatesRequest())
+
+    def stream(self):
+        """
+        DEPRECATED: Use `stream_raw` with v0.0.6+.
+
+        Return the async streaming object of raw canbus messages.
+        """
+        return self.stream_raw()

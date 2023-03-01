@@ -151,3 +151,66 @@ def parse_amiga_tpdo1_proto(message: canbus_pb2.RawCanbusMessage) -> Optional[Am
     if message.id != AmigaTpdo1.cob_id + DASHBOARD_NODE_ID:
         return None
     return AmigaTpdo1.from_can_data(message.data, stamp=message.stamp)
+
+
+class MotorControllerStatus(IntEnum):
+    PRE_OPERATIONAL = 0
+    IDLE = 1
+    POST_OPERATIONAL = 2
+    RUN = 3
+    FAULT = 4
+
+
+class MotorState:
+    """Values representing the state of the motor.
+
+    Amalgamates values from multiple CAN packets.
+    """
+
+    def __init__(
+        self,
+        id: int = 0,
+        status: MotorControllerStatus = MotorControllerStatus.FAULT,
+        rpm: int = 0,
+        voltage: float = 0.0,
+        current: float = 0.0,
+        temperature: int = 0,
+        timestamp: float = time.monotonic(),
+    ):
+        self.id: int = id
+        self.status: MotorControllerStatus = status
+        self.rpm: int = rpm
+        self.voltage: float = voltage
+        self.current: float = current
+        self.temperature: int = temperature
+        self.timestamp: float = timestamp
+
+    def to_proto(self) -> canbus_pb2.MotorState:
+        """Returns the data contained by the class encoded as CAN message data."""
+        proto = canbus_pb2.MotorState(
+            id=self.id,
+            status=self.status.value,
+            rpm=self.rpm,
+            voltage=self.voltage,
+            current=self.current,
+            temperature=self.temperature,
+            stamp=self.timestamp,
+        )
+        return proto
+
+    @classmethod
+    def from_proto(cls, proto: canbus_pb2.MotorState):
+        obj = cls()  # Does not call __init__
+        obj.id = proto.id
+        obj.status = MotorControllerStatus(proto.status)
+        obj.rpm = proto.rpm
+        obj.voltage = proto.voltage
+        obj.current = proto.current
+        obj.temperature = proto.temperature
+        obj.timestamp = proto.stamp
+        return obj
+
+    def __str__(self):
+        return "Motor state - id {:01X} status {} rpm {} voltage {} current {} temperature {} @ time {}".format(
+            self.id, self.status.name, self.rpm, self.voltage, self.current, self.temperature, self.timestamp
+        )
