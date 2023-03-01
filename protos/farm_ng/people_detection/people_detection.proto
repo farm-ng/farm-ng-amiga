@@ -1,0 +1,65 @@
+// Copyright (c) farm-ng, inc.
+//
+// Licensed under the Amiga Development Kit License (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://github.com/farm-ng/amiga-dev-kit/blob/main/LICENSE
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package farm_ng.people_detection.proto;
+
+// PeopleDetectionService is a service for people detection.
+service PeopleDetectionService {
+  // detectPeople detects people in an image.
+  rpc detectPeople(DetectPeopleRequest) returns (DetectPeopleReply) {}
+}
+
+// Detection is a message for a detection described by a bounding box.
+// The bounding box is defined by the top left corner (x, y) and the width and height.
+message Detection {
+  float x = 1;  // x coordinate of the top left corner of the bounding box.
+  float y = 2;  // y coordinate of the top left corner of the bounding box.
+  float width = 3;  // width of the bounding box.
+  float height = 4; // height of the bounding box.
+  float confidence = 5; // confidence of the detection.
+}
+
+// ImageSize is a message for the size of an image.
+// NOTE: this will implemented in Sophus in the future.
+message ImageSize {
+  int32 width = 1;  // width of the image.
+  int32 height = 2; // height of the image.
+}
+
+// Image is a message for an image.
+// NOTE: this will implemented in Sophus in the future.
+message Image {
+  bytes data = 1; // the image data in row-major order.
+  ImageSize size = 2;  // the size of the image.
+  int32 num_channels = 3;  // the number of channels of the image.
+  string dtype = 4;  // the data type of the image.
+}
+
+// DetectPeopleConfig is a message for the configuration of the people detection.
+message DetectPeopleConfig {
+  float confidence_threshold = 1;  // the confidence threshold for the detection.
+}
+
+// DetectPeopleRequest is a message for the request of the people detection.
+message DetectPeopleRequest {
+  DetectPeopleConfig config = 1;  // the configuration of the people detection.
+  Image image = 2;  // the image to detect people.
+}
+
+// DetectPeopleReply is a message for the reply of the people detection.
+message DetectPeopleReply {
+  repeated Detection detections = 1;  // the detections obtained from the people detection.
+}
