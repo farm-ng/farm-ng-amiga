@@ -11,6 +11,7 @@ Reference: [`AmigaTpdo1`](https://github.com/farm-ng/farm-ng-amiga/blob/can-file
 Create first a virtual environment
 
 ```bash
+cd farm-ng-amiga
 python3 -m venv venv
 source venv/bin/activate
 ```
@@ -18,7 +19,7 @@ source venv/bin/activate
 ## Install
 
 ```bash
-cd examples/file_reader_can
+cd py/examples/file_reader_can
 pip install -r requirements.txt
 ```
 
