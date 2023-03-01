@@ -34,11 +34,7 @@ class MotorStatesApp:
         # configure the canbus client
         canbus_config: ClientConfig = ClientConfig(address=self.address, port=self.canbus_port)
         canbus_client: CanbusClient = CanbusClient(canbus_config)
-
-        # Task(s)
-        self.async_tasks.append(asyncio.ensure_future(self.stream_motors(canbus_client)))
-
-        return await asyncio.gather(*self.async_tasks)
+        await asyncio.gather(self.stream_motors(canbus_client))
 
     async def stream_motors(self, client: CanbusClient) -> None:
         """This task:
