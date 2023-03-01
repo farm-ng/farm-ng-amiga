@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
+import warnings
 
 from farm_ng.canbus import canbus_pb2
 from farm_ng.canbus import canbus_pb2_grpc
@@ -36,6 +37,24 @@ class CanbusClient(ServiceClient):
         # create a async connection with the server
         self.stub = canbus_pb2_grpc.CanbusServiceStub(self.channel)
 
-    def stream(self):
-        """Return the async streaming object."""
+    def stream_raw(self):
+        """Return the async streaming object of raw canbus messages."""
         return self.stub.streamCanbusMessages(canbus_pb2.StreamCanbusRequest())
+
+    def stream_motors(self):
+        """Return the async streaming object of motor states."""
+        return self.stub.streamMotorStates(canbus_pb2.StreamMotorStatesRequest())
+
+    def stream(self):
+        """
+        DEPRECATED: Use `stream_raw` with v0.0.6+.
+        This will be phased out in v0.1.0
+
+        Return the async streaming object of raw canbus messages.
+        """
+        warnings.warn(
+            "CanbusClient ``stream`` method is being phased out for ``stream_raw``. Will be phased out in v0.1.0",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.stream_raw()

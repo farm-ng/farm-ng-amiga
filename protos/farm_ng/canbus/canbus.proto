@@ -17,10 +17,16 @@ syntax = "proto3";
 package farm_ng.canbus.proto;
 
 service CanbusService {
+  // Streams raw messages received on the CAN bus
   rpc streamCanbusMessages(StreamCanbusRequest)
       returns (stream StreamCanbusReply) {}
+  // Sends messages on the CAN bus
   rpc sendCanbusMessage(stream SendCanbusMessageRequest)
       returns (stream SendCanbusMessageReply) {}
+  // Streams the states of all detected motors.
+  // Motors not actively streaming their state will not appear in the StreamMotorStatesReply
+  rpc streamMotorStates(StreamMotorStatesRequest)
+      returns (stream StreamMotorStatesReply) {}
 }
 
 message StreamCanbusRequest {
@@ -39,15 +45,35 @@ message SendCanbusMessageReply {
 }
 
 message RawCanbusMessage {
-  // The time the message is "sent" on the canbus
+  // The time the message is "received" / "sent" on the canbus
   // in the steady_clock/time.montonic() time domain
   double stamp = 1;
-  uint32 id = 2;
+  uint32 id = 2; // CAN node ID of the message
   bool error = 3;
   bool remote_transmission = 4;
-  bytes data = 5;
+  bytes data = 5; // Encoded payload of the CAN packet
 }
 
 message RawCanbusMessages {
   repeated RawCanbusMessage messages = 1;
+}
+
+message StreamMotorStatesRequest {
+}
+
+// Proto definition containing state values of a motor
+// Corresponds to MotorState class
+message MotorState {
+    double stamp = 1; // stamp of the RawCanbusMessage containing the motor state values
+    uint32 id = 2; // CAN node ID of the motor
+    uint32 status = 3; // Corresponds to MotorControllerStatus enum
+    int32 rpm = 4; // Non-geared motor rpm. Values are inverted (negative) for flipped motors.
+    double voltage = 5; // Battery voltage, as measured at motor controller
+    double current = 6; // Motor current draw, as measured at motor controller
+    int32 temperature = 7; // Motor temperature
+}
+
+// Packages multiple MotorState's for the client
+message StreamMotorStatesReply {
+  repeated MotorState motors = 1;
 }
