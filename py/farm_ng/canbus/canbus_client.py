@@ -55,6 +55,6 @@ class CanbusClient(ServiceClient):
         warnings.warn(
             "CanbusClient ``stream`` method is being phased out for ``stream_raw``. Will be phased out in v0.1.0",
             DeprecationWarning,
-            stacklevel=2
+            stacklevel=2,
         )
         return self.stream_raw()
