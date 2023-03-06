@@ -25,8 +25,17 @@ service CanbusService {
       returns (stream SendCanbusMessageReply) {}
   // Streams the states of all detected motors.
   // Motors not actively streaming their state will not appear in the StreamMotorStatesReply
+
   rpc streamMotorStates(StreamMotorStatesRequest)
       returns (stream StreamMotorStatesReply) {}
+
+  // Streams twist vehicle commands on the CAN bus
+  rpc twistVehicleCommand(TwistVehicleCommandRequest)
+    returns (TwistVehicleCommandReply) {}
+
+  // Streams twist vehicle states
+  rpc streamTwistVehicleStates(TwistVehicleStatesRequest)
+  returns (stream TwistVehicleStateReply) {}
 }
 
 message StreamCanbusRequest {
@@ -43,6 +52,32 @@ message SendCanbusMessageRequest {
 message SendCanbusMessageReply {
   bool success = 1;
 }
+
+// TODO: repalce this with message from Sophus
+message Vec2F32 {
+  float x = 1;
+  float y = 2;
+}
+
+message TwistVehicleCommandRequest {
+  float command_linear_velocity_x_mps = 2;
+  float command_angular_velocity_rps = 3;
+}
+
+message TwistVehicleCommandReply {
+  bool success = 1;
+}
+
+message TwistVehicleStatesRequest {
+}
+
+
+message TwistVehicleStateReply {
+  double stamp = 1;
+  float linear_velocity_x_mps = 2;
+  float angular_velocity_rps = 3;
+}
+
 
 message RawCanbusMessage {
   // The time the message is "received" / "sent" on the canbus
