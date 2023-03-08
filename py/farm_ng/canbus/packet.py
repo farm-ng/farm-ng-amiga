@@ -97,7 +97,7 @@ class AmigaRpdo1(Packet):
         pto_bits: int = 0x0,
         hbridge_bits: int = 0x0,
     ):
-        self.format = "<BhhBBc"
+        self.format = "<BhhBBx"
         self.legacy_format = "<Bhh"
 
         self.state_req = state_req
@@ -117,7 +117,6 @@ class AmigaRpdo1(Packet):
             int(self.cmd_ang_rate * 1000.0),
             self.pto_bits,
             self.hbridge_bits,
-            bytes(1),
         )
 
     def decode(self, data):
@@ -132,7 +131,7 @@ class AmigaRpdo1(Packet):
             self.cmd_speed = cmd_speed / 1000.0
             self.cmd_ang_rate = cmd_ang_rate / 1000.0
         else:
-            (self.state_req, cmd_speed, cmd_ang_rate, self.pto_bits, self.hbridge_bits, _) = unpack(self.format, data)
+            (self.state_req, cmd_speed, cmd_ang_rate, self.pto_bits, self.hbridge_bits) = unpack(self.format, data)
             self.cmd_speed = cmd_speed / 1000.0
             self.cmd_ang_rate = cmd_ang_rate / 1000.0
 
@@ -156,7 +155,7 @@ class AmigaTpdo1(Packet):
         pto_bits: int = 0x0,
         hbridge_bits: int = 0x0,
     ):
-        self.format = "<BhhBBc"
+        self.format = "<BhhBBx"
         self.legacy_format = "<Bhh"
 
         self.state = state
@@ -176,7 +175,6 @@ class AmigaTpdo1(Packet):
             int(self.meas_ang_rate * 1000.0),
             self.pto_bits,
             self.hbridge_bits,
-            bytes(1),
         )
 
     def decode(self, data):
@@ -191,7 +189,7 @@ class AmigaTpdo1(Packet):
             self.meas_speed = meas_speed / 1000.0
             self.meas_ang_rate = meas_ang_rate / 1000.0
         else:
-            (self.state, meas_speed, meas_ang_rate, self.pto_bits, self.hbridge_bits, _) = unpack(self.format, data)
+            (self.state, meas_speed, meas_ang_rate, self.pto_bits, self.hbridge_bits) = unpack(self.format, data)
             self.meas_speed = meas_speed / 1000.0
             self.meas_ang_rate = meas_ang_rate / 1000.0
 
