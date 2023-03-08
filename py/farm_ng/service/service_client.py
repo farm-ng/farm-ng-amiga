@@ -77,10 +77,10 @@ class ServiceClient:
     """
 
     def __init__(self, config: ClientConfig) -> None:
+        print('config in ServiceClient', config)
         self.config = config
 
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.logger.debug(f"Config in ServiceClient: {config}")
 
         # create an async connection with the server
         self.channel = grpc.aio.insecure_channel(self.server_address)
@@ -93,15 +93,6 @@ class ServiceClient:
 
     async def get_state(self) -> ServiceState:
         state: ServiceState
-
-        # check if the channel is in a transient failure state
-        state_ch = self.channel.get_state()
-        if state_ch == grpc.ChannelConnectivity.TRANSIENT_FAILURE:
-            state = ServiceState()
-            self.logger.debug(f" {self.__class__.__name__} on port: %s state is: %s", self.config.port, state.name)
-            return state
-
-        # get the service state
         try:
             response: service_pb2.GetServiceStateReply = await self.state_stub.getServiceState(
                 service_pb2.GetServiceStateRequest()
@@ -109,6 +100,5 @@ class ServiceClient:
             state = ServiceState(response.state)
         except grpc.RpcError:
             state = ServiceState()
-
         self.logger.debug(f" {self.__class__.__name__} on port: %s state is: %s", self.config.port, state.name)
         return state
