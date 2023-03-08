@@ -168,6 +168,8 @@ class AmigaTpdo1(Packet):
     New in fw v0.1.9 / farm-ng-amiga v0.0.7: Add pto & hbridge control. Message data is now 8 bytes (was 5).
     """
 
+    cob_id = 0x180
+
     def __init__(
         self,
         state: AmigaControlState = AmigaControlState.STATE_ESTOPPED,
