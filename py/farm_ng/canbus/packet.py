@@ -40,6 +40,27 @@ class AmigaControlState(IntEnum):
     STATE_ESTOPPED = 6
 
 
+class ActuatorCommands(IntEnum):
+    passive = 0x0
+    forward = 0x1
+    stopped = 0x2
+    reverse = 0x3
+
+
+def actuator_bits_cmd(
+    a0=ActuatorCommands.passive, a1=ActuatorCommands.passive, a2=ActuatorCommands.passive, a3=ActuatorCommands.passive
+):
+    return a0.value + (a1.value << 2) + (a2.value << 4) + (a3.value << 6)
+
+
+def actuator_bits_read(bits):
+    a0 = ActuatorCommands(bits & 0x3)
+    a1 = ActuatorCommands((bits >> 2) & 0x3)
+    a2 = ActuatorCommands((bits >> 4) & 0x3)
+    a3 = ActuatorCommands((bits >> 6) & 0x3)
+    return (a0, a1, a2, a3)
+
+
 class Packet:
     """Base class inherited by all CAN message data structures."""
 
