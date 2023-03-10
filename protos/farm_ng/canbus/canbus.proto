@@ -33,9 +33,9 @@ service CanbusService {
   rpc sendVehicleTwistCommand(stream SendVehicleTwistCommandRequest)
     returns (stream SendVehicleTwistCommandReply) {}
 
-  // Streams twist vehicle states
-  rpc streamVehicleTwistStates(StreamVehicleTwistStatesRequest)
-    returns (stream StreamVehicleTwistStatesReply) {}
+  // // Streams twist vehicle states
+  // rpc streamVehicleTwistStates(StreamVehicleTwistStatesRequest)
+  //   returns (stream StreamVehicleTwistStatesReply) {}
 }
 
 message StreamCanbusRequest {
@@ -71,20 +71,23 @@ message SendVehicleTwistCommandRequest {
 
 // Message to send a twist command to the vehicle
 message SendVehicleTwistCommandReply {
-  // Whether the command was successfully received
   bool success = 1;
-}
-
-// Message to stream the twist states of the vehicle
-message StreamVehicleTwistStatesRequest {
-}
-
-message StreamVehicleTwistStatesReply {
   // The time the message is "received" / "sent" on the canbus
-  double stamp = 1;
+  double stamp = 2;
   // The state of the vehicle
-  Twist2d states = 2;
+  Twist2d state = 3;
 }
+
+// // Message to stream the twist states of the vehicle
+// message StreamVehicleTwistStatesRequest {
+// }
+
+// message StreamVehicleTwistStatesReply {
+//   // The time the message is "received" / "sent" on the canbus
+//   double stamp = 1;
+//   // The state of the vehicle
+//   Twist2d state = 2;
+// }
 
 message RawCanbusMessage {
   // The time the message is "received" / "sent" on the canbus
