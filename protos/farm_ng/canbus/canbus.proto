@@ -53,19 +53,14 @@ message SendCanbusMessageReply {
   bool success = 1;
 }
 
-// TODO: replace this with message from Sophus
-
-message Vec2F32 {
-  float x = 1;
-  float y = 2;
-}
-
 // Message to send a twist command to the vehicle
 message Twist2d {
   // The commanded linear velocity of the vehicle in the x direction in meters per second
-  Vec2F32 linear_velocity = 1;
+  float linear_velocity_x = 1;
+  float linear_velocity_y = 2;
+
   // The commanded angular velocity of the vehicle in radians per second
-  Vec2F32 angular_velocity = 2;
+  float angular_velocity = 3;
 }
 
 // Message to send a twist command to the vehicle
@@ -90,22 +85,6 @@ message StreamVehicleTwistStatesReply {
   // The state of the vehicle
   Twist2d states = 2;
 }
-
-//message SendVehicleTwistCommandRequest {
-//  // The commanded linear velocity of the vehicle in the x direction in meters per second
-//  float command_linear_velocity_x_mps = 1;
-//  // The commanded angular velocity of the vehicle in radians per second
-//  float command_angular_velocity_rps = 2;
-//}
-
-//message StreamVehicleTwistStatesReply {
-//  // The time the message is "received" / "sent" on the canbus
-//  double stamp = 1;
-//  // The linear velocity of the vehicle in the x direction in meters per second
-//  float linear_velocity_x_mps = 2;
-//  // The angular velocity of the vehicle in radians per second
-//  float angular_velocity_rps = 3;
-//}
 
 message RawCanbusMessage {
   // The time the message is "received" / "sent" on the canbus
