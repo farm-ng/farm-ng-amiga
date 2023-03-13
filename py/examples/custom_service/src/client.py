@@ -36,18 +36,20 @@ class AddTwoIntsClient(ServiceClient):
 
 
 async def main(config: ClientConfig, a: int, b: int) -> None:
-
+    # create an instance of the client
     client = AddTwoIntsClient(config)
 
-    # call the service and print the result
-    sum: int = await client.add_two_ints(a, b)
-    logger.info(f"Sum: {sum}")
+    # call the service method
+    sum_value: int = await client.add_two_ints(a, b)
+
+    # print the result
+    logger.info(f"The result of {a} + {b} = {sum_value}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="compost-spreader-client")
-    parser.add_argument("--host", type=str, required=True, help="The compost-spreader host address.")
-    parser.add_argument("--port", type=int, required=True, help="The compost-spreader port.")
+    parser.add_argument("--host", type=str, default="localhost", help="The server host address.")
+    parser.add_argument("--port", type=int, default=50050, help="The server port.")
     parser.add_argument("--a", type=int, required=True, help="The first integer to add.")
     parser.add_argument("--b", type=int, required=True, help="The second integer to add.")
     args = parser.parse_args()

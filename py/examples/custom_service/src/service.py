@@ -24,13 +24,13 @@ logger = logging.getLogger(__name__)
 
 
 # TODO: subclass ServiceGrpc
-class CompostSpreaderGrpc:
+class AddTwoIntsServiceGrpc:
     def __init__(self, server: grpc.aio.server, port: int) -> None:
         # TODO: define where to place this in the base class
         self.server = server
         self.server.add_insecure_port(f"[::]:{port}")
 
-        logger.info(f"Starting compost_spreader service on port {port}...")
+        logger.info(f"Starting the service on port {port}...")
 
         # NOTE: this need to be added every time a new service is added
         two_ints_pb2_grpc.add_AddTwoIntsServiceServicer_to_server(self, self.server)
@@ -45,16 +45,17 @@ class CompostSpreaderGrpc:
     async def addTwoInts(
         self, request: two_ints_pb2.AddTwoIntsRequest, _: grpc.aio.ServicerContext
     ) -> two_ints_pb2.AddTwoIntsResponse:
+        logger.info(f"Received request {request}")
         return two_ints_pb2.AddTwoIntsResponse(sum=request.a + request.b)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="add-two-ints-service")
-    parser.add_argument("--port", type=int, required=True, help="The service port port.")
+    parser.add_argument("--port", type=int, default=50050, help="The service port port.")
     args = parser.parse_args()
 
     server = grpc.aio.server()
-    service_grpc = CompostSpreaderGrpc(server, port=args.port)
+    service_grpc = AddTwoIntsServiceGrpc(server, port=args.port)
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(service_grpc.serve())
