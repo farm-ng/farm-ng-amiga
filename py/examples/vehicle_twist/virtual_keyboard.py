@@ -21,16 +21,39 @@ from farm_ng.canbus import canbus_pb2
 from farm_ng.canbus.canbus_client import CanbusClient
 from farm_ng.service.service_client import ClientConfig
 
+# NOTE: becareful with these values, they are in m/s and rad/s
+MAX_LINEAR_VELOCITY_MPS = 0.5
+MAX_ANGULAR_VELOCITY_RPS = 0.5
+
+VELOCITY_INCREMENT = 0.1
+
 
 async def request_generator() -> iter[canbus_pb2.SendVehicleTwistCommandReply]:
     # the command to send
-    # command = canbus_pb2.Twist2d()
+    twist = canbus_pb2.Twist2d()
+
+    # open a window to capture key presses
+    cv2.namedWindow('Virtual Keyboard')
 
     while True:
-        key = cv2.waitKey(1)
-        print(key)
+        key = cv2.waitKey(1)  # capture key presses
 
-        yield canbus_pb2.SendVehicleTwistCommandRequest()
+        if key == ord("i"):
+            twist.linear_velocity_x += VELOCITY_INCREMENT
+            twist.linear_velocity_x = min(twist.linear_velocity_x, MAX_LINEAR_VELOCITY_MPS)
+        elif key == ord("k"):
+            twist.linear_velocity_x -= VELOCITY_INCREMENT
+            twist.linear_velocity_x = max(twist.linear_velocity_x, -MAX_LINEAR_VELOCITY_MPS)
+
+        if key == ord("j"):
+            twist.angular_velocity += VELOCITY_INCREMENT
+            twist.angular_velocity = min(twist.angular_velocity, MAX_ANGULAR_VELOCITY_RPS)
+        elif key == ord("l"):
+            twist.angular_velocity -= VELOCITY_INCREMENT
+            twist.angular_velocity = max(twist.angular_velocity, -MAX_ANGULAR_VELOCITY_RPS)
+
+        yield canbus_pb2.SendVehicleTwistCommandRequest(command=twist)
+        await asyncio.sleep(0.1)
 
 
 async def main(config: ClientConfig) -> None:
@@ -42,7 +65,7 @@ async def main(config: ClientConfig) -> None:
 
     # print the stream results
     async for twist_state in stream:
-        # print(twist_state)
+        print(twist_state)
         pass
 
 
