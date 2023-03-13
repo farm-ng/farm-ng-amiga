@@ -1,0 +1,28 @@
+[tool.black]
+line-length = 120
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+skip-string-normalization = true
+skip-magic-trailing-comma = true
+
+[tool.isort]
+profile = "black"
+
+[build-system]
+requires = [
+    "setuptools",
+    "farm-ng-package",
+    ]
+build-backend = "setuptools.build_meta"
