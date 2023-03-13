@@ -38,6 +38,11 @@ async def request_generator() -> iter[canbus_pb2.SendVehicleTwistCommandReply]:
     while True:
         key = cv2.waitKey(1)  # capture key presses
 
+        if key == ord(" "):
+            twist.linear_velocity_x = 0.0
+            twist.linear_velocity_y = 0.0
+            twist.angular_velocity = 0.0
+
         if key == ord("i"):
             twist.linear_velocity_x += VELOCITY_INCREMENT
             twist.linear_velocity_x = min(twist.linear_velocity_x, MAX_LINEAR_VELOCITY_MPS)

@@ -42,11 +42,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--address', default='localhost')
     parser.add_argument('--port', default=50060)
-    parser.add_argument("--vx", type=float, default=0.0)
+    parser.add_argument("--vel-x", type=float, default=0.0)
     parser.add_argument("--theta", type=float, default=0.0)
     args = parser.parse_args()
 
     # create the twist command
-    twist = canbus_pb2.Twist2d(linear_velocity_x=args.vx, angular_velocity=args.theta)
+    twist = canbus_pb2.Twist2d(linear_velocity_x=args.vel_x, angular_velocity=args.theta)
 
     asyncio.run(main(ClientConfig(address=args.address, port=args.port), twist))
