@@ -67,6 +67,7 @@ message SendVehicleTwistCommandRequest {
 
 // Message to send a twist command to the vehicle
 message SendVehicleTwistCommandReply {
+  // Whether the command was successfully sent
   bool success = 1;
   // The time the message is "received" / "sent" on the canbus
   double stamp = 2;
