@@ -23,10 +23,15 @@ service CanbusService {
   // Sends messages on the CAN bus
   rpc sendCanbusMessage(stream SendCanbusMessageRequest)
       returns (stream SendCanbusMessageReply) {}
+
   // Streams the states of all detected motors.
   // Motors not actively streaming their state will not appear in the StreamMotorStatesReply
   rpc streamMotorStates(StreamMotorStatesRequest)
       returns (stream StreamMotorStatesReply) {}
+
+  // Streams twist vehicle commands on the CAN bus
+  rpc sendVehicleTwistCommand(stream SendVehicleTwistCommandRequest)
+    returns (stream SendVehicleTwistCommandReply) {}
 }
 
 message StreamCanbusRequest {
@@ -42,6 +47,32 @@ message SendCanbusMessageRequest {
 
 message SendCanbusMessageReply {
   bool success = 1;
+}
+
+// Message to send a twist command to the vehicle
+message Twist2d {
+  // The commanded linear velocity of the vehicle in the x direction in meters per second
+  float linear_velocity_x = 1;
+  float linear_velocity_y = 2;
+
+  // The commanded angular velocity of the vehicle in radians per second
+  float angular_velocity = 3;
+}
+
+// Message to send a twist command to the vehicle
+message SendVehicleTwistCommandRequest {
+  // The commanded twist to the vehicle
+  Twist2d command = 1;
+}
+
+// Message to send a twist command to the vehicle
+message SendVehicleTwistCommandReply {
+  // Whether the command was successfully sent
+  bool success = 1;
+  // The time the message is "received" / "sent" on the canbus
+  double stamp = 2;
+  // The state of the vehicle
+  Twist2d state = 3;
 }
 
 message RawCanbusMessage {
@@ -75,5 +106,6 @@ message MotorState {
 
 // Packages multiple MotorState's for the client
 message StreamMotorStatesReply {
+  // List of MotorState's
   repeated MotorState motors = 1;
 }
