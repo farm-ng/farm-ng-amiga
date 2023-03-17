@@ -11,16 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
+
 import time
 from enum import IntEnum
 from struct import pack
 from struct import unpack
-from typing import Optional
 
 from farm_ng.canbus import canbus_pb2
 from farm_ng.core.stamp import timestamp_from_monotonic
 from farm_ng.core.timestamp_pb2 import Timestamp
 
+# TODO: add some comments about the CAN bus protocol
 DASHBOARD_NODE_ID = 0xE
 PENDANT_NODE_ID = 0xF
 BRAIN_NODE_ID = 0x1F
@@ -30,6 +32,7 @@ SDK_NODE_ID = 0x2A
 class AmigaControlState(IntEnum):
     """State of the Amiga vehicle control unit (VCU)"""
 
+    # TODO: add some comments about this states
     STATE_BOOT = 0
     STATE_MANUAL_READY = 1
     STATE_MANUAL_ACTIVE = 2
@@ -66,8 +69,20 @@ class Packet:
 def make_amiga_rpdo1_proto(
     state_req: AmigaControlState, cmd_speed: float, cmd_ang_rate: float
 ) -> canbus_pb2.RawCanbusMessage:
-    """Creates a canbus_pb2.RawCanbusMessage, using the AmigaRpdo1 structure and formatting, that can be sent
-    directly to the canbus service to be formatted and send on the CAN bus."""
+    """Creates a canbus_pb2.RawCanbusMessage.
+
+    Uses the AmigaRpdo1 structure and formatting, that can be sent
+    directly to the canbus service to be formatted and send on the CAN bus.
+
+    Args:
+        state_req: State of the Amiga vehicle control unit (VCU).
+        cmd_speed: Command speed in meters per second.
+        cmd_ang_rate: Command angular rate in radians per second.
+
+    Returns:
+        An instance of a canbus_pb2.RawCanbusMessage.
+    """
+    # TODO: add some checkers, or make python CHECK_API
     return canbus_pb2.RawCanbusMessage(
         id=AmigaRpdo1.cob_id + DASHBOARD_NODE_ID,
         data=AmigaRpdo1(state_req=state_req, cmd_speed=cmd_speed, cmd_ang_rate=cmd_ang_rate).encode(),
@@ -142,23 +157,33 @@ class AmigaTpdo1(Packet):
         )
 
 
-def parse_amiga_tpdo1_proto(message: canbus_pb2.RawCanbusMessage) -> Optional[AmigaTpdo1]:
-    """Parses a canbus_pb2.RawCanbusMessage, IFF the message came from the dashboard and contains AmigaTpdo1
-    structure, formatting, and cobid.
+def parse_amiga_tpdo1_proto(message: canbus_pb2.RawCanbusMessage) -> AmigaTpdo1 | None:
+    """Parses a canbus_pb2.RawCanbusMessage.
 
-    Otherwise returns None.
+    IFF the message came from the dashboard and contains AmigaTpdo1 structure,
+    formatting, and cobid.
+
+    Args:
+        message: The raw canbus message to parse.
+
+    Returns:
+        The parsed AmigaTpdo1 message, or None if the message is not a valid AmigaTpdo1 message.
     """
+    # TODO: add some checkers, or make python CHECK_API
     if message.id != AmigaTpdo1.cob_id + DASHBOARD_NODE_ID:
         return None
     return AmigaTpdo1.from_can_data(message.data, stamp=message.stamp)
 
 
 class MotorControllerStatus(IntEnum):
-    PRE_OPERATIONAL = 0
-    IDLE = 1
-    POST_OPERATIONAL = 2
-    RUN = 3
-    FAULT = 4
+    """Values representing the status of the motor controller."""
+
+    PRE_OPERATIONAL = 0  # the motor is not ready to run
+    IDLE = 1  # the motor is waiting to start
+    POST_OPERATIONAL = 2  # the motor already started
+    # NOTE: the motor controller does not have a "running" state
+    RUN = 3  # the motor is running
+    FAULT = 4  # the motor controller is in fault mode
 
 
 class MotorState:
