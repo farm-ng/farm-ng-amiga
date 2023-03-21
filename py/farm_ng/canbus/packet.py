@@ -22,8 +22,6 @@ from farm_ng.canbus import canbus_pb2
 from farm_ng.core.stamp import timestamp_from_monotonic
 from farm_ng.core.timestamp_pb2 import Timestamp
 
-# import warnings
-
 # TODO: add some comments about the CAN bus protocol
 DASHBOARD_NODE_ID = 0xE
 PENDANT_NODE_ID = 0xF
