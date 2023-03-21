@@ -158,11 +158,12 @@ class AmigaRpdo1(Packet):
     def decode(self, data):
         """Decodes CAN message data and populates the values of the class."""
         if len(data) == 5:
-            warnings.warn(
-                "Please update dashboard firmware to >= v0.1.9."
-                " New AmigaTpdo1 packets include more data. Support will be removed in farm_ng_amiga v0.0.9",
-                stacklevel=2,
-            )
+            ## TODO: Instate warning when dashboard fw v0.1.9 is released
+            # warnings.warn(
+            #     "Please update dashboard firmware to >= v0.1.9."
+            #     " New AmigaTpdo1 packets include more data. Support will be removed in farm_ng_amiga v0.0.9",
+            #     stacklevel=2,
+            # )
             (self.state_req, cmd_speed, cmd_ang_rate) = unpack(self.legacy_format, data)
             self.cmd_speed = cmd_speed / 1000.0
             self.cmd_ang_rate = cmd_ang_rate / 1000.0
@@ -218,11 +219,12 @@ class AmigaTpdo1(Packet):
     def decode(self, data):
         """Decodes CAN message data and populates the values of the class."""
         if len(data) == 5:
-            warnings.warn(
-                "Please update dashboard firmware to >= v0.1.9."
-                " New AmigaTpdo1 packets include more data. Support will be removed in farm_ng_amiga v0.0.9",
-                stacklevel=2,
-            )
+            ## TODO: Instate warning when dashboard fw v0.1.9 is released
+            # warnings.warn(
+            #     "Please update dashboard firmware to >= v0.1.9."
+            #     " New AmigaTpdo1 packets include more data. Support will be removed in farm_ng_amiga v0.0.9",
+            #     stacklevel=2,
+            # )
             (self.state, meas_speed, meas_ang_rate) = unpack(self.legacy_format, data)
             self.meas_speed = meas_speed / 1000.0
             self.meas_ang_rate = meas_ang_rate / 1000.0
