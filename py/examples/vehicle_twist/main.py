@@ -24,7 +24,7 @@ from farm_ng.service.service_client import ClientConfig
 async def request_generator(twist: canbus_pb2.Twist2d) -> iter[canbus_pb2.SendVehicleTwistCommandReply]:
     while True:
         yield canbus_pb2.SendVehicleTwistCommandRequest(command=twist)
-        await asyncio.sleep(0.1) # Limit to 10 hz
+        await asyncio.sleep(0.1)  # Limit to 10 hz
 
 
 async def main(config: ClientConfig, twist: canbus_pb2.Twist2d) -> None:
