@@ -64,14 +64,14 @@ class OpenCvCamera(Component):
 
     @staticmethod
     def register_outputs(outputs: OutputParams) -> None:
-        outputs.declare("rgb", np.ndarray)
+        outputs.declare("image", np.ndarray)
 
     async def forward(self) -> ComponentState:
         ret, frame = self.grabber.read()
         if not ret:
             return ComponentState.STOPPED
 
-        await self.outputs.rgb.send(frame)
+        await self.outputs.image.send(frame)
 
         return ComponentState.OK
 
