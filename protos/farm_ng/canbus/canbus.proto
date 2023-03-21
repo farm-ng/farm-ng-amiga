@@ -29,7 +29,12 @@ service CanbusService {
   rpc streamMotorStates(StreamMotorStatesRequest)
       returns (stream StreamMotorStatesReply) {}
 
-  // Streams twist vehicle commands on the CAN bus
+  // Streams vehicle twist states received on the CAN bus
+  rpc streamVehicleTwistState(StreamVehicleTwistStateRequest)
+    returns (stream StreamVehicleTwistStateReply) {}
+
+  // Sends twist vehicle commands on the CAN bus
+  // and responds with the most recent received twist state.
   rpc sendVehicleTwistCommand(stream SendVehicleTwistCommandRequest)
     returns (stream SendVehicleTwistCommandReply) {}
 }
@@ -57,6 +62,18 @@ message Twist2d {
 
   // The commanded angular velocity of the vehicle in radians per second
   float angular_velocity = 3;
+}
+
+// Message to send a twist command to the vehicle
+  message StreamVehicleTwistStateRequest {
+}
+
+// Message to send a twist command to the vehicle
+message StreamVehicleTwistStateReply {
+  // The time the message is "received" / "sent" on the canbus
+  double stamp = 1;
+  // The state of the vehicle
+  Twist2d state = 2;
 }
 
 // Message to send a twist command to the vehicle
