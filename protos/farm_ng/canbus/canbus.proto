@@ -37,7 +37,20 @@ service CanbusService {
   // and responds with the most recent received twist state.
   rpc sendVehicleTwistCommand(stream SendVehicleTwistCommandRequest)
     returns (stream SendVehicleTwistCommandReply) {}
+
 }
+
+service CanbusService2 {
+
+// Streams vehicle twist states received on the CAN bus
+rpc streamVehicleTwistState(StreamVehicleTwistStateRequest)
+returns (stream StreamVehicleTwistStateReply) {}
+
+rpc sendVehicleTwistCommand(SendVehicleTwistCommandRequest)
+returns (SendVehicleTwistCommandReply) {}
+
+}
+
 
 message StreamCanbusRequest {
 }
