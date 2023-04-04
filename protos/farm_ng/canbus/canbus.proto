@@ -42,12 +42,12 @@ service CanbusService {
 
 service CanbusService2 {
 
-// Streams vehicle twist states received on the CAN bus
-rpc streamVehicleTwistState(StreamVehicleTwistStateRequest)
-returns (stream StreamVehicleTwistStateReply) {}
+  // Streams vehicle twist states received on the CAN bus
+  rpc streamVehicleTwistState(StreamVehicleTwistStateRequest)
+    returns (stream StreamVehicleTwistStateReply) {}
 
-rpc sendVehicleTwistCommand(SendVehicleTwistCommandRequest)
-returns (SendVehicleTwistCommandReply) {}
+  rpc sendVehicleTwistCommand(SendVehicleTwistCommandRequest2)
+    returns (SendVehicleTwistCommandReply) {}
 
 }
 
@@ -93,6 +93,14 @@ message StreamVehicleTwistStateReply {
 message SendVehicleTwistCommandRequest {
   // The commanded twist to the vehicle
   Twist2d command = 1;
+}
+
+// Message to send a twist command to the vehicle
+message SendVehicleTwistCommandRequest2 {
+  double stamp = 1;
+
+  // The commanded twist to the vehicle
+  Twist2d command = 2;
 }
 
 // Message to send a twist command to the vehicle
