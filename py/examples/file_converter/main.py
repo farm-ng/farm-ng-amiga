@@ -32,7 +32,12 @@ def event_has_message(event: event_pb2.Event, msg_type) -> bool:
 
 
 def main(
-    file_name: Path, output_path: Path, camera_name: str, disparity_scale: int = 1, video_to_jpg: bool = False
+    file_name: Path,
+    output_path: Path,
+    camera_name: str,
+    disparity_scale: int = 1,
+    video_to_jpg: bool = False,
+    snapshot: bool = False,
 ) -> None:
     disparity_scale = max(1, int(disparity_scale))
 
@@ -54,9 +59,9 @@ def main(
     events: List[EventLogPosition] = [
         x for x in reader.get_index() if event_has_message(x.event, oak_pb2.OakDataSample)
     ]
-
+    log_type: str = "snapshot" if snapshot else "video"
     # filter the image based events by camera name
-    cam_events: List[EventLogPosition] = [x for x in events if x.event.uri.path == f"{camera_name}/video"]
+    cam_events: List[EventLogPosition] = [x for x in events if x.event.uri.path == f"{camera_name}/{log_type}"]
 
     video_writers: dict[str, cv2.VideoWriter] = {}
     for event_log in cam_events:
@@ -73,19 +78,22 @@ def main(
             window_name: str = view + ":" + event_log.event.uri.query
             cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
             cv2.imshow(window_name, img)
-            height, width, _ = img.shape
-
-            if video_to_jpg:
-                # Save each frame as a single jpeg
-                cv2.imwrite(str(output_path / view / f'frame_{sample.frame.sequence_num:06d}.jpg'), img)
-
+            if snapshot:
+                cv2.imwrite(str(output_path / f'{view}_frame_{sample.frame.sequence_num:06d}.jpg'), img)
             else:
-                # Write frame to corresponding mp4 video
-                if view not in video_writers:
-                    video_writers[view] = cv2.VideoWriter(
-                        str(output_path / (view + '.mp4')), cv2.VideoWriter_fourcc(*'mp4v'), 10, (width, height)
-                    )
-                video_writers[view].write(img)
+                height, width, _ = img.shape
+
+                if video_to_jpg:
+                    # Save each frame as a single jpeg
+                    cv2.imwrite(str(output_path / view / f'frame_{sample.frame.sequence_num:06d}.jpg'), img)
+
+                else:
+                    # Write frame to corresponding mp4 video
+                    if view not in video_writers:
+                        video_writers[view] = cv2.VideoWriter(
+                            str(output_path / (view + '.mp4')), cv2.VideoWriter_fourcc(*'mp4v'), 10, (width, height)
+                        )
+                    video_writers[view].write(img)
 
         cv2.waitKey(1)
 
@@ -118,7 +126,21 @@ if __name__ == "__main__":
     )
     parser.set_defaults(video_to_jpeg=False)
 
+    parser.add_argument(
+        '--snapshot',
+        action='store_true',
+        help="Use this flag if the .bin file is a single snapshot. Output will be jpg images.",
+    )
+    parser.set_defaults(snapshot=False)
+
     args = parser.parse_args()
 
     # print(args.video_to_jpg)
-    main(Path(args.file_name), Path(args.output_path), args.camera_name, args.disparity_scale, args.video_to_jpg)
+    main(
+        Path(args.file_name),
+        Path(args.output_path),
+        args.camera_name,
+        args.disparity_scale,
+        args.video_to_jpg,
+        args.snapshot,
+    )
