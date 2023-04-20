@@ -104,7 +104,7 @@ def main(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="Event file reader example.")
+    parser = argparse.ArgumentParser(prog="Event file converter example.")
     parser.add_argument("--file-name", type=str, required=True, help="Path to the `events.bin` file.")
     parser.add_argument(
         "--output-path",
@@ -122,7 +122,7 @@ if __name__ == "__main__":
     parser.add_argument(
         '--video-to-jpg',
         action='store_true',
-        help="Use this flag to convert video .bin files to a series of jpg images",
+        help="Use this flag to convert video .bin files to a series of jpg images. Default for videos is mp4.",
     )
     parser.set_defaults(video_to_jpeg=False)
 
