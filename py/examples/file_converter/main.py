@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import argparse
+import os
 from pathlib import Path
 from typing import List
 
@@ -22,16 +23,23 @@ from farm_ng.core.events_file_reader import EventLogPosition
 from farm_ng.core.events_file_reader import EventsFileReader
 from farm_ng.oak import oak_pb2
 
+DEFAULT_OUTPUT_PATH = os.path.dirname(os.path.realpath(__file__))
+
 
 # helper function to filter valid events given a message type
 def event_has_message(event: event_pb2.Event, msg_type) -> bool:
     return event.uri.query.split("&")[0].split(".")[-1] == msg_type.__name__
 
 
-def main(file_name: str, camera_name: str) -> None:
+def main(file_name: Path, output_path: Path, camera_name: str) -> None:
     # create the file reader
-    reader = EventsFileReader(Path(file_name))
+    reader = EventsFileReader(file_name)
     assert reader.open()
+
+    # Add nested directories to the output_path based on the events file name & camera name
+    output_path = output_path / file_name.stem / camera_name
+    # Create the output path, if it doesn't already exist
+    output_path.mkdir(parents=True, exist_ok=True)
 
     # filter the events containing `oak_pb2.OakDataSample`
     events: List[EventLogPosition] = [
@@ -60,7 +68,7 @@ def main(file_name: str, camera_name: str) -> None:
 
             if view not in video_writers:
                 video_writers[view] = cv2.VideoWriter(
-                    view + '.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 10, (width, height)
+                    str(output_path / (view + '.mp4')), cv2.VideoWriter_fourcc(*'mp4v'), 10, (width, height)
                 )
 
             video_writers[view].write(img)
@@ -77,7 +85,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="Event file reader example.")
     parser.add_argument("--file-name", type=str, required=True, help="Path to the `events.bin` file.")
     parser.add_argument(
+        "--output-path",
+        type=str,
+        default=DEFAULT_OUTPUT_PATH,
+        help=f"Path to the folder where converted data will be written. Default: {DEFAULT_OUTPUT_PATH}",
+    )
+    parser.add_argument(
         "--camera-name", type=str, default="oak0", help="The name of the camera to visualize. Default: oak0."
     )
     args = parser.parse_args()
-    main(args.file_name, args.camera_name)
+    main(Path(args.file_name), Path(args.output_path), args.camera_name)
