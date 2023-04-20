@@ -41,6 +41,7 @@ def main(file_name: str, camera_name: str) -> None:
     # filter the image based events by camera name
     cam_events: List[EventLogPosition] = [x for x in events if x.event.uri.path == f"{camera_name}/video"]
 
+    video_writers: dict[str, cv2.VideoWriter] = {}
     for event_log in cam_events:
         # parse the message
         sample: oak_pb2.OakDataSample
@@ -55,8 +56,19 @@ def main(file_name: str, camera_name: str) -> None:
             window_name: str = view + ":" + event_log.event.uri.query
             cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
             cv2.imshow(window_name, img)
+            height, width, _ = img.shape
+
+            if view not in video_writers:
+                video_writers[view] = cv2.VideoWriter(
+                    view + '.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 10, (width, height)
+                )
+
+            video_writers[view].write(img)
 
         cv2.waitKey(3)
+
+    for writer in video_writers.values():
+        writer.release()
 
     assert reader.close()
 
