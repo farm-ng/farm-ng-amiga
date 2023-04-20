@@ -31,7 +31,9 @@ def event_has_message(event: event_pb2.Event, msg_type) -> bool:
     return event.uri.query.split("&")[0].split(".")[-1] == msg_type.__name__
 
 
-def main(file_name: Path, output_path: Path, camera_name: str) -> None:
+def main(file_name: Path, output_path: Path, camera_name: str, disparity_scale: int = 1) -> None:
+    disparity_scale = max(1, int(disparity_scale))
+
     # create the file reader
     reader = EventsFileReader(file_name)
     assert reader.open()
@@ -59,7 +61,7 @@ def main(file_name: Path, output_path: Path, camera_name: str) -> None:
         for view in ["rgb", "disparity", "left", "right"]:
             img = cv2.imdecode(np.frombuffer(getattr(frame, view).image_data, dtype="uint8"), cv2.IMREAD_UNCHANGED)
             if view == "disparity":
-                img = cv2.applyColorMap(img * 2, cv2.COLORMAP_HOT)
+                img = cv2.applyColorMap(img * disparity_scale, cv2.COLORMAP_HOT)
 
             window_name: str = view + ":" + event_log.event.uri.query
             cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
@@ -93,5 +95,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--camera-name", type=str, default="oak0", help="The name of the camera to visualize. Default: oak0."
     )
+    parser.add_argument(
+        "--disparity-scale", type=int, default=1, help="Scale for amplifying disparity color mapping. Default: 1."
+    )
     args = parser.parse_args()
-    main(Path(args.file_name), Path(args.output_path), args.camera_name)
+
+    main(Path(args.file_name), Path(args.output_path), args.camera_name, args.disparity_scale)
