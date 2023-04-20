@@ -31,7 +31,9 @@ def event_has_message(event: event_pb2.Event, msg_type) -> bool:
     return event.uri.query.split("&")[0].split(".")[-1] == msg_type.__name__
 
 
-def main(file_name: Path, output_path: Path, camera_name: str, disparity_scale: int = 1) -> None:
+def main(
+    file_name: Path, output_path: Path, camera_name: str, disparity_scale: int = 1, video_to_jpg: bool = False
+) -> None:
     disparity_scale = max(1, int(disparity_scale))
 
     # create the file reader
@@ -42,6 +44,11 @@ def main(file_name: Path, output_path: Path, camera_name: str, disparity_scale: 
     output_path = output_path / file_name.stem / camera_name
     # Create the output path, if it doesn't already exist
     output_path.mkdir(parents=True, exist_ok=True)
+
+    view_names = ["rgb", "disparity", "left", "right"]
+    if video_to_jpg:
+        for view in view_names:
+            (output_path / view).mkdir(parents=True, exist_ok=True)
 
     # filter the events containing `oak_pb2.OakDataSample`
     events: List[EventLogPosition] = [
@@ -58,7 +65,7 @@ def main(file_name: Path, output_path: Path, camera_name: str, disparity_scale: 
         sample = event_log.read_message()
 
         frame: oak_pb2.OakSyncFrame = sample.frame
-        for view in ["rgb", "disparity", "left", "right"]:
+        for view in view_names:
             img = cv2.imdecode(np.frombuffer(getattr(frame, view).image_data, dtype="uint8"), cv2.IMREAD_UNCHANGED)
             if view == "disparity":
                 img = cv2.applyColorMap(img * disparity_scale, cv2.COLORMAP_HOT)
@@ -68,14 +75,19 @@ def main(file_name: Path, output_path: Path, camera_name: str, disparity_scale: 
             cv2.imshow(window_name, img)
             height, width, _ = img.shape
 
-            if view not in video_writers:
-                video_writers[view] = cv2.VideoWriter(
-                    str(output_path / (view + '.mp4')), cv2.VideoWriter_fourcc(*'mp4v'), 10, (width, height)
-                )
+            if video_to_jpg:
+                # Save each frame as a single jpeg
+                cv2.imwrite(str(output_path / view / f'frame_{sample.frame.sequence_num:06d}.jpg'), img)
 
-            video_writers[view].write(img)
+            else:
+                # Write frame to corresponding mp4 video
+                if view not in video_writers:
+                    video_writers[view] = cv2.VideoWriter(
+                        str(output_path / (view + '.mp4')), cv2.VideoWriter_fourcc(*'mp4v'), 10, (width, height)
+                    )
+                video_writers[view].write(img)
 
-        cv2.waitKey(3)
+        cv2.waitKey(1)
 
     for writer in video_writers.values():
         writer.release()
@@ -98,6 +110,15 @@ if __name__ == "__main__":
     parser.add_argument(
         "--disparity-scale", type=int, default=1, help="Scale for amplifying disparity color mapping. Default: 1."
     )
+
+    parser.add_argument(
+        '--video-to-jpg',
+        action='store_true',
+        help="Use this flag to convert video .bin files to a series of jpg images",
+    )
+    parser.set_defaults(video_to_jpeg=False)
+
     args = parser.parse_args()
 
-    main(Path(args.file_name), Path(args.output_path), args.camera_name, args.disparity_scale)
+    # print(args.video_to_jpg)
+    main(Path(args.file_name), Path(args.output_path), args.camera_name, args.disparity_scale, args.video_to_jpg)
