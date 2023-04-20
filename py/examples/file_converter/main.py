@@ -134,7 +134,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # print(args.video_to_jpg)
     main(
         Path(args.file_name),
         Path(args.output_path),
