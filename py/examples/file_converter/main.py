@@ -47,24 +47,15 @@ def main(file_name: str, camera_name: str) -> None:
         sample = event_log.read_message()
 
         frame: oak_pb2.OakSyncFrame = sample.frame
+        for view in ["rgb", "disparity", "left", "right"]:
+            img = cv2.imdecode(np.frombuffer(getattr(frame, view).image_data, dtype="uint8"), cv2.IMREAD_UNCHANGED)
+            if view == "disparity":
+                img = cv2.applyColorMap(img * 2, cv2.COLORMAP_HOT)
 
-        # cast image data bytes to numpy and decode
-        # NOTE: explore frame.[rgb, disparity, left, right]
-        disparity = cv2.imdecode(np.frombuffer(frame.disparity.image_data, dtype="uint8"), cv2.IMREAD_GRAYSCALE)
-        rgb = cv2.imdecode(np.frombuffer(frame.rgb.image_data, dtype="uint8"), cv2.IMREAD_UNCHANGED)
+            window_name: str = view + ":" + event_log.event.uri.query
+            cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+            cv2.imshow(window_name, img)
 
-        # visualize the image
-        disparity_color = cv2.applyColorMap(disparity * 2, cv2.COLORMAP_HOT)
-
-        rgb_window_name = "rgb:" + event_log.event.uri.query
-        disparity_window_name = "disparity:" + event_log.event.uri.query
-
-        # we use opencv for convenience, use kivy, pangolin or you preferred viz tool :)
-        cv2.namedWindow(disparity_window_name, cv2.WINDOW_NORMAL)
-        cv2.namedWindow(rgb_window_name, cv2.WINDOW_NORMAL)
-
-        cv2.imshow(disparity_window_name, disparity_color)
-        cv2.imshow(rgb_window_name, rgb)
         cv2.waitKey(3)
 
     assert reader.close()
