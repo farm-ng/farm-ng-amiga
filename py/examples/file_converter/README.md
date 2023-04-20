@@ -50,7 +50,7 @@ optional arguments:
                         The name of the camera to visualize. Default: oak0.
   --disparity-scale DISPARITY_SCALE
                         Scale for amplifying disparity color mapping. Default: 1.
-  --video-to-jpg        Use this flag to convert video .bin files to a series of jpg images
+  --video-to-jpg        Use this flag to convert video .bin files to a series of jpg images. Default for videos is mp4.
   --snapshot            Use this flag if the .bin file is a single snapshot. Output will be jpg images.
 ```
 
@@ -66,8 +66,11 @@ You can convert video logs to a stream of jpg images, rather than the default mp
 python main.py --file-name events_09162022160753_000000.bin --camera-name oak1 --video-to-jpg
 ```
 
-Or you can convert a "snapshot" to one jpg per view.
+Or you can convert a "snapshot" log to one jpg per view.
 
 ```bash
 python main.py --file-name cpy_data/farm_ng/2023_01_06_13_24_33_445932_snapshot_b42d218.bin --snapshot
 ```
+
+> NOTE: video logs will not convert if the `--snapshot` flag is used.
+> Similarly, snapshot logs will not convert if the `--snapshot` flag is not used.
