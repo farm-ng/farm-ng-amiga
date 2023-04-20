@@ -40,7 +40,7 @@ def main(
     snapshot: bool = False,
 ) -> None:
     disparity_scale = max(1, int(disparity_scale))
-
+    assert not all((video_to_jpg, snapshot)), "--snapshot and --video-to-jpg flags are mutually exclusive"
     # create the file reader
     reader = EventsFileReader(file_name)
     assert reader.open()
@@ -78,22 +78,21 @@ def main(
             window_name: str = view + ":" + event_log.event.uri.query
             cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
             cv2.imshow(window_name, img)
-            if snapshot:
-                cv2.imwrite(str(output_path / f'{view}_frame_{sample.frame.sequence_num:06d}.jpg'), img)
+
+            if snapshot or video_to_jpg:
+                frame_name: str = f'frame_{sample.frame.sequence_num:06d}.jpg'
+                path: str = (
+                    str(output_path / f'{view}_{frame_name}') if snapshot else str(output_path / view / frame_name)
+                )
+                cv2.imwrite(path, img)
             else:
-                height, width, _ = img.shape
-
-                if video_to_jpg:
-                    # Save each frame as a single jpeg
-                    cv2.imwrite(str(output_path / view / f'frame_{sample.frame.sequence_num:06d}.jpg'), img)
-
-                else:
-                    # Write frame to corresponding mp4 video
-                    if view not in video_writers:
-                        video_writers[view] = cv2.VideoWriter(
-                            str(output_path / (view + '.mp4')), cv2.VideoWriter_fourcc(*'mp4v'), 10, (width, height)
-                        )
-                    video_writers[view].write(img)
+                # Write frame to corresponding mp4 video
+                if view not in video_writers:
+                    height, width, _ = img.shape
+                    video_writers[view] = cv2.VideoWriter(
+                        str(output_path / (view + '.mp4')), cv2.VideoWriter_fourcc(*'mp4v'), 10, (width, height)
+                    )
+                video_writers[view].write(img)
 
         cv2.waitKey(1)
 
