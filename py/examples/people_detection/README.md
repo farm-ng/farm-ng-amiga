@@ -51,7 +51,7 @@ python service.py --port 50090 --models-dir models/
 In another terminal, run the a pipeline using the client:
 
 ```bash
-python main.py --port-camera 50051 --port-detector 50090
+python main.py --port-camera 50051 --port-detector 50095
 ```
 
 And you should see a window with the video stream and the detected people.
