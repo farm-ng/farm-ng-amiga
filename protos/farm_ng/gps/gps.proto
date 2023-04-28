@@ -1,5 +1,5 @@
-// Copyright (c) farm-ng, inc. All rights reserved.
-
+// Copyright (c) farm-ng, inc.
+//
 // Licensed under the Amiga Development Kit License (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -47,9 +47,9 @@ message GpsFrame {
     float heading_accuracy = 7;     // Heading stddev radians? (both motion and vehicle)
     double ground_speed = 8;        // m/s Ground Speed (2-D)
     float speed_accuracy = 9;       // m/s Speed accuracy estimate
-    double vel_north = 10;          // m/s NED north velocity
-    double vel_east =11;            // m/s NED east velocity
-    double vel_down = 12;           // m/s NED down velocity
+    double vel_north = 10;          // m/s N.E.D. north velocity
+    double vel_east =11;            // m/s N.E.D. east velocity
+    double vel_down = 12;           // m/s N.E.D. down velocity
     float horizontal_accuracy = 15; // stddev m/s?
     float vertical_accuracy = 16;   // stddev m/s?
     int32 position_mode = 17;       // GNSSfix Type: 0: no fix 1: dead reckoning only 2: 2D-fix 3: 3D-fix 4: GNSS + dead reckoning combined 5: time only fix

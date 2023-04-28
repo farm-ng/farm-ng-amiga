@@ -13,14 +13,17 @@
 # limitations under the License.
 import logging
 
-from farm_ng.gps import gps_pb2, gps_pb2_grpc
-from farm_ng.service.service_client import ClientConfig, ServiceClient
+from farm_ng.gps import gps_pb2
+from farm_ng.gps import gps_pb2_grpc
+from farm_ng.service.service_client import ClientConfig
+from farm_ng.service.service_client import ServiceClient
 
 logging.basicConfig(level=logging.INFO)
 
 
 class GpsClient(ServiceClient):
     """Amiga GPS client.
+
     Client class to connect with the Amiga brain GPS service.
     Inherits from ServiceClient.
     Args:
@@ -38,6 +41,4 @@ class GpsClient(ServiceClient):
 
     def stream_relative_position(self):
         """Return the async streaming object of GPS relative frame messages."""
-        return self.stub.streamRelativePositionFrames(
-            gps_pb2.StreamRelPositionRequest()
-        )
+        return self.stub.streamRelativePositionFrames(gps_pb2.StreamRelPositionRequest())
