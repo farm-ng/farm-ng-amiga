@@ -32,11 +32,11 @@ class GpsClient(ServiceClient):
         # create a async connection with the server
         self.stub = gps_pb2_grpc.GpsServiceStub(self.channel)
 
-    def stream_frames(self):
+    def stream_gps(self):
         """Return the async streaming object of GPS frame messages."""
         return self.stub.streamFrames(gps_pb2.StreamFramesRequest())
 
-    def stream_rel_pos(self):
+    def stream_relative_position(self):
         """Return the async streaming object of GPS relative frame messages."""
         return self.stub.streamRelativePositionFrames(
             gps_pb2.StreamRelPositionRequest()
