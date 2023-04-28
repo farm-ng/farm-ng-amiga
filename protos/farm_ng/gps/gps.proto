@@ -1,0 +1,91 @@
+// Copyright (c) farm-ng, inc. All rights reserved.
+
+// Licensed under the Amiga Development Kit License (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://github.com/farm-ng/amiga-dev-kit/blob/main/LICENSE
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+import "farm_ng/core/timestamp.proto";
+
+package farm_ng.gps.proto;
+
+service GpsService {
+  rpc streamFrames(StreamFramesRequest) returns (stream StreamFramesReply) {}
+  rpc streamRelativePositionFrames(StreamRelPositionRequest) returns (stream StreamRelPositionReply) {}
+}
+
+message StreamRelPositionRequest {
+}
+
+message StreamFramesRequest {
+}
+
+message GpsFrameStatus {
+    bool time_fully_resolved = 1; // means that the UTC time is known without full seconds ambiguity
+    bool gnss_fix_ok = 2; // fixes not marked valid should not normally be used
+    bool diff_soln = 4; // DGPS used
+    bool heading_vehicle_valid = 3; // heading of vehicle is valid
+}
+
+message GpsFrame {
+    farm_ng.core.proto.Timestamp stamp = 1;
+    farm_ng.core.proto.Timestamp gps_time = 14;
+    double longitude = 2;           // angle from meridian (Wgs84), radians (+ive easterly)
+    double latitude = 3;            // angle from equator (Wgs84), radians  (+ive northerly)
+    double altitude = 4;            // meters above Wgs84 reference geoid
+    double heading_vehicle = 5;     // In radians (original Ublox is in degrees)
+    double heading_motion = 6;      // will be valid if GROUND FILTERING is set
+    float heading_accuracy = 7;     // Heading stddev radians? (both motion and vehicle)
+    double ground_speed = 8;        // m/s Ground Speed (2-D)
+    float speed_accuracy = 9;       // m/s Speed accuracy estimate
+    double vel_north = 10;          // m/s NED north velocity
+    double vel_east =11;            // m/s NED east velocity
+    double vel_down = 12;           // m/s NED down velocity
+    float horizontal_accuracy = 15; // stddev m/s?
+    float vertical_accuracy = 16;   // stddev m/s?
+    int32 position_mode = 17;       // GNSSfix Type: 0: no fix 1: dead reckoning only 2: 2D-fix 3: 3D-fix 4: GNSS + dead reckoning combined 5: time only fix
+    double p_dop = 18;              // Position DOP [1 / 0.01]
+    double height = 19;             // Height above ellipsoid
+    GpsFrameStatus status = 13;
+}
+
+message RelativePositionFrame {
+  farm_ng.core.proto.Timestamp stamp = 1;
+  farm_ng.core.proto.Timestamp gps_time = 2;
+  int32 base_station_id = 3;
+  double relative_pose_north = 4;    // northerly distance from base in meters
+  double relative_pose_east = 5;     // easterly distance from base in meters
+  double relative_pose_down = 6;     // down distance from base in meters
+  double relative_pose_heading = 7;  // bearing in radians (check?)
+  double relative_pose_length = 8;   // radial distance in meters (check?)
+  bool rel_pos_valid = 9;            // if relative position components and accuracies are valid and, in moving base mode only, if baseline is valid
+  bool rel_heading_valid = 10;       // 1 if the components of the relative position vector (including the high-precision parts) are normalized
+  float accuracy_north = 11;         // stddev meters
+  float accuracy_east = 12;          // stddev meters
+  float accuracy_down = 13;          // stddev meters
+  float accuracy_length = 14;        // stddev meters
+  float accuracy_heading = 15;       // stddev radians (check?)
+  int32 carr_soln = 16;              // Carrier phase range solution status: 0 = no carrier phase range solution 1 = carrier phase range solution with floating ambiguities 2 = carrier phase range solution with fixed ambiguities
+  bool is_moving = 17;               // 1 if the receiver is operating in moving base mode
+  bool ref_obs_miss = 18;            // 1 if extrapolated reference observations were used to compute moving base solution this epoch
+  bool ref_pos_miss = 19;            // 1 if extrapolated reference position was used to compute moving base solution this epoch
+  bool ref_pos_normalized = 20;      // ?
+  bool gnss_fix_ok = 21;
+}
+
+message StreamRelPositionReply {
+  RelativePositionFrame frame = 1;
+}
+
+message StreamFramesReply {
+  GpsFrame frame = 1;
+}
