@@ -35,7 +35,8 @@ def main(file_name: str) -> None:
     assert reader.open()
 
     # the annotation files have first the image and later the annotation with masks
-    image_log, annotations_log = reader.get_index()
+    image_log = reader.get_index()[0]
+    annotations_log = reader.get_index()[1:]
 
     images_vis, titles_vis = [], []
 
@@ -48,11 +49,13 @@ def main(file_name: str) -> None:
     titles_vis.append("image")
 
     # visualize the annotation
-    annotations_list = annotations_log.read_message()
-    for annotation in annotations_list.annotations:
-        mask_vis = np.frombuffer(annotation.mask.data, dtype="uint8") * 255
-        mask_vis = mask_vis.reshape(annotation.mask.size.height, annotation.mask.size.width)
-        win_name = f"mask-{annotation.label}-{annotation.sublabel}"
+    for annotation_log in annotations_log:
+        annotations_set = annotation_log.read_message()
+        annotations = annotations_set.annotations
+        label, sublabel = annotations[0].label, annotations[0].sublabel
+        mask_vis = np.frombuffer(annotations_set.mask.data, dtype="uint8") * 255
+        mask_vis = mask_vis.reshape(annotations_set.mask.size.height, annotations_set.mask.size.width)
+        win_name = f"mask-{label}-{sublabel}"
         titles_vis.append(win_name)
         images_vis.append(mask_vis)
 

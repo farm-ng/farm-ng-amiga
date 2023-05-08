@@ -62,12 +62,15 @@ message Annotation {
     repeated Point2d points = 3;
     // width of the line in pixels to be used when rendering
     float width = 4;
-    // binary mask that defines the region of interest
-    ImageMask mask = 5;
 }
 
 
 message AnnotationList {
+    // frame descriptor for the annotation list
+    string frame_descriptor = 1;
     // list of annotations
-    repeated Annotation annotations = 1;
+    repeated Annotation annotations = 2;
+    // binary mask that defines the region of interest
+    // including all annotations in the list
+    ImageMask mask = 3;
 }
