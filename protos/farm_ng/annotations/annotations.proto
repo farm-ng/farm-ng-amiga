@@ -16,30 +16,52 @@ syntax = "proto3";
 
 package farm_ng.annotations.proto;
 
+// ImageSize is a 2D size in pixels
 message ImageSize {
+  // width of the image in pixels
   int32 width = 1;
+  // height of the image in pixels
   int32 height = 2;
 }
 
-message JpegImage {
+// Point2d is a 2D point in image coordinates
+message Point2d {
+  // x coordinate of the point in pixels
+  float x = 1;
+  // y coordinate of the point in pixels
+  float y = 2;
+}
+
+// Image data in raw format wihout any compression
+message Image {
+  // raw image data
+  // TODO: add support for compressed image formats e.g JPEG
   bytes data = 1;
+  // image size in pixels
   ImageSize size = 2;
 }
 
-message RleImageMask {
-    bytes data = 1;
-    ImageSize size = 2;
+// A mask is a binary image that contains a single channel of data
+// where each pixel is either 0 or 1. The mask is used to define
+// a region of interest in an image.
+message ImageMask {
+  // raw image data
+  // TODO: add support for compressed binary masks e.g. RLE
+  bytes data = 1;
+  // image size in pixels
+  ImageSize size = 2;
 }
 
+// Defines a segmentation mask for a single label
 message Annotation {
+    // main label of the annotation; e.g. "tree" or "person"
     string label = 1;
+    // sublabel of the annotation; e.g. "positive" or "negative"
     string sublabel = 2;
-    repeated float points = 3;
-    double width = 4;
-    RleImageMask masks = 5;
-}
-
-message SegmentationLabel {
-    JpegImage image = 1;
-    repeated Annotation annotations = 2;
+    // list of points in image coordinates that define the line
+    repeated Point2d points = 3;
+    // width of the line in pixels to be used when rendering
+    float width = 4;
+    // binary mask that defines the region of interest
+    ImageMask mask = 5;
 }
