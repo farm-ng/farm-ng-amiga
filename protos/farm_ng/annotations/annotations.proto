@@ -65,3 +65,9 @@ message Annotation {
     // binary mask that defines the region of interest
     ImageMask mask = 5;
 }
+
+
+message AnnotationList {
+    // list of annotations
+    repeated Annotation annotations = 1;
+}
