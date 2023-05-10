@@ -14,43 +14,11 @@
 
 syntax = "proto3";
 
+import "sophus/image.proto";
+import "sophus/linalg.proto";
+
 package farm_ng.annotations.proto;
 
-// ImageSize is a 2D size in pixels
-message ImageSize {
-  // width of the image in pixels
-  int32 width = 1;
-  // height of the image in pixels
-  int32 height = 2;
-}
-
-// Point2d is a 2D point in image coordinates
-message Point2d {
-  // x coordinate of the point in pixels
-  float x = 1;
-  // y coordinate of the point in pixels
-  float y = 2;
-}
-
-// Image data in raw format wihout any compression
-message Image {
-  // raw image data
-  // TODO: add support for compressed image formats e.g JPEG
-  bytes data = 1;
-  // image size in pixels
-  ImageSize size = 2;
-}
-
-// A mask is a binary image that contains a single channel of data
-// where each pixel is either 0 or 1. The mask is used to define
-// a region of interest in an image.
-message ImageMask {
-  // raw image data
-  // TODO: add support for compressed binary masks e.g. RLE
-  bytes data = 1;
-  // image size in pixels
-  ImageSize size = 2;
-}
 
 // Defines a segmentation mask for a single label
 message Annotation {
@@ -59,18 +27,22 @@ message Annotation {
     // sublabel of the annotation; e.g. "positive" or "negative"
     string sublabel = 2;
     // list of points in image coordinates that define the line
-    repeated Point2d points = 3;
+    repeated sophus.proto.Vec2F32 points = 3;
     // width of the line in pixels to be used when rendering
     float width = 4;
 }
 
 
-message AnnotationList {
+message AnnotationsSet {
     // frame descriptor for the annotation list
     string frame_descriptor = 1;
+    // main label of the annotation list; e.g. "tree" or "person"
+    string label = 2;
+    // sublabel of the annotation list; e.g. "positive" or "negative"
+    string sublabel = 3;
     // list of annotations
-    repeated Annotation annotations = 2;
+    repeated Annotation annotations = 4;
     // binary mask that defines the region of interest
     // including all annotations in the list
-    ImageMask mask = 3;
+    sophus.proto.DynImage mask = 5;
 }
