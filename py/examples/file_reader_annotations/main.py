@@ -43,7 +43,7 @@ def main(file_name: str) -> None:
     # visualize the image
     image = image_log.read_message()
     image_vis = np.frombuffer(image.data, dtype="uint8")
-    image_vis = image_vis.reshape(image.size.height, image.size.width, 3)
+    image_vis = image_vis.reshape(image.layout.size.height, image.layout.size.width, 3)
 
     images_vis.append(image_vis)
     titles_vis.append("image")
@@ -54,7 +54,7 @@ def main(file_name: str) -> None:
         annotations = annotations_set.annotations
         label, sublabel = annotations[0].label, annotations[0].sublabel
         mask_vis = np.frombuffer(annotations_set.mask.data, dtype="uint8") * 255
-        mask_vis = mask_vis.reshape(annotations_set.mask.size.height, annotations_set.mask.size.width)
+        mask_vis = mask_vis.reshape(annotations_set.mask.layout.size.height, annotations_set.mask.layout.size.width)
         win_name = f"mask-{label}-{sublabel}"
         titles_vis.append(win_name)
         images_vis.append(mask_vis)

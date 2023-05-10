@@ -12,42 +12,65 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import numpy as np
-import torch
 
 from farm_ng.annotations import annotations_pb2
+from sophus import image_pb2, linalg_pb2
 
 
-def make_point(x: float, y: float) -> annotations_pb2.Point2d:
-    return annotations_pb2.Point2d(x=x, y=y)
+def make_point(x: float, y: float) -> linalg_pb2.Vec2F32:
+    return linalg_pb2.Vec2F32(x=x, y=y)
 
 
 class TestAnnotations:
     def test_smoke(self) -> None:
         # generate a mask
-        mask = torch.tensor([[0, True, 0], [True, 0, True]])
+        mask = np.array([[0, 255, 0], [255, 0, 255]], dtype=np.uint8)
+        points_pb = [make_point(1, 0), make_point(0, 1), make_point(2, 1)]
+        height, width = mask.shape
+
+        mask_pb = image_pb2.DynImage(
+            data=mask.tobytes(),
+            layout=image_pb2.ImageLayout(
+                size=image_pb2.ImageSize(width=width, height=height),
+                pitch_bytes=width * mask.dtype.itemsize,
+            ),
+            pixel_format=image_pb2.PixelFormat(
+                number_type="unsigned",
+                num_components=1,
+                num_bytes_per_component=1,
+            ),
+        )
 
         annotation = annotations_pb2.Annotation(
             label="person",
             sublabel="positive",
-            points=[make_point(x, y) for y, x in mask.nonzero()],
+            points=points_pb,
             width=1,
-            mask=annotations_pb2.ImageMask(
-                data=mask.byte().numpy().tobytes(),
-                size=annotations_pb2.ImageSize(width=mask.shape[1], height=mask.shape[0])
-            )
         )
-
         assert annotation.label == "person"
         assert annotation.sublabel == "positive"
-        assert annotation.points == [make_point(1, 0), make_point(0, 1), make_point(2, 1)]
+        assert annotation.points == points_pb
         assert annotation.width == 1
 
+        annotations_set = annotations_pb2.AnnotationsSet(
+            frame_descriptor="events_0000000000000000_oak0_00000",
+            label="person",
+            sublabel="positive",
+            annotations=[annotation],
+            mask=mask_pb,
+        )
+        assert annotations_set.frame_descriptor == "events_0000000000000000_oak0_00000"
+        assert annotations_set.label == "person"
+        assert annotations_set.sublabel == "positive"
+        assert annotations_set.annotations == [annotation]
+        assert annotations_set.mask == mask_pb
+
         # reconstruct the mask
-        mask_hat = torch.frombuffer(bytearray(annotation.mask.data), dtype=torch.bool)
+        mask_hat = np.frombuffer(bytearray(annotations_set.mask.data), dtype=np.uint8)
         mask_hat = mask_hat.reshape(
-            annotation.mask.size.height, annotation.mask.size.width)
+            annotations_set.mask.layout.size.height, annotations_set.mask.layout.size.width)
         
-        assert (mask == mask_hat).all()
+        assert np.allclose(mask, mask_hat)
 
 
 
