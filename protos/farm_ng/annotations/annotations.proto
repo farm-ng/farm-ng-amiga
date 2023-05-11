@@ -46,3 +46,13 @@ message AnnotationsSet {
     // including all annotations in the list
     sophus.proto.DynImage mask = 5;
 }
+
+
+message AnnotationsHeader {
+    // the list of labels that are used in the annotations typically used for
+    // describing the object of interest e.g "tree", "person", "car"
+    repeated string labels = 1;
+    // the list of sublabels that are used in the annotations typically used for
+    // positive/negative or foreground/background
+    repeated string sublabels = 2;
+}

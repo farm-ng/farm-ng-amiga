@@ -34,9 +34,16 @@ def main(file_name: str) -> None:
     reader = EventsFileReader(Path(file_name))
     assert reader.open()
 
+    # reader the header
+    header_log = reader.get_index()[0]
+    header = header_log.read_message()
+    labels, sublabels = header.labels, header.sublabels
+    print(f"labels: {labels}")
+    print(f"sublabels: {sublabels}")
+
     # the annotation files have first the image and later the annotation with masks
-    image_log = reader.get_index()[0]
-    annotations_log = reader.get_index()[1:]
+    image_log = reader.get_index()[1]
+    annotations_log = reader.get_index()[2:]
 
     images_vis, titles_vis = [], []
 
