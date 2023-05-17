@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import pytest
 import numpy as np
 
 from farm_ng.annotations import annotations_pb2
@@ -21,6 +22,7 @@ def make_point(x: float, y: float) -> linalg_pb2.Vec2F32:
     return linalg_pb2.Vec2F32(x=x, y=y)
 
 
+@pytest.mark.skip(reason="enable if you have the latest sophus with DynImage")
 class TestAnnotations:
     def test_smoke(self) -> None:
         # generate a mask
