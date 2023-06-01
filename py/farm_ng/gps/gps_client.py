@@ -42,3 +42,7 @@ class GpsClient(ServiceClient):
     def stream_relative_position(self):
         """Return the async streaming object of GPS relative frame messages."""
         return self.stub.streamRelativePositionFrames(gps_pb2.StreamRelPositionRequest())
+
+    def stream_sync_frames(self):
+        """Return the async streaming object of synchronized GPS raw and relative frame messages."""
+        return self.stub.streamGpsSyncFrames(gps_pb2.StreamGpsSyncnRequest())

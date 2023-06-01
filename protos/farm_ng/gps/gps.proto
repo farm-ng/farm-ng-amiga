@@ -21,12 +21,28 @@ package farm_ng.gps.proto;
 service GpsService {
   rpc streamFrames(StreamFramesRequest) returns (stream StreamFramesReply) {}
   rpc streamRelativePositionFrames(StreamRelPositionRequest) returns (stream StreamRelPositionReply) {}
+  rpc streamGpsSyncFrames(StreamGpsSyncRequest) returns (stream StreamGpsSyncReply) {}
+}
+
+message StreamFramesRequest {
 }
 
 message StreamRelPositionRequest {
 }
 
-message StreamFramesRequest {
+message StreamGpsSyncRequest {
+}
+
+message StreamFramesReply {
+  GpsFrame frame = 1;
+}
+
+message StreamRelPositionReply {
+  RelativePositionFrame frame = 1;
+}
+
+message StreamGpsSyncReply {
+  GpsSyncFrame sync_frame = 1;
 }
 
 message GpsFrameStatus {
@@ -82,10 +98,8 @@ message RelativePositionFrame {
   bool gnss_fix_ok = 21;
 }
 
-message StreamRelPositionReply {
-  RelativePositionFrame frame = 1;
-}
-
-message StreamFramesReply {
-  GpsFrame frame = 1;
+message GpsSyncFrame {
+  farm_ng.core.proto.Timestamp gps_time = 1;          // Synced time of GpsFrame & RelativePositionFrame, from ublox iTOW
+  GpsFrame gps_frame = 2;                             // Raw GPS Frame
+  RelativePositionFrame relative_position_frame = 3;  // N.E.D. Relative position frame
 }
