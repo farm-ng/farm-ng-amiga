@@ -6,9 +6,9 @@ farm_ng_add_protobufs(farm_ng_amiga_proto_defs
     PROTO_FILES
         farm_ng/canbus/canbus.proto
         farm_ng/gps/gps.proto
+        farm_ng/health_monitor/health_monitor.proto
         farm_ng/oak/oak.proto
         farm_ng/service/service.proto
-        farm_ng/service/health_monitor.proto
     DEPENDENCIES
       Sophus::sophus_linalg_proto_defs
       Sophus::sophus_lie_proto_defs
