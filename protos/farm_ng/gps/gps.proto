@@ -89,3 +89,12 @@ message StreamRelPositionReply {
 message StreamFramesReply {
   GpsFrame frame = 1;
 }
+
+message GpsCoordinates{
+  // Not a reading from the GPS receiver
+  // Created / calculated GPS coordinates.
+  // Altitude may not be accurate / present.
+  double longitude = 1; // angle from meridian (Wgs84), radians (+ive easterly)
+  double latitude = 2;  // angle from equator (Wgs84), radians  (+ive northerly)
+  double altitude = 3;  // meters above Wgs84 reference geoid
+}
