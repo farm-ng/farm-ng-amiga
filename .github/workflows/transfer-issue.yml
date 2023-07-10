@@ -1,0 +1,32 @@
+name: Transfer Issue
+
+on:
+  issues:
+    types:
+      - opened
+      - edited
+
+jobs:
+  transfer-issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Transfer Issue
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const { number } = context.issue;
+            const newRepo = 'Amiga-support-issues';
+
+            const response = await github.request(
+              'POST /repos/{owner}/{repo}/issues/{issue_number}/transfer',
+              {
+                owner: owner,
+                repo: repo,
+                issue_number: number,
+                new_owner: owner,
+                new_repo: newRepo
+              }
+            );
+
+            console.log(response);
