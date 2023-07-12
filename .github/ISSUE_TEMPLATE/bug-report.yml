@@ -4,6 +4,8 @@ title: "[Bug]: "
 labels: ["bug"]
 assignees:
   - Hackerman342
+projects:
+  - Amiga-support-issues
 body:
   - type: markdown
     attributes:
