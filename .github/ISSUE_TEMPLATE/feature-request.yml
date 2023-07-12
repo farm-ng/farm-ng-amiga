@@ -4,6 +4,8 @@ title: "[Feature Request]: "
 labels: ["feature-request"]
 assignees:
   - Hackerman342
+projects:
+  - Amiga-support-issues
 body:
   - type: markdown
     attributes:
