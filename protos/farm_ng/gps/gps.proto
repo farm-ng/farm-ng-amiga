@@ -80,7 +80,7 @@ message RelativePositionFrame {
   bool ref_pos_miss = 19;            // 1 if extrapolated reference position was used to compute moving base solution this epoch
   bool ref_pos_normalized = 20;      // ?
   bool gnss_fix_ok = 21;
-  bool has_base_coords = 22;         // 1 if the base / reference station coordinates are known
+  bool base_coords_known = 22;       // 1 if the base / reference station coordinates are known
   GpsCoordinates base_coords = 23;   // base / reference station coordinates, if known
 }
 
