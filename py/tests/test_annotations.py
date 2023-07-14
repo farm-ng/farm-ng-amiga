@@ -11,11 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import pytest
 import numpy as np
-
+import pytest
 from farm_ng.annotations import annotations_pb2
-from sophus import image_pb2, linalg_pb2
+from sophus import image_pb2
+from sophus import linalg_pb2
 
 
 def make_point(x: float, y: float) -> linalg_pb2.Vec2F32:
@@ -33,22 +33,12 @@ class TestAnnotations:
         mask_pb = image_pb2.DynImage(
             data=mask.tobytes(),
             layout=image_pb2.ImageLayout(
-                size=image_pb2.ImageSize(width=width, height=height),
-                pitch_bytes=width * mask.dtype.itemsize,
+                size=image_pb2.ImageSize(width=width, height=height), pitch_bytes=width * mask.dtype.itemsize
             ),
-            pixel_format=image_pb2.PixelFormat(
-                number_type="unsigned",
-                num_components=1,
-                num_bytes_per_component=1,
-            ),
+            pixel_format=image_pb2.PixelFormat(number_type="unsigned", num_components=1, num_bytes_per_component=1),
         )
 
-        annotation = annotations_pb2.Annotation(
-            label="person",
-            sublabel="positive",
-            points=points_pb,
-            width=1,
-        )
+        annotation = annotations_pb2.Annotation(label="person", sublabel="positive", points=points_pb, width=1)
         assert annotation.label == "person"
         assert annotation.sublabel == "positive"
         assert annotation.points == points_pb
@@ -69,10 +59,6 @@ class TestAnnotations:
 
         # reconstruct the mask
         mask_hat = np.frombuffer(bytearray(annotations_set.mask.data), dtype=np.uint8)
-        mask_hat = mask_hat.reshape(
-            annotations_set.mask.layout.size.height, annotations_set.mask.layout.size.width)
-        
+        mask_hat = mask_hat.reshape(annotations_set.mask.layout.size.height, annotations_set.mask.layout.size.width)
+
         assert np.allclose(mask, mask_hat)
-
-
-

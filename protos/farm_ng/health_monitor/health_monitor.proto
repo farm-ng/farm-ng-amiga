@@ -31,6 +31,3 @@ message HealthStatus {
 message StreamHealthStatusReply {
   HealthStatus status = 1;
 }
-
-
-
