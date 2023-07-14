@@ -80,6 +80,8 @@ message RelativePositionFrame {
   bool ref_pos_miss = 19;            // 1 if extrapolated reference position was used to compute moving base solution this epoch
   bool ref_pos_normalized = 20;      // ?
   bool gnss_fix_ok = 21;
+  bool base_coords_known = 22;       // 1 if the base / reference station coordinates are known
+  GpsCoordinates base_coords = 23;   // base / reference station coordinates, if known
 }
 
 message StreamRelPositionReply {
@@ -88,4 +90,12 @@ message StreamRelPositionReply {
 
 message StreamFramesReply {
   GpsFrame frame = 1;
+}
+
+message GpsCoordinates{
+  // Not necessarily a reading directly from the GPS receiver.
+  // Likely a created / calculated set of GPS coordinates.
+  double longitude = 1; // angle from meridian (Wgs84), radians (+ive easterly)
+  double latitude = 2;  // angle from equator (Wgs84), radians  (+ive northerly)
+  double altitude = 3;  // meters above Wgs84 reference geoid
 }
