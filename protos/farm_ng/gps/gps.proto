@@ -41,15 +41,15 @@ message UtcStamp {
     // https://github.com/KumarRobotics/ublox/blob/master/ublox_msgs/msg/NavPVT.msg
     // But tweaked to match the UBX NAV-PVT message we get from the Ublox
 
-    int32 iTOW = 1;    // uint32 iTOW   -> GPS Millisecond time of week [ms]
-    int32 year = 2;    // uint16 year   -> Year (UTC)
-    int32 month = 3;   // uint8 month   -> Month, range 1..12 (UTC)
-    int32 day = 4;     // uint8 day     -> Day of month, range 1..31 (UTC)
-    int32 hour = 5;    // uint8 hour    -> Hour of day, range 0..23 (UTC)
-    int32 min = 6;     // uint8 min     -> Minute of hour, range 0..59 (UTC)
-    int32 sec = 7;     // uint8 seconds -> Seconds of minute, range 0..60 (UTC)
-    int32 nano = 8;    // int32 nano    -> Fraction of second, range -1e9 .. 1e9 (UTC)
-    int32 tAcc = 9;    // uint32 tAcc   -> Time accuracy estimate (UTC)
+    int32 iTOW = 1;    // uint32 iTOW  -> GPS Millisecond time of week [ms]
+    int32 year = 2;    // uint16 year  -> Year (UTC)
+    int32 month = 3;   // uint8 month  -> Month, range 1..12 (UTC)
+    int32 day = 4;     // uint8 day    -> Day of month, range 1..31 (UTC)
+    int32 hour = 5;    // uint8 hour   -> Hour of day, range 0..23 (UTC)
+    int32 min = 6;     // uint8 min    -> Minute of hour, range 0..59 (UTC)
+    int32 sec = 7;     // uint8 second -> Seconds of minute, range 0..60 (UTC)
+    int32 nano = 8;    // int32 nano   -> Fraction of second, range -1e9 .. 1e9 (UTC)
+    int32 tAcc = 9;    // uint32 tAcc  -> Time accuracy estimate (UTC)
 
     // Validity flags
     int32 valid_date = 11;     // uint8 validDate -> Valid UTC Date
