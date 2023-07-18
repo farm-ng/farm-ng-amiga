@@ -64,13 +64,12 @@ message CameraSettings {
 }
 
 message OakImageMeta {
-  // NOTE: timestamp that we really want is capture time synchronized to the host monotonic clock
   int64 category = 1;          // DepthAI catetory
   int64 instance_num = 2;      // DepthAI instance number
   int64 sequence_num = 3;      // for synchronization between left, right and stereo
-  double timestamp = 4;        // seconds, capture time device monotonic clock
-  double timestamp_device = 5; // seconds, capture time device Clock::now
-  double timestamp_host = 7;   // seconds, host receive time in monotonic clock
+  double timestamp = 4;        // seconds, capture time (begin of exposure) synchronized with host monotonic
+  double timestamp_device = 5; // seconds, capture time (begin of exposure) in the device monotonic clock
+  double timestamp_recv = 7;   // seconds, host receive time in host monotonic clock
   CameraSettings settings = 6;
 }
 
@@ -85,7 +84,7 @@ message OakGyro {
   string accuracy = 3;
   double timestamp = 4;        // See OakImageMeta
   double timestamp_device = 5; // See OakImageMeta
-  double timestamp_host = 6;   // See OakImageMeta
+  double timestamp_recv = 6;   // See OakImageMeta
 }
 
 message OakAccelero {
@@ -94,7 +93,7 @@ message OakAccelero {
   string accuracy = 3;
   double timestamp = 4;        // See OakImageMeta
   double timestamp_device = 5; // See OakImageMeta
-  double timestamp_host = 6;   // See OakImageMeta
+  double timestamp_recv = 6;   // See OakImageMeta
 }
 
 message OakImuPacket {
