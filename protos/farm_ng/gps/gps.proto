@@ -60,7 +60,7 @@ message UtcStamp {
 
 message GpsFrame {
     farm_ng.core.proto.Timestamp stamp = 1;      // seconds, host receive time in monotonic clock
-    farm_ng.core.proto.Timestamp gps_time = 14;  // ITOW (integer time of the week) on the device
+    farm_ng.core.proto.Timestamp gps_time = 14;  // seconds, measurement sample time converted to POSIX clock
     double longitude = 2;           // angle from meridian (Wgs84), radians (+ive easterly)
     double latitude = 3;            // angle from equator (Wgs84), radians  (+ive northerly)
     double altitude = 4;            // meters above Wgs84 reference geoid
@@ -83,7 +83,7 @@ message GpsFrame {
 
 message RelativePositionFrame {
   farm_ng.core.proto.Timestamp stamp = 1;    // seconds, host receive time in monotonic clock
-  farm_ng.core.proto.Timestamp gps_time = 2; // ITOW (integer time of the week) on the device
+  farm_ng.core.proto.Timestamp gps_time = 2; // seconds, measurement sample time converted to POSIX clock
   int32 base_station_id = 3;
   double relative_pose_north = 4;    // northerly distance from base in meters
   double relative_pose_east = 5;     // easterly distance from base in meters
