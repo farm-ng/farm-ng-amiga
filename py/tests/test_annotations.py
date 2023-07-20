@@ -12,17 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import numpy as np
-import pytest
 from farm_ng.annotations import annotations_pb2
-from sophus import image_pb2
-from sophus import linalg_pb2
+from farm_ng.image import image_pb2
 
 
-def make_point(x: float, y: float) -> linalg_pb2.Vec2F32:
-    return linalg_pb2.Vec2F32(x=x, y=y)
+def make_point(x: float, y: float) -> image_pb2.Vec2F32:
+    return image_pb2.Vec2F32(x=x, y=y)
 
 
-@pytest.mark.skip(reason="enable if you have the latest sophus with DynImage")
 class TestAnnotations:
     def test_smoke(self) -> None:
         # generate a mask

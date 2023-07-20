@@ -16,6 +16,8 @@ syntax = "proto3";
 
 package farm_ng.people_detection.proto;
 
+import "farm_ng/image/image.proto";
+
 // PeopleDetectionService is a service for people detection.
 service PeopleDetectionService {
   // detectPeople detects people in an image.
@@ -32,22 +34,6 @@ message Detection {
   float confidence = 5; // confidence of the detection.
 }
 
-// ImageSize is a message for the size of an image.
-// NOTE: this will implemented in Sophus in the future.
-message ImageSize {
-  int32 width = 1;  // width of the image.
-  int32 height = 2; // height of the image.
-}
-
-// Image is a message for an image.
-// NOTE: this will implemented in Sophus in the future.
-message Image {
-  bytes data = 1; // the image data in row-major order.
-  ImageSize size = 2;  // the size of the image.
-  int32 num_channels = 3;  // the number of channels of the image.
-  string dtype = 4;  // the data type of the image.
-}
-
 // DetectPeopleConfig is a message for the configuration of the people detection.
 message DetectPeopleConfig {
   float confidence_threshold = 1;  // the confidence threshold for the detection.
@@ -56,7 +42,7 @@ message DetectPeopleConfig {
 // DetectPeopleRequest is a message for the request of the people detection.
 message DetectPeopleRequest {
   DetectPeopleConfig config = 1;  // the configuration of the people detection.
-  Image image = 2;  // the image to detect people.
+  farm_ng.image.proto.Image image = 2;  // the image to detect people.
 }
 
 // DetectPeopleReply is a message for the reply of the people detection.
