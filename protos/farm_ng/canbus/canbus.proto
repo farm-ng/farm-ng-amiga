@@ -109,6 +109,17 @@ message RawCanbusMessages {
 message StreamMotorStatesRequest {
 }
 
+// Enum of motor controller states
+enum MotorControllerStatus {
+  // TODO: Do we want to replace uint32 status=3; in MotorState with this enum?
+  // Would be breaking for any clients that are already using the proto
+  PRE_OPERATIONAL = 0;
+  IDLE = 1;
+  POST_OPERATIONAL = 2;
+  RUN = 3;
+  FAULT = 4;
+}
+
 // Proto definition containing state values of a motor
 // Corresponds to MotorState class
 message MotorState {
