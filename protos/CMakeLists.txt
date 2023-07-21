@@ -4,6 +4,7 @@ farm_ng_add_protobufs(farm_ng_amiga_proto_defs
       ${Sophus_PROTO_DIR}
       ${farm_ng_core_PROTO_DIR}
     PROTO_FILES
+        farm_ng/canbus/amiga_v6.proto
         farm_ng/canbus/canbus.proto
         farm_ng/gps/gps.proto
         farm_ng/health_monitor/health_monitor.proto
