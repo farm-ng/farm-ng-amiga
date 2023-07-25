@@ -58,7 +58,7 @@ message UtcStamp {
     int32 valid_mag = 14;      // uint8 validMag -> Valid Magnetic Declination
 }
 
-message GpsFrame {
+message GpsFrame { // NAV-PVT
     farm_ng.core.proto.Timestamp stamp = 1;      // seconds, host receive time in monotonic clock
     farm_ng.core.proto.Timestamp gps_time = 14;  // seconds, measurement sample time converted to POSIX clock
     double longitude = 2;           // angle from meridian (Wgs84), radians (+ive easterly)
@@ -81,7 +81,7 @@ message GpsFrame {
     UtcStamp utc_stamp = 20;
 }
 
-message RelativePositionFrame {
+message RelativePositionFrame { // NAV-RELPOSNED
   farm_ng.core.proto.Timestamp stamp = 1;    // seconds, host receive time in monotonic clock
   farm_ng.core.proto.Timestamp gps_time = 2; // seconds, measurement sample time converted to POSIX clock
   int32 base_station_id = 3;
