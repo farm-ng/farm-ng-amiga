@@ -16,44 +16,6 @@ syntax = "proto3";
 
 package farm_ng.canbus.proto;
 
-service CanbusService {
-  // Streams raw messages received on the CAN bus
-  rpc streamCanbusMessages(StreamCanbusRequest)
-      returns (stream StreamCanbusReply) {}
-  // Sends messages on the CAN bus
-  rpc sendCanbusMessage(stream SendCanbusMessageRequest)
-      returns (stream SendCanbusMessageReply) {}
-
-  // Streams the states of all detected motors.
-  // Motors not actively streaming their state will not appear in the StreamMotorStatesReply
-  rpc streamMotorStates(StreamMotorStatesRequest)
-      returns (stream StreamMotorStatesReply) {}
-
-  // Streams vehicle twist states received on the CAN bus
-  rpc streamVehicleTwistState(StreamVehicleTwistStateRequest)
-    returns (stream StreamVehicleTwistStateReply) {}
-
-  // Sends twist vehicle commands on the CAN bus
-  // and responds with the most recent received twist state.
-  rpc sendVehicleTwistCommand(stream SendVehicleTwistCommandRequest)
-    returns (stream SendVehicleTwistCommandReply) {}
-}
-
-message StreamCanbusRequest {
-}
-
-message StreamCanbusReply {
-  RawCanbusMessages messages = 1;
-}
-
-message SendCanbusMessageRequest {
-  RawCanbusMessage message = 1;
-}
-
-message SendCanbusMessageReply {
-  bool success = 1;
-}
-
 // Message to send a twist command to the vehicle
 message Twist2d {
   // The commanded linear velocity of the vehicle in the x direction in meters per second
@@ -62,34 +24,6 @@ message Twist2d {
 
   // The commanded angular velocity of the vehicle in radians per second
   float angular_velocity = 3;
-}
-
-// Message to send a twist command to the vehicle
-  message StreamVehicleTwistStateRequest {
-}
-
-// Message to send a twist command to the vehicle
-message StreamVehicleTwistStateReply {
-  // The time the message is "received" / "sent" on the canbus
-  double stamp = 1;
-  // The state of the vehicle
-  Twist2d state = 2;
-}
-
-// Message to send a twist command to the vehicle
-message SendVehicleTwistCommandRequest {
-  // The commanded twist to the vehicle
-  Twist2d command = 1;
-}
-
-// Message to send a twist command to the vehicle
-message SendVehicleTwistCommandReply {
-  // Whether the command was successfully sent
-  bool success = 1;
-  // The time the message is "received" / "sent" on the canbus
-  double stamp = 2;
-  // The state of the vehicle
-  Twist2d state = 3;
 }
 
 message RawCanbusMessage {
@@ -104,9 +38,6 @@ message RawCanbusMessage {
 
 message RawCanbusMessages {
   repeated RawCanbusMessage messages = 1;
-}
-
-message StreamMotorStatesRequest {
 }
 
 // Enum of motor controller states
@@ -130,10 +61,4 @@ message MotorState {
     double voltage = 5; // Battery voltage, as measured at motor controller
     double current = 6; // Motor current draw, as measured at motor controller
     int32 temperature = 7; // Motor temperature
-}
-
-// Packages multiple MotorState's for the client
-message StreamMotorStatesReply {
-  // List of MotorState's
-  repeated MotorState motors = 1;
 }
