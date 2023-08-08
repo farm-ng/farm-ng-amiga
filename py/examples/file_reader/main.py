@@ -22,6 +22,8 @@ from farm_ng.core.events_file_reader import EventLogPosition
 from farm_ng.core.events_file_reader import EventsFileReader
 from farm_ng.oak import oak_pb2
 
+from utils import build_events_dict
+
 
 # helper function to filter valid events given a message type
 def event_has_message(event: event_pb2.Event, msg_type) -> bool:
@@ -32,39 +34,28 @@ def main(file_name: str, camera_name: str) -> None:
     # create the file reader
     reader = EventsFileReader(Path(file_name))
     assert reader.open()
+    success: bool = reader.open()
+    if not success:
+        raise RuntimeError(f"Failed to open events file: {file_name}")
 
-    # filter the events containing `oak_pb2.OakDataSample`
-    events: List[EventLogPosition] = [
-        x for x in reader.get_index() if event_has_message(x.event, oak_pb2.OakDataSample)
-    ]
+    # get the index of the events file
+    # events_index: list[EventLogPosition] = reader.get_index()
+    events_index: list[EventLogPosition] = reader.get_index()
 
-    # filter the image based events by camera name
-    cam_events: List[EventLogPosition] = [x for x in events if x.event.uri.path == f"{camera_name}/video"]
+    # structure the index as a dictionary of lists of events
+    events_dict: dict[str, EventLogPosition] = build_events_dict(events_index)
 
-    for event_log in cam_events:
+    # print(events_dict.keys())
+
+    oak0_rgb_events = events_dict["oak0/rgb"]
+
+    for event_log in oak0_rgb_events:
         # parse the message
-        sample: oak_pb2.OakDataSample
+        # sample: oak_pb2.OakDataSample
         sample = event_log.read_message()
-
-        frame: oak_pb2.OakSyncFrame = sample.frame
-
-        # cast image data bytes to numpy and decode
-        # NOTE: explore frame.[rgb, disparity, left, right]
-        disparity = cv2.imdecode(np.frombuffer(frame.disparity.image_data, dtype="uint8"), cv2.IMREAD_GRAYSCALE)
-        rgb = cv2.imdecode(np.frombuffer(frame.rgb.image_data, dtype="uint8"), cv2.IMREAD_UNCHANGED)
-
-        # visualize the image
-        disparity_color = cv2.applyColorMap(disparity * 2, cv2.COLORMAP_HOT)
-
-        rgb_window_name = "rgb:" + event_log.event.uri.query
-        disparity_window_name = "disparity:" + event_log.event.uri.query
-
-        # we use opencv for convenience, use kivy, pangolin or you preferred viz tool :)
-        cv2.namedWindow(disparity_window_name, cv2.WINDOW_NORMAL)
-        cv2.namedWindow(rgb_window_name, cv2.WINDOW_NORMAL)
-
-        cv2.imshow(disparity_window_name, disparity_color)
-        cv2.imshow(rgb_window_name, rgb)
+        # print(sample.image_data)
+        img = cv2.imdecode(np.frombuffer(sample.image_data, dtype="uint8"), cv2.IMREAD_UNCHANGED)
+        cv2.imshow("Oak0 RGB",img)
         cv2.waitKey(3)
 
     assert reader.close()
