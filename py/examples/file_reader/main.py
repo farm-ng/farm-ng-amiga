@@ -30,7 +30,7 @@ def event_has_message(event: event_pb2.Event, msg_type) -> bool:
     return event.uri.query.split("&")[0].split(".")[-1] == msg_type.__name__
 
 
-def main(file_name: str, camera_name: str) -> None:
+def main(file_name: str, camera_name: str, view_name: str) -> None:
     # create the file reader
     reader = EventsFileReader(Path(file_name))
     assert reader.open()
@@ -45,17 +45,21 @@ def main(file_name: str, camera_name: str) -> None:
     # structure the index as a dictionary of lists of events
     events_dict: dict[str, EventLogPosition] = build_events_dict(events_index)
 
-    # print(events_dict.keys())
+    print(events_dict.keys())
 
-    oak0_rgb_events = events_dict["oak0/rgb"]
+    # customize camera and view
+    camera_events = events_dict[f"{camera_name}/{view_name}"]
 
-    for event_log in oak0_rgb_events:
+    for event_log in camera_events:
+        
         # parse the message
-        # sample: oak_pb2.OakDataSample
         sample = event_log.read_message()
-        # print(sample.image_data)
+        
+        # decode image
         img = cv2.imdecode(np.frombuffer(sample.image_data, dtype="uint8"), cv2.IMREAD_UNCHANGED)
-        cv2.imshow("Oak0 RGB",img)
+
+        # show image
+        cv2.imshow(f"{camera_name} {view_name}",img)
         cv2.waitKey(3)
 
     assert reader.close()
@@ -67,5 +71,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--camera-name", type=str, default="oak0", help="The name of the camera to visualize. Default: oak0."
     )
+    parser.add_argument(
+        "--view-name", type=str, default="rgb", help="The name of the camera view to visualize. Default: oak0."
+    )
     args = parser.parse_args()
-    main(args.file_name, args.camera_name)
+    main(args.file_name, args.camera_name,args.view_name)
