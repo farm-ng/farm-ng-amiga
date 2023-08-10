@@ -18,17 +18,6 @@ import "farm_ng/core/timestamp.proto";
 
 package farm_ng.gps.proto;
 
-service GpsService {
-  rpc streamFrames(StreamFramesRequest) returns (stream StreamFramesReply) {}
-  rpc streamRelativePositionFrames(StreamRelPositionRequest) returns (stream StreamRelPositionReply) {}
-}
-
-message StreamRelPositionRequest {
-}
-
-message StreamFramesRequest {
-}
-
 message GpsFrameStatus {
     bool time_fully_resolved = 1; // means that the UTC time is known without full seconds ambiguity
     bool gnss_fix_ok = 2; // fixes not marked valid should not normally be used
@@ -105,14 +94,6 @@ message RelativePositionFrame { // NAV-RELPOSNED
   bool gnss_fix_ok = 21;
   bool base_coords_known = 22;       // 1 if the base / reference station coordinates are known
   GpsCoordinates base_coords = 23;   // base / reference station coordinates, if known
-}
-
-message StreamRelPositionReply {
-  RelativePositionFrame frame = 1;
-}
-
-message StreamFramesReply {
-  GpsFrame frame = 1;
 }
 
 message GpsCoordinates{

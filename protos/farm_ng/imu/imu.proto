@@ -1,0 +1,27 @@
+// Copyright (c) farm-ng, inc. All rights reserved.
+
+syntax = "proto3";
+
+import "farm_ng/core/linalg.proto";
+import "farm_ng/core/lie.proto";
+
+package farm_ng.imu.proto;
+
+message ImuBias {
+    // Gyro bias in radians per second
+    farm_ng.core.proto.Vec3F64 gyro_bias = 1;
+    // Accelerometer bias in meters per second squared
+    farm_ng.core.proto.Vec3F64 accelero_bias = 2;
+}
+
+message Imu {
+    // Angular velocity in radians per second
+    farm_ng.core.proto.Vec3F64 angular_velocity = 2;
+    // Linear acceleration in meters per second squared
+    farm_ng.core.proto.Vec3F64 linear_acceleration = 3;
+    // Orientation as a quaternion
+    farm_ng.core.proto.QuaternionF64 orientation = 4;
+    // Gyro and Accelero bias 
+    ImuBias bias = 5;
+}
+  
