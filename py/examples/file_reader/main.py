@@ -25,16 +25,16 @@ from farm_ng.oak import oak_pb2
 from utils import build_events_dict
 
 
-def main(file_name: str, camera_name: str, view_name: str) -> None:
+def main(file_name: Path, camera_name: str, view_name: str) -> None:
     """Reads an events file and displays the images from the specified camera and view.
 
     Args:
-        file_name (str): The path to the events file.
+        file_name (Path): The path to the events file.
         camera_name (str): The name of the camera to visualize.
         view_name (str): The name of the camera view to visualize.
     """
     # create the file reader
-    reader = EventsFileReader(Path(file_name))
+    reader = EventsFileReader(file_name)
     success: bool = reader.open()
     if not success:
         raise RuntimeError(f"Failed to open events file: {file_name}")
@@ -76,7 +76,7 @@ def main(file_name: str, camera_name: str, view_name: str) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="Event file reader example.")
-    parser.add_argument("--file-name", type=str, required=True, help="Path to the `events.bin` file.")
+    parser.add_argument("--file-name", type=Path, required=True, help="Path to the `events.bin` file.")
     parser.add_argument(
         "--camera-name", type=str, default="oak0", help="The name of the camera to visualize. Default: oak0."
     )
