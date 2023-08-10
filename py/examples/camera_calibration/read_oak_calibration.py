@@ -1,3 +1,4 @@
+"""Example of requesting the camera calibration from the camera service."""
 # Copyright (c) farm-ng, inc.
 #
 # Licensed under the Amiga Development Kit License (the "License");
@@ -13,34 +14,38 @@
 # limitations under the License.
 import argparse
 import asyncio
+from pathlib import Path
 
+from farm_ng.core.event_client import EventClient
+from farm_ng.core.event_service_pb2 import (
+    EventServiceConfig,
+)
+from farm_ng.core.events_file_reader import proto_from_json_file, payload_to_protobuf
 from farm_ng.oak import oak_pb2
-from farm_ng.oak.camera_client import OakCameraClient
-from farm_ng.service import service_pb2
-from farm_ng.service.service_client import ClientConfig
+from google.protobuf.empty_pb2 import Empty
 
 
-async def main(address: str, port: int) -> None:
+async def main(service_config_path: Path) -> None:
+    """Request the camera calibration from the camera service.
+    
+    Args:
+        service_config_path (Path): The path to the camera service config.
+    """
     # create a client to the camera service
-    config = ClientConfig(address=address, port=port)
-    client = OakCameraClient(config)
-
-    # check the service is in a valid state to run this test
-    state = await client.get_state()
-    if state.value not in [service_pb2.ServiceState.IDLE, service_pb2.ServiceState.RUNNING]:
-        print("Service is not in a valid state to run this test.")
-        return
+    config: EventServiceConfig = proto_from_json_file(
+        service_config_path, EventServiceConfig())
 
     # get the calibration message
-    response: oak_pb2.GetCalibrationReply = await client.get_calibration()
-    calibration: oak_pb2.OakCalibration = response.calibration
+    reply = await EventClient(config).request_reply("/calibration", Empty())
+
+    # parse the reply
+    calibration: oak_pb2.OakCalibration = payload_to_protobuf(reply.event, reply.payload)
     print(calibration)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="amiga-camera-calibration")
-    parser.add_argument("--port", type=int, required=True, help="The camera port.")
-    parser.add_argument("--address", type=str, default="localhost", help="The camera address")
+    parser.add_argument("--service-config", type=Path, required=True, help="The camera config.")
     args = parser.parse_args()
 
-    asyncio.run(main(args.address, args.port))
+    asyncio.run(main(args.service_config))
