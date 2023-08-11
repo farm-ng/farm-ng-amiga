@@ -1,3 +1,4 @@
+"""Example of a camera service client."""
 # Copyright (c) farm-ng, inc.
 #
 # Licensed under the Amiga Development Kit License (the "License");
@@ -15,59 +16,43 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+from pathlib import Path
 
 import cv2
 import numpy as np
-from farm_ng.oak import oak_pb2
-from farm_ng.oak.camera_client import OakCameraClient
-from farm_ng.service import service_pb2
-from farm_ng.service.service_client import ClientConfig
+from farm_ng.core.event_client import EventClient
+from farm_ng.core.event_service_pb2 import EventServiceConfig
+from farm_ng.core.events_file_reader import proto_from_json_file
 
 
-async def main(address: str, port: int, stream_every_n: int) -> None:
-    # configure the camera client
-    config = ClientConfig(address=address, port=port)
-    client = OakCameraClient(config)
+async def main(service_config_path: Path) -> None:
+    """Run the camera service client.
 
-    # Get the streaming object from the service
-    response_stream = client.stream_frames(every_n=stream_every_n)
+    Args:
+        service_config_path (Path): The path to the camera service config.
+    """
+    # create a client to the camera service
+    config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
 
-    while True:
-        # check the service state
-        state = await client.get_state()
-        if state.value != service_pb2.ServiceState.RUNNING:
-            print("Camera is not streaming!")
-            continue
+    async for event, message in EventClient(config).subscribe(config.subscriptions[0], decode=True):
+        print(f"Timestamps: {event.timestamps[-2]}")
+        print(f"Meta: {message.meta}")
+        print("###################\n")
 
-        response: oak_pb2.StreamFramesReply = await response_stream.read()
+        # cast image data bytes to numpy and decode
+        # NOTE: explore frame.[rgb, disparity, left, right]
+        image = np.frombuffer(message.image_data, dtype="uint8")
+        image = cv2.imdecode(image, cv2.IMREAD_UNCHANGED)
 
-        if response:
-            # get the sync frame
-            frame: oak_pb2.OakSyncFrame = response.frame
-            print(f"Got frame: {frame.sequence_num}")
-            print(f"Device info: {frame.device_info}")
-            print(f"Timestamp: {frame.rgb.meta.timestamp}")
-            print("#################################\n")
-
-            try:
-                # cast image data bytes to numpy and decode
-                # NOTE: explore frame.[rgb, disparity, left, right]
-                image = np.frombuffer(frame.rgb.image_data, dtype="uint8")
-                image = cv2.imdecode(image, cv2.IMREAD_UNCHANGED)
-
-                # visualize the image
-                cv2.namedWindow("image", cv2.WINDOW_NORMAL)
-                cv2.imshow("image", image)
-                cv2.waitKey(1)
-            except Exception as e:
-                print(e)
+        # visualize the image
+        cv2.namedWindow("image", cv2.WINDOW_NORMAL)
+        cv2.imshow("image", image)
+        cv2.waitKey(1)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="amiga-camera-app")
-    parser.add_argument("--port", type=int, required=True, help="The camera port.")
-    parser.add_argument("--address", type=str, default="localhost", help="The camera address")
-    parser.add_argument("--stream-every-n", type=int, default=1, help="Streaming frequency")
+    parser = argparse.ArgumentParser(prog="amiga-camera-stream")
+    parser.add_argument("--service-config", type=Path, required=True, help="The camera config.")
     args = parser.parse_args()
 
-    asyncio.run(main(args.address, args.port, args.stream_every_n))
+    asyncio.run(main(args.service_config))
