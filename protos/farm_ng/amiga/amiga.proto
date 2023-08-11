@@ -25,6 +25,7 @@ package farm_ng.amiga.proto;
 
 message AmigaRobotConfig {
   repeated WheelConfig wheels = 1;
+  farm_ng.core.proto.Vec3F32 gyro_bias = 2;
   // List of poses
   farm_ng.core.proto.PoseTree pose_tree = 6;
 }
