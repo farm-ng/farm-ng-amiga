@@ -16,7 +16,7 @@
 
 syntax = "proto3";
 
-import "farm_ng/gps/gps.proto";
+import "farm_ng/imu/imu.proto";
 
 import "farm_ng/core/linalg.proto";
 import "farm_ng/core/pose.proto";
@@ -24,15 +24,13 @@ import "farm_ng/core/pose.proto";
 package farm_ng.amiga.proto;
 
 message AmigaRobotConfig {
-  repeated WheelConfig wheels = 1;
   // List of poses
-  farm_ng.core.proto.PoseTree pose_tree = 6;
+  farm_ng.core.proto.PoseTree pose_tree = 1;
+  map<string, farm_ng.imu.proto.ImuBias> imus = 3;
+  map<string, WheelConfig> wheels = 4;
 }
 
 message WheelConfig {
-  // User friendly identifier (front-left, ...)
-  string name = 1;
-
   // ID of motor controller on canbus
   uint32 canbus_id = 2;
 
