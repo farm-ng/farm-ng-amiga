@@ -11,3 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import sys
+
+if sys.version_info >= (3, 8):  # pragma: >=3.8 cover
+    import importlib.metadata as importlib_metadata
+else:  # pragma: <3.8 cover
+    import importlib_metadata
+
+__version__ = importlib_metadata.version("farm_ng_amiga")

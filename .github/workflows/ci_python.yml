@@ -11,13 +11,13 @@ on:
       - main-v2
 
 jobs:
-  tests-cpu:
+  py-cpu:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: [3.8, 3.9]
+        os: [ubuntu-latest] # ubuntu only for now macos-latest, windows-latest]
+        python-version: [3.8] # ubuntu 20.04, python 3.8 is our current supported target
     steps:
     - uses: actions/checkout@v3
     - uses: actions/setup-python@v4
