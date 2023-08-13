@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import farm_ng
+from farm_ng.amiga import amiga_pb2
 from farm_ng.canbus import canbus_pb2
+from farm_ng.gps import gps_pb2
+from farm_ng.imu import imu_pb2
 from farm_ng.oak import oak_pb2
-from farm_ng.people_detection import people_detection_pb2
 
 
 def test_import() -> None:
@@ -22,7 +24,15 @@ def test_import() -> None:
     assert farm_ng.core.__version__ is not None
     assert farm_ng.oak is not None
     assert farm_ng.oak.__version__ is not None
+    assert farm_ng.imu is not None
+    assert farm_ng.imu.__version__ is not None
+    assert farm_ng.canbus is not None
+    assert farm_ng.canbus.__version__ is not None
+    assert farm_ng.amiga is not None
+    assert farm_ng.amiga.__version__ is not None
 
     assert canbus_pb2 is not None
-    assert people_detection_pb2 is not None
     assert oak_pb2 is not None
+    assert imu_pb2 is not None
+    assert gps_pb2 is not None
+    assert amiga_pb2 is not None
