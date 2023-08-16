@@ -62,3 +62,8 @@ message MotorState {
     double current = 6; // Motor current draw, as measured at motor controller
     int32 temperature = 7; // Motor temperature
 }
+
+message MotorStates {
+  // List of motorstates
+  repeated MotorState motors = 1;
+}
