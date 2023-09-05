@@ -24,6 +24,10 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
-      run: pip3 install -e .[dev]
+      run: |
+        pip3 install -U setuptools wheel
+        pip3 install farm-ng-package@git+https://github.com/farm-ng/farm-ng-package.git@main
+        pip3 install farm-ng-core@git+https://github.com/farm-ng/farm-ng-core.git@main
+        pip3 install --no-build-isolation -e .[dev]
     - name: Run Tests
       run: pytest -v py/tests/ --mypy
