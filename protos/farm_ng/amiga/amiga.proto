@@ -44,11 +44,11 @@ message WheelConfig {
 
 message FilterState{
   // UKF state
-  PositionCovariance position = 1;
-  VelocityCovariance velocity = 2;
+  PositionCovariance position_covariance = 1;
+  VelocityCovariance velocity_covariance = 2;
   Innovation sensors = 3;
-  bool converged = 4;
-  bool calibrated = 5;
+  bool has_converged = 4;
+  bool is_calibrated = 5;
 }
 
 message PositionCovariance{
