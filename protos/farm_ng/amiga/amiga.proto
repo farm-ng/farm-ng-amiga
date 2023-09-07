@@ -41,3 +41,31 @@ message WheelConfig {
   // diameter of wheel (in contact with ground) in meters
   double wheel_diameter_m = 5;
 }
+
+message FilterState{
+  // UKF state
+  PositionCovariance position = 1;
+  VelocityCovariance velocity = 2;
+  Innovation sensors = 3;
+  bool converged = 4;
+  bool calibrated = 5;
+}
+
+message PositionCovariance{
+  // Position in squared meters and heading in squared radians
+  double x = 1;
+  double y = 2;
+  double heading = 3;
+}
+
+message VelocityCovariance{
+  // Linear velocity in squared meters per squared seconds and angular velocity in squared radians per squared seconds
+  double linear = 1;
+  double angular = 2;
+}
+
+message Innovation{
+  // Innovation in meters and radians per second
+  double gps = 1;
+  double canbus = 2;
+}
