@@ -32,4 +32,3 @@ message FilterState {
   farm_ng.core.proto.VecXF64 covariance_diagonal = 4;
   farm_ng.core.proto.VecXF64 innovation = 5;
 }
-
