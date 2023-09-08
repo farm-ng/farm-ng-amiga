@@ -6,6 +6,7 @@ farm_ng_add_protobufs(farm_ng_amiga_proto_defs
         farm_ng/amiga/amiga.proto
         farm_ng/canbus/amiga_v6.proto
         farm_ng/canbus/canbus.proto
+        farm_ng/control/control.proto
         farm_ng/gps/gps.proto
         farm_ng/imu/imu.proto
         farm_ng/filter/filter.proto
