@@ -18,6 +18,7 @@ syntax = "proto3";
 
 
 import "farm_ng/core/lie.proto";
+import "farm_ng/core/linalg.proto";
 import "farm_ng/core/pose.proto";
 
 package farm_ng.control.proto;
@@ -25,7 +26,8 @@ package farm_ng.control.proto;
 
 message ControllerState {
   farm_ng.core.proto.Pose pose = 1;
-  farm_ng.core.proto.Isometry3F64Tangent commands = 2;
+  farm_ng.core.proto.VecXF64 robot_from_goal = 2;
+  farm_ng.core.proto.Isometry3F64Tangent commands = 3;
 
-  double heading = 3; // Rotation about the z-axis contained in pose, in radians
+  double heading = 4; // Rotation about the z-axis contained in pose, in radians
 }
