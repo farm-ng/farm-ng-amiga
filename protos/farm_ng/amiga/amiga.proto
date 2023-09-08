@@ -42,7 +42,7 @@ message WheelConfig {
   double wheel_diameter_m = 5;
 }
 
-message FilterState{
+message FilterState {
   // UKF state
   farm_ng.core.proto.Pose pose = 1;
   PositionCovariance covariance_position = 2;
