@@ -29,7 +29,7 @@ message FilterState {
   bool has_converged = 2;
   bool is_calibrated = 3;
 
-  farm_ng.core.proto.VecXF64 covariance_diagonal = 2;
-  farm_ng.core.proto.VecXF64 innovation = 3;
+  farm_ng.core.proto.VecXF64 covariance_diagonal = 4;
+  farm_ng.core.proto.VecXF64 innovation = 5;
 }
 
