@@ -37,4 +37,5 @@ message FilterState {
 
 message FilterTrack {
   repeated FilterState states = 1;
+  string name = 2;
 }
