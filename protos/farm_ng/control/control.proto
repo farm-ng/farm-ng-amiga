@@ -38,4 +38,3 @@ message ControllerState {
 
   farm_ng.core.proto.VecXF64 robot_from_track = 8;
 }
-
