@@ -41,4 +41,8 @@ message ControllerState {
 
   // the distance from the track
   farm_ng.core.proto.VecXF64 robot_from_track = 8;
+
+  int32 current_index = 9;
+  int32 track_size = 10;
+  bool following_track = 11;
 }
