@@ -45,4 +45,6 @@ message ControllerState {
   int32 current_index = 9;
   int32 track_size = 10;
   bool following_track = 11;
+  // if the amiga is in auto mode or not.
+  bool auto_mode = 12;
 }
