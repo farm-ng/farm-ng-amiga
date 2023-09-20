@@ -12,22 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Copyright (c) farm-ng, inc. All rights reserved.
+
 syntax = "proto3";
 
-import "farm_ng/core/timestamp.proto";
+import "farm_ng/imu/imu.proto";
 
-package farm_ng.health_monitor.proto;
+import "farm_ng/core/pose.proto";
 
-service HealthMonitoService {
-  rpc streamHealthStatus(StreamHealthStatusRequest) returns (stream StreamHealthStatusReply) {}
+package farm_ng.amiga.proto;
+
+message AmigaRobotConfig {
+  // List of poses
+  farm_ng.core.proto.PoseTree pose_tree = 1;
+  map<string, farm_ng.imu.proto.ImuBias> imus = 3;
+  map<string, WheelConfig> wheels = 4;
 }
 
-message StreamHealthStatusRequest {
-}
+message WheelConfig {
+  // ID of motor controller on canbus
+  uint32 canbus_id = 2;
 
-message HealthStatus {
-}
+  // Gear reduction.
+  // E.g. 1000 rpm motor turns wheel at wheel_from_motor_rate * 1000 rpm.
+  double wheel_from_motor_rate = 4;
 
-message StreamHealthStatusReply {
-  HealthStatus status = 1;
+  // diameter of wheel (in contact with ground) in meters
+  double wheel_diameter_m = 5;
 }

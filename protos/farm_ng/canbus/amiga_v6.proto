@@ -1,0 +1,63 @@
+// Copyright (c) farm-ng, inc.
+//
+// Licensed under the Amiga Development Kit License (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://github.com/farm-ng/amiga-dev-kit/blob/main/LICENSE
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package farm_ng.canbus.proto;
+
+enum AmigaControlState {
+  STATE_BOOT = 0;          // Dashboard is booting
+  STATE_MANUAL_READY = 1;  // Transistory state before manual control is active
+  STATE_MANUAL_ACTIVE = 2; // Amiga is under manual control
+  STATE_CC_ACTIVE = 3;     // Amiga is under cruise control
+  STATE_AUTO_READY = 4;    // Amiga is ready to accept auto control commands
+  STATE_AUTO_ACTIVE = 5;   // Amiga is under auto control
+  STATE_ESTOPPED = 6;      // Amiga is in an E-stop state
+}
+
+message AmigaTpdo1 {
+  /*
+  State, speed, and angular rate of the Amiga vehicle control unit (VCU).
+
+  New in fw v0.1.9 / farm-ng-amiga v0.0.7:
+    - Add pto & hbridge control.
+    - Message data is now 8 bytes (was 5).
+  */
+  uint32 node_id = 1;                   // Node ID of sender
+  double stamp = 2;                     // Received time, in host monotonic clock (seconds)
+
+  AmigaControlState control_state = 3;  // See AmigaControlState
+  double measured_speed = 4;            // Based on unicycle model
+  double measured_angular_rate = 5;     // Based on unicycle model
+  uint32 pto_bits = 6;                  // bit masked PTO device states
+  uint32 hbridge_bits = 7;              // bit masked H-bridge device states
+}
+
+message AmigaPdo2 {
+  /*
+  Contains a request or reply of RPM for each in individual motor (0xA - 0xD).
+
+  Identical packet for RPDO (request = control) & TPDO (reply = measured).
+  Should be used in conjunction with AmigaRpdo1 / AmigaTpdo1 for auto control.
+
+  Introduced in fw version v0.2.0
+  */
+  uint32 node_id = 1;  // Node ID of sender
+  double stamp = 2;    // Received or creation time, in host monotonic clock (seconds)
+
+  int32 motor_a_rpm = 3;  // RPM of motor A
+  int32 motor_b_rpm = 4;  // RPM of motor B
+  int32 motor_c_rpm = 5;  // RPM of motor C
+  int32 motor_d_rpm = 6;  // RPM of motor D
+}
