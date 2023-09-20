@@ -1,0 +1,6 @@
+{
+    "name": "oak1",
+    "port": 50011,
+    "host": "localhost",
+    "log_level": "INFO"
+}
