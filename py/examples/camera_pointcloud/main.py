@@ -41,7 +41,7 @@ def decode_disparity(message: oak_pb2.OakFrame, decoder: ImageDecoder) -> Tensor
         decoder (ImageDecoder): The image decoder.
     
     Returns:
-        Tensor: The disparity image tensor (HxW) with values in [0, 1].
+        Tensor: The disparity image tensor (HxW).
     """
     # decode the disparity image from the message into a dlpack tensor for zero-copy
     disparity_dl = decoder.decode(message.image_data)
@@ -49,7 +49,7 @@ def decode_disparity(message: oak_pb2.OakFrame, decoder: ImageDecoder) -> Tensor
     # cast the dlpack tensor to a torch tensor
     disparity_t = torch.from_dlpack(disparity_dl)
 
-    return disparity_t[..., 0].float()  # HxW -- normalize to [0, 1]
+    return disparity_t[..., 0].float()  # HxW
 
 
 def get_camera_matrix(camera_data: oak_pb2.CameraData) -> Tensor:
@@ -69,14 +69,20 @@ def get_camera_matrix(camera_data: oak_pb2.CameraData) -> Tensor:
     return tensor([[fx, 0, cx], [0, fy, cy], [0, 0, 1]])
 
 
-async def main(service_config_path: Path) -> None:
+async def main() -> None:
     """Request the camera calibration from the camera service.
 
     Args:
         service_config_path (Path): The path to the camera service config.
     """
+    parser = argparse.ArgumentParser(prog="amiga-camera-pointcloud")
+    parser.add_argument("--service-config", type=Path, required=True, help="The camera config.")
+    parser.add_argument("--save-disparity", action="store_true", help="Save the disparity image.")
+    parser.add_argument("--save-pointcloud", action="store_true", help="Save the depth image.")
+    args = parser.parse_args()
+
     # create a client to the camera service
-    config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
+    config: EventServiceConfig = proto_from_json_file(args.service_config, EventServiceConfig())
 
     camera_client = EventClient(config)
 
@@ -103,56 +109,42 @@ async def main(service_config_path: Path) -> None:
         ),
         decode=True,
     ):
-        print(f"Timestamps: {event.timestamps[-2]}")
-        print(f"Meta: {message.meta}")
-        print("###################\n")
-
         # cast image data bytes to a tensor and decode
-        disparity_t = decode_disparity(message, image_decoder)
-        K.io.write_image(
-            f"disparity_{message.meta.sequence_num}.jpg",
-            disparity_t[None].repeat(3,1,1).mul(255).byte()
-        )
+        disparity_t = decode_disparity(message, image_decoder)  # HxW
 
         # compute the depth image from the disparity image
         calibration_baseline: float = .075 # m
         calibration_focal: float = float(camera_matrix[0, 0])
 
-        #depth_t = K.geometry.depth.depth_from_disparity(
-        #    disparity_t, baseline=calibration_baseline, focal=calibration_focal)
-        depth_t = calibration_focal * calibration_baseline / (disparity_t + 1e-6)
+        depth_t = K.geometry.depth.depth_from_disparity(
+            disparity_t, baseline=calibration_baseline, focal=calibration_focal)  # HxW
         
         # compute the point cloud from the depth image
-        # TODO(edgar): improve kornia interface to support inputting non batched tensors
-        # and return BxHxWx3 tensors.
-        points_xyz = K.geometry.depth.depth_to_3d(
-            depth_t[None, None], camera_matrix[None]
-        )
-
-        points_xyz = points_xyz.permute(0, 2, 3, 1)[0]  # HxWx3
+        points_xyz = K.geometry.depth.depth_to_3d_v2(depth_t, camera_matrix)  # HxWx3
         
         # filter out points that are in the range of the camera
-        valid_mask = (points_xyz[..., -1] >= 0.2) & (points_xyz[..., -1] <= 7.5)  # HxW
-        valid_mask = valid_mask[..., None].repeat(1, 1, 3)  # HxWx3
+        valid_mask = (points_xyz[..., -1:] >= 0.2) & (points_xyz[..., -1:] <= 7.5)  # HxWx1
+        valid_mask = valid_mask.repeat(1, 1, 3)  # HxWx3
 
-        points_xyz = points_xyz[valid_mask]  # Nx3
+        points_xyz = points_xyz[valid_mask].reshape(-1, 3)  # Nx3
+        
+        # serialize the disparity image
+        if args.save_disparity:
+            K.io.write_image(
+                f"disparity_{message.meta.sequence_num}.jpg",
+                disparity_t[None].repeat(3,1,1).mul(255).byte()
+            )
 
-        # serialize the point cloud to stl
-        print(f"Saving point cloud to pointcloud_{message.meta.sequence_num}.ply ...")
+        # serialize the pointcloud
+        if args.save_pointcloud:
+            print(f"Saving point cloud to pointcloud_{message.meta.sequence_num}.ply ...")
 
-        K.utils.save_pointcloud_ply(
-            f"pointcloud_{message.meta.sequence_num}.ply", points_xyz[:, None]
-        )
+            K.utils.save_pointcloud_ply(
+                f"pointcloud_{message.meta.sequence_num}.ply", points_xyz
+            )
 
-        print(f"Saving point cloud to pointcloud_{message.meta.sequence_num}.ply ... OK")
-
-        import pdb;pdb.set_trace()
-        pass
+            print(f"Saving point cloud to pointcloud_{message.meta.sequence_num}.ply ... OK")
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="amiga-camera-calibration")
-    parser.add_argument("--service-config", type=Path, required=True, help="The camera config.")
-    args = parser.parse_args()
-
-    asyncio.run(main(args.service_config))
+    asyncio.run(main())
