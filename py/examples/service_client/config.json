@@ -1,0 +1,6 @@
+{
+    "name": "two_int",
+    "port": 5001,
+    "host": "localhost",
+    "log_level": "DEBUG"
+}
