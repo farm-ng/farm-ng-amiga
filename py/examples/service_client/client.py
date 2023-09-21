@@ -19,6 +19,7 @@ async def main() -> None:
     # create a client to the camera service
     config: EventServiceConfig = proto_from_json_file(args.service_config, EventServiceConfig())
 
+    # request the sum of two integers
     result = await EventClient(config).request_reply(
         "/sum", AddTwoIntsRequest(a=args.a, b=args.b), decode=True
     )

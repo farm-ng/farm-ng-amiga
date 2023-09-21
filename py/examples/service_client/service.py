@@ -5,6 +5,7 @@ from pathlib import Path
 import grpc
 import logging
 
+from farm_ng.core.event_pb2 import Event
 from farm_ng.core.event_service import EventServiceGrpc
 from farm_ng.core.event_service_pb2 import (
     EventServiceConfig,
@@ -18,7 +19,7 @@ from farm_ng.core.events_file_reader import (
 from google.protobuf.message import Message
 from google.protobuf.empty_pb2 import Empty
 
-from two_ints_pb2 import AddTwoIntsResponse
+import two_ints_pb2
 
 
 class AddTwoIntServer:
@@ -30,8 +31,7 @@ class AddTwoIntServer:
             event_service: The event service to use for communication.
         """
         self._event_service = event_service
-        # TODO: improve by self._event_service.add_request_reply_handler(self.request_reply_handler)
-        self._event_service.request_reply_handler = self.request_reply_handler
+        self._event_service.add_request_reply_handler(self.request_reply_handler)
     
     @property
     def logger(self) -> logging.Logger:
@@ -40,21 +40,34 @@ class AddTwoIntServer:
 
     async def request_reply_handler(
         self,
-        request: RequestReplyRequest,
+        event: Event,
+        message: two_ints_pb2.AddTwoIntsRequest,
     ) -> Message:
         """The callback for handling request/reply messages."""
+        if event.uri.path == "/sum":
+            self.logger.info(f"Requested to sum {message.a} + {message.b}")
 
-        # decode the requested message
-        request_message: two_ints_pb2.AddTwoIntsRequest = payload_to_protobuf(
-            request.event, request.payload
-        )
-
-        if request.event.uri.path == "/sum":
-            self.logger.info(f"Requested to sum {request_message.a} + {request_message.b}")
-
-            return AddTwoIntsResponse(sum=request_message.a + request_message.b)
+            return two_ints_pb2.AddTwoIntsResponse(sum=message.a + message.b)
         
         return Empty()
+
+    #async def request_reply_handler(
+    #    self,
+    #    request: RequestReplyRequest,
+    #) -> Message:
+    #    """The callback for handling request/reply messages."""
+
+    #    # decode the requested message
+    #    request_message: two_ints_pb2.AddTwoIntsRequest = payload_to_protobuf(
+    #        request.event, request.payload
+    #    )
+
+    #    if request.event.uri.path == "/sum":
+    #        self.logger.info(f"Requested to sum {request_message.a} + {request_message.b}")
+
+    #        return two_ints_pb2.AddTwoIntsResponse(sum=request_message.a + request_message.b)
+    #    
+    #    return Empty()
     
     async def serve(self) -> None:
         """Serve the service."""
