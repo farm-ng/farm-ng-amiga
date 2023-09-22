@@ -1,0 +1,6 @@
+{
+  "name": "counter",
+  "port": 5001,
+  "host": "localhost",
+  "log_level": "INFO"
+}
