@@ -20,6 +20,7 @@ from pathlib import Path
 
 import cv2
 import numpy as np
+from kornia_rs import ImageDecoder
 from farm_ng.core.events_file_reader import EventLogPosition
 from farm_ng.core.events_file_reader import EventsFileReader
 from farm_ng.oak import oak_pb2
@@ -87,13 +88,16 @@ def main(
     # create a video writer to write the video
     video_writer: cv2.VideoWriter | None = None
 
+    # instantiate the image decoder
+    image_decoder = ImageDecoder()
+
     event_log: EventLogPosition
     for event_log in tqdm(camera_events):
         # parse the message
         sample: oak_pb2.OakFrame = event_log.read_message()
 
         # decode image
-        img: np.ndarray = cv2.imdecode(np.frombuffer(sample.image_data, dtype="uint8"), cv2.IMREAD_UNCHANGED)
+        img: np.ndarray = np.from_dlpack(image_decoder.decode(sample.image_data))
 
         if view_name == "disparity":
             disparity_scale: int = max(1, int(disparity_scale))

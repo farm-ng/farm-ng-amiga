@@ -1,3 +1,4 @@
 farm-ng-amiga
 opencv-python
 numpy
+kornia_rs==0.0.8

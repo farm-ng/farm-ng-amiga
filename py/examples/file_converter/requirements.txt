@@ -2,3 +2,4 @@ farm-ng-amiga
 opencv-python
 numpy
 tqdm
+kornia_rs==0.0.8

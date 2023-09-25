@@ -19,6 +19,7 @@ from pathlib import Path
 
 import cv2
 import numpy as np
+from kornia_rs import ImageDecoder
 from farm_ng.core.events_file_reader import EventLogPosition
 from farm_ng.core.events_file_reader import EventsFileReader
 from farm_ng.oak import oak_pb2
@@ -38,6 +39,9 @@ def main(file_name: Path, camera_name: str, view_name: str) -> None:
     success: bool = reader.open()
     if not success:
         raise RuntimeError(f"Failed to open events file: {file_name}")
+
+    # instantiate the image decoder
+    image_decoder = ImageDecoder()
 
     # get the index of the events file
     events_index: list[EventLogPosition] = reader.get_index()
@@ -64,7 +68,7 @@ def main(file_name: Path, camera_name: str, view_name: str) -> None:
         sample: oak_pb2.OakFrame = event_log.read_message()
 
         # decode image
-        img: np.ndarray = cv2.imdecode(np.frombuffer(sample.image_data, dtype="uint8"), cv2.IMREAD_UNCHANGED)
+        img: np.ndarray = np.from_dlpack(image_decoder.decode(sample.image_data))
 
         # show image
         cv2.imshow(topic_name, img)
