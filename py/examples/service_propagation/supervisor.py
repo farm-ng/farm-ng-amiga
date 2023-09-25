@@ -46,11 +46,6 @@ class SupervisorServer:
         # the rate in hertz to send commands
         self._confidence = float(args["confidence"])
     
-    async def _broadcast_scores(self, score) -> None:
-        """Broadcast a score."""
-        for _, client in self._clients.items():
-            await client.request_reply("/update_score", score)
-
     async def subscribe(self, subscripton) -> None:
         """Run the main task."""
         # create the event client
@@ -62,8 +57,9 @@ class SupervisorServer:
                 residual = await self._clients["storage"].request_reply(
                     "/update_storage", Empty(), decode=True
                 )
-                await self._broadcast_scores(residual)
-    
+                self._event_service.logger.info(f"Residual: {residual}")
+                await client.request_reply("/update_residual", residual)
+
     async def serve(self) -> None:
         """Run the service."""
         tasks: list[asyncio.Task] = []

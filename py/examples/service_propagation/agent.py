@@ -47,7 +47,7 @@ class AgentServer:
     
     async def request_reply_handler(self, event: Event, message) -> None:
         """The callback for handling request/reply messages."""
-        if event.uri.path == "/update_score":
+        if event.uri.path == "/update_residual":
             self._remainder = message.value
             self._event_service.logger.info(f"Remainder: {self._remainder}")
         
@@ -58,13 +58,14 @@ class AgentServer:
         while True:
             if self._remainder <= 0:
                 return
-
+            
             message = Struct()
             message["sample"] = random.random()
             message["task_id"] = task_id
 
             await self._event_service.publish("/sample", message)
             await asyncio.sleep(1.0 / self._rate)
+            print(f"Published sample {message['sample']} from task {task_id}")
     
     async def serve(self) -> None:
         """Run the service."""

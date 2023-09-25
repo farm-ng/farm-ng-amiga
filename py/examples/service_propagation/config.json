@@ -36,7 +36,7 @@
       "host": "localhost",
       "log_level": "INFO",
       "args": [
-        "confidence=0.75"
+        "confidence=0.25"
       ],
       "subscriptions": [
         {
@@ -79,7 +79,8 @@
       "host": "localhost",
       "log_level": "INFO",
       "args": [
-        "max_storage=500"
+        "max_storage=500",
+        "batch_size=50"
       ]
     }
   ]

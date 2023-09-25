@@ -43,8 +43,11 @@ class StorageServer:
             key, value = arg.split("=")
             args[key] = value
 
-        # the rate in hertz to send commands
+        # the maximum storage capacity
         self._max_storage = int(args["max_storage"])
+
+        # the batch size to remove from storage
+        self._batch_size = int(args["batch_size"])
     
     async def request_reply_handler(self, event: Event, message: Empty) -> None:
         """The callback for handling request/reply messages."""
@@ -57,9 +60,29 @@ class StorageServer:
             return Int32Value(value=residual)
         
         return Empty()
+    
+    async def remove_from_storage(self) -> None:
+        """Remove from storage."""
+        while True:
+
+            if self._storage < self._batch_size:
+                await asyncio.sleep(0.05)
+                continue
+
+            self._storage -= self._batch_size
+
+            self._event_service.logger.info(
+                f"Removed from storage: {self._batch_size}/{self._max_storage}"
+            )
+
+            await asyncio.sleep(0.1)
 
     async def serve(self) -> None:
-        await self._event_service.serve()
+        tasks: list[asyncio.Task] = [
+            asyncio.create_task(self._event_service.serve()),
+            asyncio.create_task(self.remove_from_storage())
+        ]
+        await asyncio.gather(*tasks)
 
 
 if __name__ == "__main__":
