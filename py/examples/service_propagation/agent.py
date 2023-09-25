@@ -62,7 +62,8 @@ class AgentServer:
         """Run the main task."""
         while True:
             if self._remainder <= 0:
-                return
+                await asyncio.sleep(0.01)
+                continue
 
             message = Struct()
             message["sample"] = random.random()
