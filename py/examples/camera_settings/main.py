@@ -12,13 +12,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
+
 import argparse
 import asyncio
 from pathlib import Path
 
 from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfig
-from farm_ng.core.events_file_reader import payload_to_protobuf
 from farm_ng.core.events_file_reader import proto_from_json_file
 from farm_ng.oak import oak_pb2
 from google.protobuf.empty_pb2 import Empty
@@ -45,10 +46,9 @@ async def main(service_config_path: Path, settings_config_path: Path, stream_nam
     # available settings are:
     #   - /camera_settings/rgb
     #   - /camera_settings/mono
-    reply = await EventClient(config).request_reply(f"/camera_settings/{stream_name}", camera_settings_request)
-
-    # parse the reply
-    camera_settings: oak_pb2.CameraSettings = payload_to_protobuf(reply.event, reply.payload)
+    camera_settings: oak_pb2.CameraSettings = await EventClient(config).request_reply(
+        f"/camera_settings/{stream_name}", camera_settings_request, decode=True
+    )
 
     print(camera_settings)
 
