@@ -18,7 +18,6 @@ from pathlib import Path
 
 from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfig
-from farm_ng.core.events_file_reader import payload_to_protobuf
 from farm_ng.core.events_file_reader import proto_from_json_file
 from farm_ng.oak import oak_pb2
 from google.protobuf.empty_pb2 import Empty
@@ -34,10 +33,7 @@ async def main(service_config_path: Path) -> None:
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
 
     # get the calibration message
-    reply = await EventClient(config).request_reply("/calibration", Empty())
-
-    # parse the reply
-    calibration: oak_pb2.OakCalibration = payload_to_protobuf(reply.event, reply.payload)
+    calibration: oak_pb2.OakCalibration = await EventClient(config).request_reply("/calibration", Empty(), decode=True)
     print(calibration)
 
 
