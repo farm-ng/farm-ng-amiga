@@ -29,7 +29,8 @@ message FilterState {
   bool has_converged = 2;
   bool is_calibrated = 3;
 
-  farm_ng.core.proto.VecXF64 covariance_diagonal = 4;
+  // Std deviation of the state, from the covariance matrix diagonal
+  farm_ng.core.proto.VecXF64 uncertainty_diagonal = 4;
   farm_ng.core.proto.VecXF64 innovation = 5;
 
   double heading = 6; // Rotation about the z-axis contained in pose, in radians
