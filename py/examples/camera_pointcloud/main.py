@@ -21,7 +21,6 @@ import torch
 from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfig
 from farm_ng.core.event_service_pb2 import SubscribeRequest
-from farm_ng.core.events_file_reader import payload_to_protobuf
 from farm_ng.core.events_file_reader import proto_from_json_file
 from farm_ng.core.uri import uri_pb2
 from farm_ng.oak import oak_pb2
@@ -85,10 +84,7 @@ async def main() -> None:
     camera_client = EventClient(config)
 
     # get the calibration message
-    reply = await camera_client.request_reply("/calibration", Empty())
-
-    # parse the reply
-    calibration_proto: oak_pb2.OakCalibration = payload_to_protobuf(reply.event, reply.payload)
+    calibration_proto: oak_pb2.OakCalibration = await camera_client.request_reply("/calibration", Empty(), decode=True)
 
     # NOTE: The OakCalibration message contains the camera calibration data for all the cameras.
     # Since we are interested in the disparity image, we will use the calibration data for the right camera
