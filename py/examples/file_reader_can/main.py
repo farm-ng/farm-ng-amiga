@@ -56,7 +56,7 @@ def main(file_name: str, can_interface: str) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="Event file reader example.")
+    parser = argparse.ArgumentParser(prog="Event file reader example for parsing CAN messages.")
     parser.add_argument("--file-name", type=str, required=True, help="Path to the `events.bin` file.")
     parser.add_argument(
         "--can-interface", type=str, default="can0", help="The name of the can interface to read. Default: oak0."
