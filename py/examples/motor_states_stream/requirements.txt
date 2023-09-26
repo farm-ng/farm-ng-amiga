@@ -1,1 +1,1 @@
-farm-ng-amiga>=0.0.6
+farm-ng-amiga

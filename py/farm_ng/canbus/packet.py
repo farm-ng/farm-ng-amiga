@@ -317,6 +317,9 @@ class MotorState:
         return obj
 
     def __str__(self):
-        return "Motor state - id {:01X} status {} rpm {} voltage {} current {} temperature {} @ time {}".format(
-            self.id, self.status.name, self.rpm, self.voltage, self.current, self.temperature, self.timestamp
+        return (
+            "Motor state - id {:01X} status {} rpm {:4} voltage {:.3f} "
+            "current {:.3f} temperature {:.1f} @ time {:.3f}".format(
+                self.id, self.status.name, self.rpm, self.voltage, self.current, self.temperature, self.timestamp
+            )
         )
