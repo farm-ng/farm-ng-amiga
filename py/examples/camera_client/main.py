@@ -23,7 +23,8 @@ import numpy as np
 from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfig
 from farm_ng.core.events_file_reader import proto_from_json_file
-from kornia_rs import ImageDecoder
+from farm_ng.core.stamp import get_stamp_by_semantics_and_clock_type
+from farm_ng.core.stamp import StampSemantics
 
 
 async def main(service_config_path: Path) -> None:
@@ -35,16 +36,22 @@ async def main(service_config_path: Path) -> None:
     # create a client to the camera service
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
 
-    # instantiate the image decoder
-    image_decoder = ImageDecoder()
-
     async for event, message in EventClient(config).subscribe(config.subscriptions[0], decode=True):
-        print(f"Timestamps: {event.timestamps[-2]}")
+        # Find the monotonic driver receive timestamp, or the first timestamp if not available.
+        stamp = (
+            get_stamp_by_semantics_and_clock_type(event, StampSemantics.DRIVER_RECEIVE, "monotonic")
+            or event.timestamps[0].stamp
+        )
+
+        # print the timestamp and metadata
+        print(f"Timestamp: {stamp}\n")
         print(f"Meta: {message.meta}")
         print("###################\n")
 
         # cast image data bytes to numpy and decode
-        image: np.ndarray = cv2.cvtColor(np.from_dlpack(image_decoder.decode(message.image_data)), cv2.COLOR_RGB2BGR)
+        image = cv2.imdecode(np.frombuffer(message.image_data, dtype="uint8"), cv2.IMREAD_UNCHANGED)
+        if event.uri.path == "/disparity":
+            image = cv2.applyColorMap(image * 3, cv2.COLORMAP_JET)
 
         # visualize the image
         cv2.namedWindow("image", cv2.WINDOW_NORMAL)

@@ -22,8 +22,9 @@ import numpy as np
 from farm_ng.core.events_file_reader import build_events_dict
 from farm_ng.core.events_file_reader import EventLogPosition
 from farm_ng.core.events_file_reader import EventsFileReader
+from farm_ng.core.stamp import get_stamp_by_semantics_and_clock_type
+from farm_ng.core.stamp import StampSemantics
 from farm_ng.oak import oak_pb2
-from kornia_rs import ImageDecoder
 
 
 def main(file_name: Path, camera_name: str, view_name: str) -> None:
@@ -39,9 +40,6 @@ def main(file_name: Path, camera_name: str, view_name: str) -> None:
     success: bool = reader.open()
     if not success:
         raise RuntimeError(f"Failed to open events file: {file_name}")
-
-    # instantiate the image decoder
-    image_decoder = ImageDecoder()
 
     # get the index of the events file
     events_index: list[EventLogPosition] = reader.get_index()
@@ -62,17 +60,21 @@ def main(file_name: Path, camera_name: str, view_name: str) -> None:
 
     event_log: EventLogPosition
     for event_log in camera_events:
-
         # parse the message
         sample: oak_pb2.OakFrame = event_log.read_message()
 
-        # decode image
-        img: np.ndarray = cv2.cvtColor(np.from_dlpack(image_decoder.decode(sample.image_data)), cv2.COLOR_RGB2BGR)
+        # Decode the image
+        img = cv2.imdecode(np.frombuffer(sample.image_data, dtype="uint8"), cv2.IMREAD_UNCHANGED)
+        if view_name == "disparity":
+            img = cv2.applyColorMap(img * 3, cv2.COLORMAP_JET)
+
+        # Get the timestamp from the monotonic clock when the driver received the message.
+        stamp = get_stamp_by_semantics_and_clock_type(event_log.event, StampSemantics.DRIVER_RECEIVE, "monotonic")
 
         # show image
         cv2.imshow(topic_name, img)
-        cv2.setWindowTitle(topic_name, f"{topic_name} - {int(event_log.event.timestamps[-2].stamp * 1e9)}")
-        cv2.waitKey(75)  # to slow down the playback
+        cv2.setWindowTitle(topic_name, f"{topic_name} - {stamp:.2f} s")
+        cv2.waitKey(1)
 
     assert reader.close()
 
