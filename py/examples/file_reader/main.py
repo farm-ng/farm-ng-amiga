@@ -68,12 +68,12 @@ def main(file_name: Path, camera_name: str, view_name: str) -> None:
         sample: oak_pb2.OakFrame = event_log.read_message()
 
         # decode image
-        img: np.ndarray = np.from_dlpack(image_decoder.decode(sample.image_data))
+        img: np.ndarray = cv2.cvtColor(np.from_dlpack(image_decoder.decode(sample.image_data)), cv2.COLOR_RGB2BGR)
 
         # show image
         cv2.imshow(topic_name, img)
         cv2.setWindowTitle(topic_name, f"{topic_name} - {int(event_log.event.timestamps[-2].stamp * 1e9)}")
-        cv2.waitKey(250)  # to slow down the playback
+        cv2.waitKey(75)  # to slow down the playback
 
     assert reader.close()
 

@@ -77,7 +77,7 @@ def main(
         sample: oak_pb2.OakFrame = event_log.read_message()
 
         # decode image
-        img: np.ndarray = np.from_dlpack(image_decoder.decode(sample.image_data))
+        img: np.ndarray = cv2.cvtColor(np.from_dlpack(image_decoder.decode(sample.image_data)), cv2.COLOR_RGB2BGR)
 
         if view_name == "disparity":
             disparity_scale: int = max(1, int(disparity_scale))
