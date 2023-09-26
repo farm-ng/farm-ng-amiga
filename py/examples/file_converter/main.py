@@ -53,8 +53,7 @@ def main(
     # structure the index as a dictionary of lists of events
     events_dict: dict[str, list[EventLogPosition]] = build_events_dict(events_index)
 
-    print("All available topics:")
-    print(events_dict.keys())
+    print(f"All available topics: {sorted(events_dict.keys())}")
 
     # customize camera and view
     topic_name = f"/{camera_name}/{view_name}"
