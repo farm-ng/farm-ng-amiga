@@ -19,11 +19,11 @@ from pathlib import Path
 
 import cv2
 import numpy as np
+from farm_ng.core.events_file_reader import build_events_dict
 from farm_ng.core.events_file_reader import EventLogPosition
 from farm_ng.core.events_file_reader import EventsFileReader
 from farm_ng.oak import oak_pb2
 from kornia_rs import ImageDecoder
-from utils import build_events_dict
 
 
 def main(file_name: Path, camera_name: str, view_name: str) -> None:
@@ -49,8 +49,7 @@ def main(file_name: Path, camera_name: str, view_name: str) -> None:
     # structure the index as a dictionary of lists of events
     events_dict: dict[str, list[EventLogPosition]] = build_events_dict(events_index)
 
-    print("All available topics:")
-    print(events_dict.keys())
+    print(f"All available topics: {sorted(events_dict.keys())}")
 
     # customize camera and view
     topic_name = f"/{camera_name}/{view_name}"
@@ -68,12 +67,12 @@ def main(file_name: Path, camera_name: str, view_name: str) -> None:
         sample: oak_pb2.OakFrame = event_log.read_message()
 
         # decode image
-        img: np.ndarray = np.from_dlpack(image_decoder.decode(sample.image_data))
+        img: np.ndarray = cv2.cvtColor(np.from_dlpack(image_decoder.decode(sample.image_data)), cv2.COLOR_RGB2BGR)
 
         # show image
         cv2.imshow(topic_name, img)
         cv2.setWindowTitle(topic_name, f"{topic_name} - {int(event_log.event.timestamps[-2].stamp * 1e9)}")
-        cv2.waitKey(250)  # to slow down the playback
+        cv2.waitKey(75)  # to slow down the playback
 
     assert reader.close()
 

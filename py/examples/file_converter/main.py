@@ -15,36 +15,16 @@
 from __future__ import annotations
 
 import argparse
-from collections import defaultdict
 from pathlib import Path
 
 import cv2
 import numpy as np
+from farm_ng.core.events_file_reader import build_events_dict
 from farm_ng.core.events_file_reader import EventLogPosition
 from farm_ng.core.events_file_reader import EventsFileReader
 from farm_ng.oak import oak_pb2
 from kornia_rs import ImageDecoder
 from tqdm import tqdm
-
-
-# TODO: add to farm_ng.core
-def build_events_dict(events_index: list[EventLogPosition]) -> dict[str, list[EventLogPosition]]:
-    """Build a dictionary of lists of events, where the key is the path of the event.
-
-    Args:
-        events_index (list[EventLogPosition]): [description]
-
-    Returns:
-        dict[str, list[EventLogPosition]]: [description]
-    """
-    events_dict: dict[str, list[EventLogPosition]] = defaultdict(list)
-    for event_index in events_index:
-        # NOTE: this is how we get the service name from the event uri
-        # TODO: this should be done by the event service
-        service_name = event_index.event.uri.query.split("&")[-1].split("=")[-1]
-        topic_name = f"/{service_name}{event_index.event.uri.path}"
-        events_dict[topic_name].append(event_index)
-    return events_dict
 
 
 def main(
@@ -73,8 +53,7 @@ def main(
     # structure the index as a dictionary of lists of events
     events_dict: dict[str, list[EventLogPosition]] = build_events_dict(events_index)
 
-    print("All available topics:")
-    print(events_dict.keys())
+    print(f"All available topics: {sorted(events_dict.keys())}")
 
     # customize camera and view
     topic_name = f"/{camera_name}/{view_name}"
@@ -97,7 +76,7 @@ def main(
         sample: oak_pb2.OakFrame = event_log.read_message()
 
         # decode image
-        img: np.ndarray = np.from_dlpack(image_decoder.decode(sample.image_data))
+        img: np.ndarray = cv2.cvtColor(np.from_dlpack(image_decoder.decode(sample.image_data)), cv2.COLOR_RGB2BGR)
 
         if view_name == "disparity":
             disparity_scale: int = max(1, int(disparity_scale))

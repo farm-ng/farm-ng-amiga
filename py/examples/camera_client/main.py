@@ -44,7 +44,7 @@ async def main(service_config_path: Path) -> None:
         print("###################\n")
 
         # cast image data bytes to numpy and decode
-        image = np.from_dlpack(image_decoder.decode(message.image_data))
+        image: np.ndarray = cv2.cvtColor(np.from_dlpack(image_decoder.decode(message.image_data)), cv2.COLOR_RGB2BGR)
 
         # visualize the image
         cv2.namedWindow("image", cv2.WINDOW_NORMAL)
