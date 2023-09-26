@@ -53,24 +53,6 @@ class AddTwoIntServer:
 
         return Empty()
 
-    # async def request_reply_handler(
-    #    self,
-    #    request: RequestReplyRequest,
-    # ) -> Message:
-    #    """The callback for handling request/reply messages."""
-
-    #    # decode the requested message
-    #    request_message: two_ints_pb2.AddTwoIntsRequest = payload_to_protobuf(
-    #        request.event, request.payload
-    #    )
-
-    #    if request.event.uri.path == "/sum":
-    #        self.logger.info(f"Requested to sum {request_message.a} + {request_message.b}")
-
-    #        return two_ints_pb2.AddTwoIntsResponse(sum=request_message.a + request_message.b)
-    #
-    #    return Empty()
-
     async def serve(self) -> None:
         """Serve the service."""
         await self._event_service.serve()
