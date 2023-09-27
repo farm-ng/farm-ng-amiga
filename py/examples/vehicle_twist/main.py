@@ -15,39 +15,82 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+from pathlib import Path
 
-from farm_ng.canbus import canbus_pb2
-from farm_ng.canbus.canbus_client import CanbusClient
-from farm_ng.service.service_client import ClientConfig
+import cv2
+from farm_ng.canbus.canbus_pb2 import Twist2d
+from farm_ng.core.event_client import EventClient
+from farm_ng.core.event_service_pb2 import EventServiceConfig
+from farm_ng.core.events_file_reader import proto_from_json_file
+from numpy import clip
+
+# NOTE: be careful with these values, they are in m/s and rad/s
+MAX_LINEAR_VELOCITY_MPS = 0.5
+MAX_ANGULAR_VELOCITY_RPS = 0.5
+VELOCITY_INCREMENT = 0.05
 
 
-async def request_generator(twist: canbus_pb2.Twist2d) -> iter[canbus_pb2.SendVehicleTwistCommandReply]:
+def update_twist_with_key_press(twist: Twist2d, key: int):
+    """Function to update the twist command based on the key pressed."""
+    # Stop
+    if key == ord(" "):
+        twist.linear_velocity_x = 0.0
+        twist.linear_velocity_y = 0.0
+        twist.angular_velocity = 0.0
+
+    # Forward / reverse
+    if key == ord("w"):
+        twist.linear_velocity_x += VELOCITY_INCREMENT
+    elif key == ord("s"):
+        twist.linear_velocity_x -= VELOCITY_INCREMENT
+
+    # Left / right
+    if key == ord("a"):
+        twist.angular_velocity += VELOCITY_INCREMENT
+    elif key == ord("d"):
+        twist.angular_velocity -= VELOCITY_INCREMENT
+
+    # Clip the velocities
+    twist.linear_velocity_x = clip(twist.linear_velocity_x, -MAX_LINEAR_VELOCITY_MPS, MAX_LINEAR_VELOCITY_MPS)
+    twist.angular_velocity = clip(twist.angular_velocity, -MAX_ANGULAR_VELOCITY_RPS, MAX_ANGULAR_VELOCITY_RPS)
+    return twist
+
+
+async def main(service_config_path: Path) -> None:
+    """Run the camera service client.
+
+    Args:
+        service_config_path (Path): The path to the camera service config.
+    """
+    # Initialize the command to send
+    twist = Twist2d()
+
+    # open a window to capture key presses
+    cv2.namedWindow('Virtual Keyboard')
+
+    # create a client to the camera service
+    config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
+    client: EventClient = EventClient(config)
+
+    print(client.config)
+
     while True:
-        yield canbus_pb2.SendVehicleTwistCommandRequest(command=twist)
-        await asyncio.sleep(0.1)  # Limit to 10 hz
+        key = cv2.waitKey(1)  # capture key press
+        if key == ord("q"):
+            break
+
+        # Update and send the twist command
+        twist = update_twist_with_key_press(twist, key)
+        print(f"Sending linear velocity: {twist.linear_velocity_x:.3f}, angular velocity: {twist.angular_velocity:.3f}")
+        await client.request_reply("/twist", twist)
+
+        # Sleep to maintain a constant rate
+        await asyncio.sleep(0.05)
 
 
-async def main(config: ClientConfig, twist: canbus_pb2.Twist2d) -> None:
-    # Connect to the robot
-    client = CanbusClient(config)
-
-    # get the tiwst command stream
-    stream = client.stub.sendVehicleTwistCommand(request_generator(twist))
-
-    # print the stream results
-    async for twist_state in stream:
-        print(twist_state)
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--address', default='localhost')
-    parser.add_argument('--port', default=50060)
-    parser.add_argument("--vel-x", type=float, default=0.0)
-    parser.add_argument("--theta", type=float, default=0.0)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(prog="Send twist commands to control Amiga through the canbus service.")
+    parser.add_argument("--service-config", type=Path, required=True, help="The camera config.")
     args = parser.parse_args()
 
-    # create the twist command
-    twist = canbus_pb2.Twist2d(linear_velocity_x=args.vel_x, angular_velocity=args.theta)
-
-    asyncio.run(main(ClientConfig(address=args.address, port=args.port), twist))
+    asyncio.run(main(args.service_config))

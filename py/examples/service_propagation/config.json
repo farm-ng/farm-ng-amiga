@@ -1,0 +1,87 @@
+{
+  "configs": [
+    {
+      "name": "agent-1",
+      "port": 5001,
+      "host": "localhost",
+      "log_level": "INFO",
+      "args": [
+        "rate=5",
+        "num_tasks=10"
+      ]
+    },
+    {
+      "name": "agent-2",
+      "port": 5002,
+      "host": "localhost",
+      "log_level": "INFO",
+      "args": [
+        "rate=10",
+        "num_tasks=5"
+      ]
+    },
+    {
+      "name": "agent-3",
+      "port": 5003,
+      "host": "localhost",
+      "log_level": "INFO",
+      "args": [
+        "rate=100",
+        "num_tasks=1"
+      ]
+    },
+    {
+      "name": "supervisor-1",
+      "port": 7001,
+      "host": "localhost",
+      "log_level": "INFO",
+      "args": [
+        "confidence=0.25"
+      ],
+      "subscriptions": [
+        {
+          "uri": {
+            "path": "/sample",
+            "query": "service_name=agent-1"
+          },
+          "every_n": 1
+        },
+        {
+          "uri": {
+            "path": "/sample",
+            "query": "service_name=agent-2"
+          },
+          "every_n": 1
+        }
+      ]
+    },
+    {
+      "name": "supervisor-2",
+      "port": 7002,
+      "host": "localhost",
+      "log_level": "INFO",
+      "args": [
+        "confidence=0.5"
+      ],
+      "subscriptions": [
+        {
+          "uri": {
+            "path": "/sample",
+            "query": "service_name=agent-3"
+          },
+          "every_n": 1
+        }
+      ]
+    },
+    {
+      "name": "storage",
+      "port": 7010,
+      "host": "localhost",
+      "log_level": "INFO",
+      "args": [
+        "max_storage=500",
+        "batch_size=50"
+      ]
+    }
+  ]
+}
