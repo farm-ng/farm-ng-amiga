@@ -113,21 +113,29 @@ def main(file_name: str, msg_type: str) -> None:
         gps_msg = unpack_gps_message(msg, msg_type)
 
         if msg_type == "pvt":
-            print(
-                f"Message stamp: {gps_msg[0]}, GPS time: {gps_msg[1]}, "
-                f"Latitude: {gps_msg[2]}, Longitude: {gps_msg[3]}, Altitude: {gps_msg[4]},\n"
-                f"Ground speed: {gps_msg[5]}, Speed accuracy: {gps_msg[6]}, "
-                f"Horizontal accuracy: {gps_msg[7]}, Vertical accuracy: {gps_msg[8]}, P dop: {gps_msg[9]}\n"
-            )
+            print(f"Message stamp: {gps_msg[0]}")
+            print(f"GPS time: {gps_msg[1]}")
+            print(f"Latitude: {gps_msg[2]}")
+            print(f"Longitude: {gps_msg[3]}")
+            print(f"Altitude: {gps_msg[4]}")
+            print(f"Ground speed: {gps_msg[5]}")
+            print(f"Speed accuracy: {gps_msg[6]}")
+            print(f"Horizontal accuracy: {gps_msg[7]}")
+            print(f"Vertical accuracy: {gps_msg[8]}")
+            print(f"P dop: {gps_msg[9]}\n################################")
+
         else:
-            print(
-                f"Message stamp: {gps_msg[0]}, GPS time: {gps_msg[1]}, "
-                f"Relative pose north: {gps_msg[2]}, Relative pose east: {gps_msg[3]}, "
-                f"Relative pose down: {gps_msg[4]},\n"
-                f"Relative pose length: {gps_msg[5]}, Accuracy north: {gps_msg[6]}, "
-                f"Accuracy east: {gps_msg[7]}, Accuracy down: {gps_msg[8]}, "
-                f"Carr soln: {gps_msg[9]}, GNSS fix ok: {gps_msg[10]}\n"
-            )
+            print(f"Message stamp: {gps_msg[0]}")
+            print(f"GPS time: {gps_msg[1]}")
+            print(f"Relative pose north: {gps_msg[2]}")
+            print(f"Relative pose east: {gps_msg[3]}")
+            print(f"Relative pose down: {gps_msg[4]}")
+            print(f"Relative pose length: {gps_msg[5]}")
+            print(f"Accuracy north: {gps_msg[6]}")
+            print(f"Accuracy east: {gps_msg[7]}")
+            print(f"Accuracy down: {gps_msg[8]}")
+            print(f"Carr soln: {gps_msg[9]}")
+            print(f"GNSS fix ok: {gps_msg[10]}\n################################")
 
     assert reader.close()
 
