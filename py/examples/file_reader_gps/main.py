@@ -14,27 +14,27 @@
 from __future__ import annotations
 
 import argparse
-from typing import Optional
 
-from farm_ng.gps import gps_pb2
 from farm_ng.core.events_file_reader import build_events_dict
 from farm_ng.core.events_file_reader import EventLogPosition
 from farm_ng.core.events_file_reader import EventsFileReader
+from farm_ng.gps import gps_pb2
+
 
 def unpack_gps_message(msg: gps_pb2.RelativePositionFrame) -> tuple:
-
     """Unpacks a gps_pb2.RelativePositionFrame message into a list of values.
+
     Args:
         msg (gps_pb2.RelativePositionFrame): The message to unpack.
     Returns:
         tuple: The unpacked message.
     """
-    
+
     stamp: float = msg.stamp.stamp
     gps_time: float = msg.gps_time.stamp
     relative_pose_north: float = msg.relative_pose_north
     relative_pose_east: float = msg.relative_pose_east
-    relative_pose_down:float = msg.relative_pose_down
+    relative_pose_down: float = msg.relative_pose_down
     relative_pose_length: float = msg.relative_pose_length
     accuracy_north: float = msg.accuracy_north
     accuracy_east: float = msg.accuracy_east
@@ -42,7 +42,19 @@ def unpack_gps_message(msg: gps_pb2.RelativePositionFrame) -> tuple:
     carr_soln: int = msg.carr_soln
     gnss_fix_ok: bool = msg.gnss_fix_ok
 
-    gps_message = (stamp, gps_time, relative_pose_north, relative_pose_east, relative_pose_down, relative_pose_length, accuracy_north, accuracy_east, accuracy_down, carr_soln, gnss_fix_ok)
+    gps_message = (
+        stamp,
+        gps_time,
+        relative_pose_north,
+        relative_pose_east,
+        relative_pose_down,
+        relative_pose_length,
+        accuracy_north,
+        accuracy_east,
+        accuracy_down,
+        carr_soln,
+        gnss_fix_ok,
+    )
 
     return gps_message
 
@@ -69,7 +81,14 @@ def main(file_name: str, gps_interface: str) -> None:
         # parse the message
         msg: gps_pb2.RelativePositionFrame = event_log.read_message()
         gps_msg = unpack_gps_message(msg)
-        print(f"Message stamp: {gps_msg[0]}, GPS time: {gps_msg[1]}, Relative pose north: {gps_msg[2]}, Relative pose east: {gps_msg[3]}, Relative pose down: {gps_msg[4]}, \nRelative pose length: {gps_msg[5]}, Accuracy north: {gps_msg[6]}, Accuracy east: {gps_msg[7]}, Accuracy down: {gps_msg[8]}, Carr soln: {gps_msg[9]}, GNSS fix ok: {gps_msg[10]}\n")
+        print(
+            f"Message stamp: {gps_msg[0]}, GPS time: {gps_msg[1]}, "
+            f"Relative pose north: {gps_msg[2]}, Relative pose east: {gps_msg[3]}, "
+            f"Relative pose down: {gps_msg[4]}, Relative pose length: {gps_msg[5]},\n"
+            f"Accuracy north: {gps_msg[6]}, Accuracy east: {gps_msg[7]}, "
+            f"Accuracy down: {gps_msg[8]}, Carr soln: {gps_msg[9]}, "
+            f"GNSS fix ok: {gps_msg[10]}\n"
+        )
 
     assert reader.close()
 
