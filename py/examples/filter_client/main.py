@@ -27,12 +27,12 @@ from farm_ng_core_pybind import Pose3F64
 
 
 async def main(service_config_path: Path) -> None:
-    """Run the camera service client.
+    """Run the filter service client.
 
     Args:
-        service_config_path (Path): The path to the camera service config.
+        service_config_path (Path): The path to the filter service config.
     """
-    # create a client to the camera service
+    # create a client to the filter service
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
 
     async for event, message in EventClient(config).subscribe(config.subscriptions[0], decode=True):
