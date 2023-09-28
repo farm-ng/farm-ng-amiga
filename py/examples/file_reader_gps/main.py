@@ -47,52 +47,29 @@ def main(file_name: str, msg_type: str) -> None:
         msg: gps_pb2.RelativePositionFrame | gps_pb2.GpsFrame = event_log.read_message()
 
         if msg_type == "pvt":
-            stamp: float = msg.stamp.stamp
-            gps_time: float = msg.gps_time.stamp
-            latitude: float = msg.latitude
-            longitude: float = msg.longitude
-            altitude: float = msg.altitude
-            ground_speed: float = msg.ground_speed
-            speed_accuracy: float = msg.speed_accuracy
-            horizontal_accuracy: float = msg.horizontal_accuracy
-            vertical_accuracy: float = msg.vertical_accuracy
-            p_dop: float = msg.p_dop
-
-            print(f"Message stamp: {stamp}")
-            print(f"GPS time: {gps_time}")
-            print(f"Latitude: {latitude}")
-            print(f"Longitude: {longitude}")
-            print(f"Altitude: {altitude}")
-            print(f"Ground speed: {ground_speed}")
-            print(f"Speed accuracy: {speed_accuracy}")
-            print(f"Horizontal accuracy: {horizontal_accuracy}")
-            print(f"Vertical accuracy: {vertical_accuracy}")
-            print(f"P dop: {p_dop}\n################################")
+            print(f"Message stamp: {msg.stamp.stamp}")
+            print(f"GPS time: {msg.gps_time.stamp}")
+            print(f"Latitude: {msg.latitude}")
+            print(f"Longitude: {msg.longitude}")
+            print(f"Altitude: {msg.altitude}")
+            print(f"Ground speed: {msg.ground_speed}")
+            print(f"Speed accuracy: {msg.speed_accuracy}")
+            print(f"Horizontal accuracy: {msg.horizontal_accuracy}")
+            print(f"Vertical accuracy: {msg.vertical_accuracy}")
+            print(f"P dop: {msg.p_dop}\n################################")
 
         elif msg_type == "relposned":
-            stamp: float = msg.stamp.stamp
-            gps_time: float = msg.gps_time.stamp
-            relative_pose_north: float = msg.relative_pose_north
-            relative_pose_east: float = msg.relative_pose_east
-            relative_pose_down: float = msg.relative_pose_down
-            relative_pose_length: float = msg.relative_pose_length
-            accuracy_north: float = msg.accuracy_north
-            accuracy_east: float = msg.accuracy_east
-            accuracy_down: float = msg.accuracy_down
-            carr_soln: int = msg.carr_soln
-            gnss_fix_ok: bool = msg.gnss_fix_ok
-
-            print(f"Message stamp: {stamp}")
-            print(f"GPS time: {gps_time}")
-            print(f"Relative pose north: {relative_pose_north}")
-            print(f"Relative pose east: {relative_pose_east}")
-            print(f"Relative pose down: {relative_pose_down}")
-            print(f"Relative pose length: {relative_pose_length}")
-            print(f"Accuracy north: {accuracy_north}")
-            print(f"Accuracy east: {accuracy_east}")
-            print(f"Accuracy down: {accuracy_down}")
-            print(f"Carrier solution: {carr_soln}")
-            print(f"GNSS fix ok: {gnss_fix_ok}\n################################")
+            print(f"Message stamp: {msg.stamp.stamp}")
+            print(f"GPS time: {msg.gps_time.stamp}")
+            print(f"Relative pose north: {msg.relative_pose_north}")
+            print(f"Relative pose east: {msg.relative_pose_east}")
+            print(f"Relative pose down: {msg.relative_pose_down}")
+            print(f"Relative pose length: {msg.relative_pose_length}")
+            print(f"Accuracy north: {msg.accuracy_north}")
+            print(f"Accuracy east: {msg.accuracy_east}")
+            print(f"Accuracy down: {msg.accuracy_down}")
+            print(f"Carrier solution: {msg.carr_soln}")
+            print(f"GNSS fix ok: {msg.gnss_fix_ok}\n################################")
 
     assert reader.close()
 
