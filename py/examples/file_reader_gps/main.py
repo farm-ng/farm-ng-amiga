@@ -21,45 +21,75 @@ from farm_ng.core.events_file_reader import EventsFileReader
 from farm_ng.gps import gps_pb2
 
 
-def unpack_gps_message(msg: gps_pb2.RelativePositionFrame) -> tuple:
+def unpack_gps_message(msg: gps_pb2.RelativePositionFrame | gps_pb2.GpsFrame, msg_type: str) -> tuple:
     """Unpacks a gps_pb2.RelativePositionFrame message into a list of values.
 
     Args:
-        msg (gps_pb2.RelativePositionFrame): The message to unpack.
+        msg (gps_pb2.RelativePositionFrame | gps_pb2.GpsFrame): The message to unpack.
     Returns:
         tuple: The unpacked message.
     """
 
-    stamp: float = msg.stamp.stamp
-    gps_time: float = msg.gps_time.stamp
-    relative_pose_north: float = msg.relative_pose_north
-    relative_pose_east: float = msg.relative_pose_east
-    relative_pose_down: float = msg.relative_pose_down
-    relative_pose_length: float = msg.relative_pose_length
-    accuracy_north: float = msg.accuracy_north
-    accuracy_east: float = msg.accuracy_east
-    accuracy_down: float = msg.accuracy_down
-    carr_soln: int = msg.carr_soln
-    gnss_fix_ok: bool = msg.gnss_fix_ok
+    if msg_type == "relposned":
 
-    gps_message = (
-        stamp,
-        gps_time,
-        relative_pose_north,
-        relative_pose_east,
-        relative_pose_down,
-        relative_pose_length,
-        accuracy_north,
-        accuracy_east,
-        accuracy_down,
-        carr_soln,
-        gnss_fix_ok,
-    )
+        stamp: float = msg.stamp.stamp
+        gps_time: float = msg.gps_time.stamp
+        relative_pose_north: float = msg.relative_pose_north
+        relative_pose_east: float = msg.relative_pose_east
+        relative_pose_down: float = msg.relative_pose_down
+        relative_pose_length: float = msg.relative_pose_length
+        accuracy_north: float = msg.accuracy_north
+        accuracy_east: float = msg.accuracy_east
+        accuracy_down: float = msg.accuracy_down
+        carr_soln: int = msg.carr_soln
+        gnss_fix_ok: bool = msg.gnss_fix_ok
+
+        gps_message = (
+            stamp,
+            gps_time,
+            relative_pose_north,
+            relative_pose_east,
+            relative_pose_down,
+            relative_pose_length,
+            accuracy_north,
+            accuracy_east,
+            accuracy_down,
+            carr_soln,
+            gnss_fix_ok,
+        )
+
+    else:
+        stamp: float = msg.stamp.stamp
+        gps_time: float = msg.gps_time.stamp
+        latitude: float = msg.latitude
+        longitude: float = msg.longitude
+        altitude: float = msg.altitude
+        ground_speed: float = msg.ground_speed
+        speed_accuracy: float = msg.speed_accuracy
+        horizontal_accuracy: float = msg.horizontal_accuracy
+        vertical_accuracy: float = msg.vertical_accuracy
+        p_dop: float = msg.p_dop
+
+        gps_message = (
+            stamp,
+            gps_time,
+            latitude,
+            longitude,
+            altitude,
+            ground_speed,
+            speed_accuracy,
+            horizontal_accuracy,
+            vertical_accuracy,
+            p_dop,
+        )
 
     return gps_message
 
 
-def main(file_name: str, gps_interface: str) -> None:
+def main(file_name: str, msg_type: str) -> None:
+    if msg_type not in ["relposned", "pvt"]:
+        raise RuntimeError(f"Message type not recognized: {msg_type}")
+
     # create the file reader
     reader = EventsFileReader(file_name)
     success: bool = reader.open()
@@ -73,22 +103,31 @@ def main(file_name: str, gps_interface: str) -> None:
     events_dict: dict[str, list[EventLogPosition]] = build_events_dict(events_index)
     print(f"All available topics: {sorted(events_dict.keys())}")
 
-    gps_events = events_dict["/gps/relposned"]
-    print(f"Found {len(gps_events)} packets of gps_pb2.RelativePositionFrame\n")
+    gps_events = events_dict[f"/gps/{msg_type}"]
+    print(f"Found {len(gps_events)} packets of gps/{msg_type}\n")
 
     for event_log in gps_events:
 
         # parse the message
-        msg: gps_pb2.RelativePositionFrame = event_log.read_message()
-        gps_msg = unpack_gps_message(msg)
-        print(
-            f"Message stamp: {gps_msg[0]}, GPS time: {gps_msg[1]}, "
-            f"Relative pose north: {gps_msg[2]}, Relative pose east: {gps_msg[3]}, "
-            f"Relative pose down: {gps_msg[4]}, Relative pose length: {gps_msg[5]},"
-            f"Accuracy north: {gps_msg[6]}, Accuracy east: {gps_msg[7]}, "
-            f"Accuracy down: {gps_msg[8]}, Carr soln: {gps_msg[9]}, "
-            f"GNSS fix ok: {gps_msg[10]}\n"
-        )
+        msg: gps_pb2.RelativePositionFrame | gps_pb2.GpsFrame = event_log.read_message()
+        gps_msg = unpack_gps_message(msg, msg_type)
+
+        if msg_type == "pvt":
+            print(
+                f"Message stamp: {gps_msg[0]}, GPS time: {gps_msg[1]}, "
+                f"Latitude: {gps_msg[2]}, Longitude: {gps_msg[3]}, Altitude: {gps_msg[4]},\n"
+                f"Ground speed: {gps_msg[5]}, Speed accuracy: {gps_msg[6]}, "
+                f"Horizontal accuracy: {gps_msg[7]}, Vertical accuracy: {gps_msg[8]}, P dop: {gps_msg[9]}\n"
+            )
+        else:
+            print(
+                f"Message stamp: {gps_msg[0]}, GPS time: {gps_msg[1]}, "
+                f"Relative pose north: {gps_msg[2]}, Relative pose east: {gps_msg[3]}, "
+                f"Relative pose down: {gps_msg[4]},\n"
+                f"Relative pose length: {gps_msg[5]}, Accuracy north: {gps_msg[6]}, "
+                f"Accuracy east: {gps_msg[7]}, Accuracy down: {gps_msg[8]}, "
+                f"Carr soln: {gps_msg[9]}, GNSS fix ok: {gps_msg[10]}\n"
+            )
 
     assert reader.close()
 
@@ -97,7 +136,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="Event file reader example for parsing GPS messages.")
     parser.add_argument("--file-name", type=str, required=True, help="Path to the `events.bin` file.")
     parser.add_argument(
-        "--gps-interface", type=str, default="relposed", help="The name of the gps interface to read: relposned or pvt."
+        "--msg-type", type=str, default="relposned", help="The name of the gps interface to read: relposned or pvt."
     )
     args = parser.parse_args()
-    main(args.file_name, args.gps_interface)
+    main(args.file_name, args.msg_type)
