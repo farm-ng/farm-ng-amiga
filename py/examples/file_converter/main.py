@@ -104,7 +104,8 @@ def main(
         cv2.waitKey(1)
 
     # close the video writer and the file reader
-    video_writer.release()
+    if video_writer is not None:
+        video_writer.release()
     reader.close()
 
 
