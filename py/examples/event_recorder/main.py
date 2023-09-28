@@ -17,7 +17,8 @@ import asyncio
 from pathlib import Path
 
 from farm_ng.core.event_client import EventClient
-from farm_ng.core.event_service_pb2 import EventServiceConfig, EventServiceConfigList
+from farm_ng.core.event_service_pb2 import EventServiceConfig
+from farm_ng.core.event_service_pb2 import EventServiceConfigList
 from farm_ng.core.events_file_reader import proto_from_json_file
 from google.protobuf.empty_pb2 import Empty
 
@@ -34,29 +35,23 @@ async def stop_recording(service_config: EventServiceConfig) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="amiga-camera-calibration")
-    parser.add_argument(
-        "--service-config", type=Path, required=True, help="The camera config.")
+    parser.add_argument("--service-config", type=Path, required=True, help="The camera config.")
 
     subparsers = parser.add_subparsers(dest="command")
 
     start_command = subparsers.add_parser("start_recording", help="Start recording.")
-    start_command.add_argument(
-        "--recording-profile", type=Path, required=True, help="The recording profile.")
+    start_command.add_argument("--recording-profile", type=Path, required=True, help="The recording profile.")
 
     stop_command = subparsers.add_parser("stop_recording", help="Stop recording.")
 
     args = parser.parse_args()
 
     # create a client to the camera service
-    service_config: EventServiceConfig = proto_from_json_file(
-        args.service_config, EventServiceConfig()
-    )
+    service_config: EventServiceConfig = proto_from_json_file(args.service_config, EventServiceConfig())
 
     if args.command == "start_recording":
-        recording_profile = proto_from_json_file(
-            args.recording_profile, EventServiceConfigList()
-        )
+        recording_profile = proto_from_json_file(args.recording_profile, EventServiceConfigList())
         asyncio.run(start_recording(service_config, recording_profile))
-    
+
     if args.command == "stop_recording":
         asyncio.run(stop_recording(service_config))
