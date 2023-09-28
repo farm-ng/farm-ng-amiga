@@ -84,7 +84,7 @@ def main(file_name: str, gps_interface: str) -> None:
         print(
             f"Message stamp: {gps_msg[0]}, GPS time: {gps_msg[1]}, "
             f"Relative pose north: {gps_msg[2]}, Relative pose east: {gps_msg[3]}, "
-            f"Relative pose down: {gps_msg[4]}, Relative pose length: {gps_msg[5]},\n"
+            f"Relative pose down: {gps_msg[4]}, Relative pose length: {gps_msg[5]},"
             f"Accuracy north: {gps_msg[6]}, Accuracy east: {gps_msg[7]}, "
             f"Accuracy down: {gps_msg[8]}, Carr soln: {gps_msg[9]}, "
             f"GNSS fix ok: {gps_msg[10]}\n"
