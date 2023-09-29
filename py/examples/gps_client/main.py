@@ -53,7 +53,7 @@ def print_gps_frame(msg):
     print("-" * 50)
 
 
-async def main(service_config_path: Path, uri_path: str, _outage_ctn=[0]) -> None:
+async def main(service_config_path: Path) -> None:
     """Run the gps service client.
 
     Args:
@@ -61,30 +61,17 @@ async def main(service_config_path: Path, uri_path: str, _outage_ctn=[0]) -> Non
     """
     # create a client to the camera service
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
-
     async for event, msg in EventClient(config).subscribe(config.subscriptions[0]):
 
-        try:
-            if not uri_path or event.uri.path == f"{uri_path}":
-                if isinstance(msg, gps_pb2.RelativePositionFrame):
-                    print_relative_position_frame(msg)
-                elif isinstance(msg, gps_pb2.GpsFrame):
-                    print_gps_frame(msg)
-
-        except AttributeError:
-            _outage_ctn[0] += 1
-            if _outage_ctn[0] > 0:
-                print(
-                    "Service is active but no messages are being published. "
-                    "Ensure your GPS antenna is unobstructed and "
-                    "try restarting the service."
-                )
+        if isinstance(msg, gps_pb2.RelativePositionFrame):
+            print_relative_position_frame(msg)
+        elif isinstance(msg, gps_pb2.GpsFrame):
+            print_gps_frame(msg)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="amiga-gps-stream")
     parser.add_argument("--service-config", type=Path, required=True, help="The GPS config.")
-    parser.add_argument("--uri-path", type=str, help="The name of the gps interface to read: /relposned or /pvt.")
     args = parser.parse_args()
 
-    asyncio.run(main(args.service_config, args.uri_path))
+    asyncio.run(main(args.service_config))
