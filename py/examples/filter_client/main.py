@@ -36,9 +36,10 @@ async def main(service_config_path: Path) -> None:
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
 
     async for event, message in EventClient(config).subscribe(config.subscriptions[0], decode=True):
-        # Find the monotonic driver receive timestamp, or the first timestamp if not available.
+        # Find the monotonic service send timestamp (this is the time the filter calculated the state),
+        # or the first timestamp if not available.
         stamp = (
-            get_stamp_by_semantics_and_clock_type(event, StampSemantics.DRIVER_RECEIVE, "monotonic")
+            get_stamp_by_semantics_and_clock_type(event, StampSemantics.SERVICE_SEND, "monotonic")
             or event.timestamps[0].stamp
         )
 
