@@ -18,6 +18,8 @@ import argparse
 from farm_ng.core.events_file_reader import build_events_dict
 from farm_ng.core.events_file_reader import EventLogPosition
 from farm_ng.core.events_file_reader import EventsFileReader
+from farm_ng.core.stamp import get_stamp_by_semantics_and_clock_type
+from farm_ng.core.stamp import StampSemantics
 from farm_ng.gps import gps_pb2
 
 
@@ -71,8 +73,21 @@ def main(file_name: str, topic_name: str) -> None:
         gps_events = events_dict[f"/gps/{topic_name}"]
         print(f"Found {len(gps_events)} packets of gps/{topic_name}\n")
     else:
-        gps_events = events_dict["/gps/relposned"] + events_dict["/gps/pvt"]
-        print(f"Found {len(gps_events)} packets of /gps/\n")
+        relposned_events = events_dict["/gps/relposned"]
+        print(f"Found {len(relposned_events)} packets of /gps/relposned\n")
+        pvt_events = events_dict["/gps/pvt"]
+        print(f"Found {len(pvt_events)} packets of /gps/pvt\n")
+        gps_events = relposned_events + pvt_events
+
+        # Sort the pvt and relposned events by the DRIVER_RECEIVE timestamp
+        # DRIVER_RECEIVE is the monotonic time the GPS service on the amiga brain
+        # received the message from the GPS receiver.
+        gps_events = sorted(
+            gps_events,
+            key=lambda event_log: get_stamp_by_semantics_and_clock_type(
+                event_log.event, StampSemantics.DRIVER_RECEIVE, "monotonic"
+            ),
+        )
 
     for event_log in gps_events:
         # parse the message
