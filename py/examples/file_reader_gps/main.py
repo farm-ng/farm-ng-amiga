@@ -50,9 +50,9 @@ def print_gps_frame(msg):
     print("-" * 50)
 
 
-def main(file_name: str, uri_path: str) -> None:
-    if uri_path is not None and uri_path not in ["/relposned", "/pvt"]:
-        raise RuntimeError(f"Uri path type not recognized: {uri_path}")
+def main(file_name: str, topic_name: str) -> None:
+    if topic_name not in [None, "relposned", "pvt"]:
+        raise RuntimeError(f"Topic name not recognized: {topic_name}")
 
     # create the file reader
     reader = EventsFileReader(file_name)
@@ -67,22 +67,20 @@ def main(file_name: str, uri_path: str) -> None:
     events_dict: dict[str, list[EventLogPosition]] = build_events_dict(events_index)
     print(f"All available topics: {sorted(events_dict.keys())}")
 
-    if uri_path is not None:
-        gps_events = events_dict[f"/gps{uri_path}"]
-        print(f"Found {len(gps_events)} packets of gps{uri_path}\n")
+    if topic_name is not None:
+        gps_events = events_dict[f"/gps/{topic_name}"]
+        print(f"Found {len(gps_events)} packets of gps/{topic_name}\n")
     else:
         gps_events = events_dict["/gps/relposned"] + events_dict["/gps/pvt"]
         print(f"Found {len(gps_events)} packets of /gps/\n")
 
     for event_log in gps_events:
-
         # parse the message
         msg: gps_pb2.RelativePositionFrame | gps_pb2.GpsFrame = event_log.read_message()
-        if not uri_path or event_log.event.uri.path == f"gps{uri_path}":
-            if isinstance(msg, gps_pb2.RelativePositionFrame):
-                print_relative_position_frame(msg)
-            elif isinstance(msg, gps_pb2.GpsFrame):
-                print_gps_frame(msg)
+        if isinstance(msg, gps_pb2.RelativePositionFrame):
+            print_relative_position_frame(msg)
+        elif isinstance(msg, gps_pb2.GpsFrame):
+            print_gps_frame(msg)
 
     assert reader.close()
 
@@ -90,6 +88,10 @@ def main(file_name: str, uri_path: str) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="Event file reader example for parsing GPS messages.")
     parser.add_argument("--file-name", type=str, required=True, help="Path to the `events.bin` file.")
-    parser.add_argument("--uri-path", type=str, help="The name of the gps interface to read: /relposned or /pvt.")
+    parser.add_argument(
+        "--topic-name",
+        type=str,
+        help="The name of the gps interface to print: `relposned` or `pvt`. Default is both topics.",
+    )
     args = parser.parse_args()
-    main(args.file_name, args.uri_path)
+    main(args.file_name, args.topic_name)
