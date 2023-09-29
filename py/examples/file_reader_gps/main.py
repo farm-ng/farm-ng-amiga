@@ -21,9 +21,38 @@ from farm_ng.core.events_file_reader import EventsFileReader
 from farm_ng.gps import gps_pb2
 
 
-def main(file_name: str, msg_type: str) -> None:
-    if msg_type not in ["relposned", "pvt"]:
-        raise RuntimeError(f"Message type not recognized: {msg_type}")
+def print_relative_position_frame(msg):
+    print(f"Message stamp: {msg.stamp.stamp}")
+    print(f"GPS time: {msg.gps_time.stamp}")
+    print(f"Relative pose north: {msg.relative_pose_north}")
+    print(f"Relative pose east: {msg.relative_pose_east}")
+    print(f"Relative pose down: {msg.relative_pose_down}")
+    print(f"Relative pose length: {msg.relative_pose_length}")
+    print(f"Accuracy north: {msg.accuracy_north}")
+    print(f"Accuracy east: {msg.accuracy_east}")
+    print(f"Accuracy down: {msg.accuracy_down}")
+    print(f"Carrier solution: {msg.carr_soln}")
+    print(f"GNSS fix ok: {msg.gnss_fix_ok}")
+    print("-" * 50)
+
+
+def print_gps_frame(msg):
+    print(f"Message stamp: {msg.stamp.stamp}")
+    print(f"GPS time: {msg.gps_time.stamp}")
+    print(f"Latitude: {msg.latitude}")
+    print(f"Longitude: {msg.longitude}")
+    print(f"Altitude: {msg.altitude}")
+    print(f"Ground speed: {msg.ground_speed}")
+    print(f"Speed accuracy: {msg.speed_accuracy}")
+    print(f"Horizontal accuracy: {msg.horizontal_accuracy}")
+    print(f"Vertical accuracy: {msg.vertical_accuracy}")
+    print(f"P DOP: {msg.p_dop}")
+    print("-" * 50)
+
+
+def main(file_name: str, uri_path: str) -> None:
+    if uri_path is not None and uri_path not in ["/relposned", "/pvt"]:
+        raise RuntimeError(f"Uri path type not recognized: {uri_path}")
 
     # create the file reader
     reader = EventsFileReader(file_name)
@@ -38,38 +67,22 @@ def main(file_name: str, msg_type: str) -> None:
     events_dict: dict[str, list[EventLogPosition]] = build_events_dict(events_index)
     print(f"All available topics: {sorted(events_dict.keys())}")
 
-    gps_events = events_dict[f"/gps/{msg_type}"]
-    print(f"Found {len(gps_events)} packets of gps/{msg_type}\n")
+    if uri_path is not None:
+        gps_events = events_dict[f"/gps{uri_path}"]
+        print(f"Found {len(gps_events)} packets of gps{uri_path}\n")
+    else:
+        gps_events = events_dict["/gps/relposned"] + events_dict["/gps/pvt"]
+        print(f"Found {len(gps_events)} packets of /gps/\n")
 
     for event_log in gps_events:
 
         # parse the message
         msg: gps_pb2.RelativePositionFrame | gps_pb2.GpsFrame = event_log.read_message()
-
-        if msg_type == "pvt":
-            print(f"Message stamp: {msg.stamp.stamp}")
-            print(f"GPS time: {msg.gps_time.stamp}")
-            print(f"Latitude: {msg.latitude}")
-            print(f"Longitude: {msg.longitude}")
-            print(f"Altitude: {msg.altitude}")
-            print(f"Ground speed: {msg.ground_speed}")
-            print(f"Speed accuracy: {msg.speed_accuracy}")
-            print(f"Horizontal accuracy: {msg.horizontal_accuracy}")
-            print(f"Vertical accuracy: {msg.vertical_accuracy}")
-            print(f"P dop: {msg.p_dop}\n################################")
-
-        elif msg_type == "relposned":
-            print(f"Message stamp: {msg.stamp.stamp}")
-            print(f"GPS time: {msg.gps_time.stamp}")
-            print(f"Relative pose north: {msg.relative_pose_north}")
-            print(f"Relative pose east: {msg.relative_pose_east}")
-            print(f"Relative pose down: {msg.relative_pose_down}")
-            print(f"Relative pose length: {msg.relative_pose_length}")
-            print(f"Accuracy north: {msg.accuracy_north}")
-            print(f"Accuracy east: {msg.accuracy_east}")
-            print(f"Accuracy down: {msg.accuracy_down}")
-            print(f"Carrier solution: {msg.carr_soln}")
-            print(f"GNSS fix ok: {msg.gnss_fix_ok}\n################################")
+        if not uri_path or event_log.event.uri.path == f"gps{uri_path}":
+            if isinstance(msg, gps_pb2.RelativePositionFrame):
+                print_relative_position_frame(msg)
+            elif isinstance(msg, gps_pb2.GpsFrame):
+                print_gps_frame(msg)
 
     assert reader.close()
 
@@ -77,8 +90,6 @@ def main(file_name: str, msg_type: str) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="Event file reader example for parsing GPS messages.")
     parser.add_argument("--file-name", type=str, required=True, help="Path to the `events.bin` file.")
-    parser.add_argument(
-        "--msg-type", type=str, default="relposned", help="The name of the gps interface to read: relposned or pvt."
-    )
+    parser.add_argument("--uri-path", type=str, help="The name of the gps interface to read: /relposned or /pvt.")
     args = parser.parse_args()
-    main(args.file_name, args.msg_type)
+    main(args.file_name, args.uri_path)
