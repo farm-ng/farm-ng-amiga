@@ -19,9 +19,12 @@ from pathlib import Path
 from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfig, EventServiceConfigList, SubscribeRequest
 from farm_ng.core.events_file_reader import proto_from_json_file
+from farm_ng.core.stamp import get_stamp_by_semantics_and_clock_type, StampSemantics
+from farm_ng.oak import oak_pb2
+from farm_ng.gps import gps_pb2
 
 
-class MultiClientSubscriber:
+class GeoTaggedImageSubscriber:
     """Example of subscribing to events from multiple clients."""
     def __init__(self, service_config: EventServiceConfigList) -> None:
         """Initialize the multi-client subscriber.
@@ -39,18 +42,50 @@ class MultiClientSubscriber:
                 self.subscriptions = config.subscriptions
                 continue
             self.clients[config.name] = EventClient(config)
+        
+        # create a queue to store the images since they come in faster than we can process them
+        self.image_queue: asyncio.Queue = asyncio.Queue()
     
     async def _subscribe(self, subscription: SubscribeRequest) -> None:
         # the client name is the last part of the query
         client_name: str = subscription.uri.query.split("=")[-1]
         client: EventClient = self.clients[client_name]
         # subscribe to the event
-        # NOTE: set decode to True to decode the message
-        async for event, message in client.subscribe(subscription, decode=False):
-            # decode the message type
-            message_type = event.uri.query.split("&")[0].split("=")[-1]
-            print(f"Received event from {client_name}{event.uri.path}: {message_type}")
-    
+        async for event, message in client.subscribe(subscription, decode=True):
+            print(f"Received event from {client_name}{event.uri.path}")
+            if isinstance(message, oak_pb2.OakFrame):
+                await self.image_queue.put((event, message))
+            elif isinstance(message, gps_pb2.GpsFrame):
+                stamp_gps = get_stamp_by_semantics_and_clock_type(
+                    event, semantics="service/send", clock_type="monotonic"
+                )
+                if stamp_gps is None:
+                    continue
+
+                geo_image = None
+
+                while self.image_queue.qsize() > 0:
+                    event_image, image = await self.image_queue.get()
+                    stamp_image = get_stamp_by_semantics_and_clock_type(
+                        event_image, semantics="service/send", clock_type="monotonic"
+                    )
+                    if stamp_image is None:
+                        continue
+                    stamp_diff = abs(stamp_gps - stamp_image)
+
+                    # NOTE: define this threshold depending on the precision of your application
+                    if stamp_diff > 0.05:
+                        print(f"Skipping image because stamp_diff is too large: {stamp_diff}")
+                        continue
+                    else:
+                        print(f"Synced image and gps data with stamp_diff: {stamp_diff}")
+                        geo_image = ((event_image, image), (event, message))
+                        break
+                
+                if geo_image is None:
+                    print("Could not sync image and gps data")
+                    continue
+
     async def run(self) -> None:
         # start the subscribe routines
         tasks: list[asyncio.Task] = []
@@ -73,6 +108,6 @@ if __name__ == "__main__":
     )
 
     # create the multi-client subscriber
-    subscriber = MultiClientSubscriber(service_config)
+    subscriber = GeoTaggedImageSubscriber(service_config)
 
     asyncio.run(subscriber.run())
