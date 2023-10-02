@@ -17,15 +17,18 @@ import asyncio
 from pathlib import Path
 
 from farm_ng.core.event_client import EventClient
-from farm_ng.core.event_service_pb2 import EventServiceConfig, EventServiceConfigList, SubscribeRequest
+from farm_ng.core.event_service_pb2 import EventServiceConfig
+from farm_ng.core.event_service_pb2 import EventServiceConfigList
+from farm_ng.core.event_service_pb2 import SubscribeRequest
 from farm_ng.core.events_file_reader import proto_from_json_file
 
 
 class MultiClientSubscriber:
     """Example of subscribing to events from multiple clients."""
+
     def __init__(self, service_config: EventServiceConfigList) -> None:
         """Initialize the multi-client subscriber.
-        
+
         Args:
             service_config: The service config.
         """
@@ -39,7 +42,7 @@ class MultiClientSubscriber:
                 self.subscriptions = config.subscriptions
                 continue
             self.clients[config.name] = EventClient(config)
-    
+
     async def _subscribe(self, subscription: SubscribeRequest) -> None:
         # the client name is the last part of the query
         client_name: str = subscription.uri.query.split("=")[-1]
@@ -50,7 +53,7 @@ class MultiClientSubscriber:
             # decode the message type
             message_type = event.uri.query.split("&")[0].split("=")[-1]
             print(f"Received event from {client_name}{event.uri.path}: {message_type}")
-    
+
     async def run(self) -> None:
         # start the subscribe routines
         tasks: list[asyncio.Task] = []
@@ -68,9 +71,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # create a client to the camera service
-    service_config: EventServiceConfigList = proto_from_json_file(
-        args.config, EventServiceConfigList()
-    )
+    service_config: EventServiceConfigList = proto_from_json_file(args.config, EventServiceConfigList())
 
     # create the multi-client subscriber
     subscriber = MultiClientSubscriber(service_config)

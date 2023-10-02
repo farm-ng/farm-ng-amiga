@@ -17,18 +17,21 @@ import asyncio
 from pathlib import Path
 
 from farm_ng.core.event_client import EventClient
-from farm_ng.core.event_service_pb2 import EventServiceConfig, EventServiceConfigList, SubscribeRequest
+from farm_ng.core.event_service_pb2 import EventServiceConfig
+from farm_ng.core.event_service_pb2 import EventServiceConfigList
+from farm_ng.core.event_service_pb2 import SubscribeRequest
 from farm_ng.core.events_file_reader import proto_from_json_file
-from farm_ng.core.stamp import get_stamp_by_semantics_and_clock_type, StampSemantics
-from farm_ng.oak import oak_pb2
+from farm_ng.core.stamp import get_stamp_by_semantics_and_clock_type
 from farm_ng.gps import gps_pb2
+from farm_ng.oak import oak_pb2
 
 
 class GeoTaggedImageSubscriber:
     """Example of subscribing to events from multiple clients."""
+
     def __init__(self, service_config: EventServiceConfigList) -> None:
         """Initialize the multi-client subscriber.
-        
+
         Args:
             service_config: The service config.
         """
@@ -42,10 +45,10 @@ class GeoTaggedImageSubscriber:
                 self.subscriptions = config.subscriptions
                 continue
             self.clients[config.name] = EventClient(config)
-        
+
         # create a queue to store the images since they come in faster than we can process them
         self.image_queue: asyncio.Queue = asyncio.Queue()
-    
+
     async def _subscribe(self, subscription: SubscribeRequest) -> None:
         # the client name is the last part of the query
         client_name: str = subscription.uri.query.split("=")[-1]
@@ -81,7 +84,7 @@ class GeoTaggedImageSubscriber:
                         print(f"Synced image and gps data with stamp_diff: {stamp_diff}")
                         geo_image = ((event_image, image), (event, message))
                         break
-                
+
                 if geo_image is None:
                     print("Could not sync image and gps data")
                     continue
@@ -103,9 +106,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # create a client to the camera service
-    service_config: EventServiceConfigList = proto_from_json_file(
-        args.config, EventServiceConfigList()
-    )
+    service_config: EventServiceConfigList = proto_from_json_file(args.config, EventServiceConfigList())
 
     # create the multi-client subscriber
     subscriber = GeoTaggedImageSubscriber(service_config)
