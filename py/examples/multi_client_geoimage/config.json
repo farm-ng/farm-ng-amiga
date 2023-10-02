@@ -18,7 +18,7 @@
             "path": "/rgb",
             "query": "service_name=oak0"
           },
-          "every_n": 2
+          "every_n": 1
         },
         {
           "uri": {
