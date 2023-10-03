@@ -1,0 +1,33 @@
+{
+  "configs": [
+    {
+      "name": "gps",
+      "port": 3001,
+      "host": "localhost"
+    },
+    {
+      "name": "oak0",
+      "port": 50010,
+      "host": "localhost"
+    },
+    {
+      "name": "multi_subscriber",
+      "subscriptions": [
+        {
+          "uri": {
+            "path": "/right",
+            "query": "service_name=oak0"
+          },
+          "every_n": 1
+        },
+        {
+          "uri": {
+            "path": "/pvt",
+            "query": "service_name=gps"
+          },
+          "every_n": 1
+        }
+      ]
+    }
+  ]
+}
