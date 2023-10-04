@@ -12,8 +12,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
+
 import argparse
 import asyncio
+from math import radians
 from pathlib import Path
 
 from farm_ng.control.control_pb2 import ControllerState
@@ -88,7 +91,7 @@ def create_turn_segment(previous_pose: Pose3F64, next_frame_b: str, angle: float
         angle (float): The angle to turn, in degrees (+ left, - right).
     """
     turn_segment: Pose3F64 = Pose3F64(
-        a_from_b=Isometry3F64.Rz(angle), frame_a=previous_pose.frame_b, frame_b=next_frame_b
+        a_from_b=Isometry3F64.Rz(radians(angle)), frame_a=previous_pose.frame_b, frame_b=next_frame_b
     )
     return previous_pose * turn_segment
 
@@ -103,7 +106,7 @@ def format_track(track_waypoints: list[Pose3F64]) -> FilterTrack:
     Args:
         track_waypoints (list[Pose3F64]): The track waypoints.
     """
-    return FilterTrack(states=[FilterState(state=pose.to_proto()) for pose in track_waypoints], name="my_custom_track")
+    return FilterTrack(states=[FilterState(pose=pose.to_proto()) for pose in track_waypoints], name="my_custom_track")
 
 
 async def main(service_config_path: Path, side_length: float) -> None:
