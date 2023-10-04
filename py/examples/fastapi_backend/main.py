@@ -18,6 +18,7 @@ import asyncio
 import json
 from pathlib import Path
 
+import uvicorn
 from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfigList
 from farm_ng.core.event_service_pb2 import SubscribeRequest
@@ -85,8 +86,6 @@ def read_root():
 
 
 if __name__ == "__main__":
-    import uvicorn
-
     # NOTE: alternatively, we can use uvicorn to run the server
     # uvicorn main:app --reload --port 8002
     parser = argparse.ArgumentParser()
@@ -104,6 +103,5 @@ if __name__ == "__main__":
         # add the client to the clients dict
         clients[config.name] = client
 
-    # TODO (tony-ologic): review later so that we can access the website over tailscale
-    # without port forwarding.
+    # run the server
     uvicorn.run(app, host="0.0.0.0", port=args.port)  # noqa: S104
