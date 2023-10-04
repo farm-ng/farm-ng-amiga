@@ -16,6 +16,7 @@ import argparse
 import asyncio
 from pathlib import Path
 
+from farm_ng.control.control_pb2 import ControllerState
 from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfig
 from farm_ng.core.events_file_reader import proto_from_json_file
@@ -149,7 +150,33 @@ async def main(service_config_path: Path, side_length: float) -> None:
     # Follow the track
     await follow_track(config)
 
-    # TODO: Add a subscriber to the controller state and print the state as it changes.
+
+async def stream_controller_state(service_config_path: Path) -> None:
+    """Stream the controller state.
+
+    Args:
+        service_config_path (Path): The path to the controller service config.
+    """
+
+    # Brief wait to allow the controller to start (not necessary in practice)
+    await asyncio.sleep(1)
+    print("Streaming controller state...")
+
+    # create a client to the camera service
+    config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
+
+    message: ControllerState
+    async for event, message in EventClient(config).subscribe(config.subscriptions[0], decode=True):
+        print("###################")
+        print(message)
+
+
+async def run(args) -> None:
+    tasks: list[asyncio.Task] = [
+        asyncio.create_task(main(args.service_config, args.side_length)),
+        asyncio.create_task(stream_controller_state(args.service_config)),
+    ]
+    await asyncio.gather(*tasks)
 
 
 if __name__ == "__main__":
@@ -158,4 +185,5 @@ if __name__ == "__main__":
     parser.add_argument("--side-length", type=float, default=1.0, help="The side length of the square.")
     args = parser.parse_args()
 
-    asyncio.run(main(args.service_config, args.side_length))
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(run(args))
