@@ -23,20 +23,7 @@ from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfig
 from farm_ng.core.events_file_reader import proto_from_json_file
 from farm_ng.filter.filter_pb2 import FilterTrack
-from farm_ng_core_pybind import Pose3F64
-from google.protobuf.empty_pb2 import Empty
 from google.protobuf.wrappers_pb2 import StringValue
-
-
-async def get_pose(service_config: EventServiceConfig) -> Pose3F64:
-    """Get the current pose of the robot in the world frame, from the controller service.
-
-    Args:
-        service_config (EventServiceConfig): The controller service config.
-    """
-    reply = await EventClient(service_config).request_reply("/get_pose", Empty(), decode=True)
-    print(f"Current pose:\n{reply}")
-    return Pose3F64.from_proto(reply)
 
 
 async def set_track(service_config: EventServiceConfig, filter_track: FilterTrack) -> None:
@@ -106,7 +93,7 @@ async def stream_controller_state(service_config_path: Path) -> None:
 
 async def run(args) -> None:
     tasks: list[asyncio.Task] = [
-        asyncio.create_task(main(args.service_config, args.side_length)),
+        asyncio.create_task(main(args.service_config, args.track)),
         asyncio.create_task(stream_controller_state(args.service_config)),
     ]
     await asyncio.gather(*tasks)
