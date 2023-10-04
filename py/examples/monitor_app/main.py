@@ -25,11 +25,20 @@ from farm_ng.core.event_service_pb2 import SubscribeRequest
 from farm_ng.core.events_file_reader import proto_from_json_file
 from farm_ng.core.uri_pb2 import Uri
 from fastapi import FastAPI
+from fastapi import WebSocket
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.responses import StreamingResponse
 from google.protobuf.json_format import MessageToJson
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 # to store the events clients
 clients: dict[str, EventClient] = {}
@@ -57,27 +66,19 @@ async def list_uris() -> JSONResponse:
     return JSONResponse(content=all_uris, status_code=200)
 
 
-@app.get("/subscribe/{service_name}/{uri_path}")
-async def subscribe(service_name: str, uri_path: str, every_n: int = 1):
-
-    if service_name not in clients:
-        return JSONResponse(content={"error": f"service {service_name} is not available"}, status_code=404)
+@app.websocket("/subscribe/{service_name}/{uri_path}")
+async def subscribe(websocket: WebSocket, service_name: str, uri_path: str, every_n: int = 1):
 
     client: EventClient = clients[service_name]
 
-    uris = await client.list_uris()
+    await websocket.accept()
 
-    if not any(uri.path == f"/{uri_path}" for uri in uris):
-        return JSONResponse(content={"error": f"uri {uri_path} is not available"}, status_code=404)
+    async for event, message in client.subscribe(
+        request=SubscribeRequest(uri=Uri(path=f"/{uri_path}"), every_n=every_n), decode=True
+    ):
+        await websocket.send_json(MessageToJson(message))
 
-    # subscribe to the uri
-    async def generate_data():
-        async for event, message in client.subscribe(
-            request=SubscribeRequest(uri=Uri(path=f"/{uri_path}"), every_n=every_n), decode=True
-        ):
-            yield MessageToJson(message)
-
-    return StreamingResponse(generate_data(), media_type="text/event-stream")
+    await websocket.close()
 
 
 @app.get("/")
