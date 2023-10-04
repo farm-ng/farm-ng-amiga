@@ -24,6 +24,7 @@ from farm_ng.core.events_file_reader import proto_from_json_file
 from farm_ng.core.events_file_writer import proto_to_json_file
 from farm_ng.filter.filter_pb2 import FilterState
 from farm_ng.filter.filter_pb2 import FilterTrack
+from google.protobuf.empty_pb2 import Empty
 
 
 async def main(service_config_path: Path, track_name: str, output_dir: Path) -> None:
@@ -37,16 +38,25 @@ async def main(service_config_path: Path, track_name: str, output_dir: Path) -> 
     # create a client to the filter service
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
 
-    filter_states: list[FilterState] = []
+    # Clear the track so everything going forward is tracked
+    await EventClient(config).request_reply("/clear_track", Empty())
 
+    # Create a list to store the filter track states
+    filter_track_states: list[FilterState] = []
+
+    # Subscribe to the filter track topic
     async for event, message in EventClient(config).subscribe(config.subscriptions[0], decode=True):
 
+        print("###################")
+        print("Adding to track:")
+        print(message)
+
         # Add the filter state to the list
-        filter_states.append(message)
+        filter_track_states.append(message)
 
         # Write the FilterTrack to disk, overwriting the file each time
         if not proto_to_json_file(
-            output_dir / f"{track_name}.json", FilterTrack(states=filter_states, name=track_name)
+            output_dir / f"{track_name}.json", FilterTrack(states=filter_track_states, name=track_name)
         ):
             raise RuntimeError(f"Failed to write track to {output_dir}")
 
