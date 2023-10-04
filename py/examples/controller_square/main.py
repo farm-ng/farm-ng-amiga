@@ -43,16 +43,19 @@ async def get_pose(service_config: EventServiceConfig) -> Pose3F64:
     return Pose3F64.from_proto(reply)
 
 
-async def set_track(service_config: EventServiceConfig, track_waypoints: list[Pose3F64]) -> None:
+async def set_track(service_config: EventServiceConfig, filter_track: FilterTrack) -> None:
     """Set the track of the controller.
+
+    WARNING: This API will change in the future.
+    The controller service currently expects a FilterTrack proto message,
+    but this will change in the future to a more general message type.
 
     Args:
         service_config (EventServiceConfig): The controller service config.
-        track_waypoints (list[Pose3F64]): The track waypoints.
+        filter_track (FilterTrack): The track for the controller to follow.
     """
-    track: FilterTrack = format_track(track_waypoints)
-    print(f"Setting track:\n{track}")
-    await EventClient(service_config).request_reply("/set_track", track)
+    print(f"Setting track:\n{filter_track}")
+    await EventClient(service_config).request_reply("/set_track", filter_track)
 
 
 async def follow_track(service_config: EventServiceConfig) -> None:
@@ -63,6 +66,47 @@ async def follow_track(service_config: EventServiceConfig) -> None:
     """
     print("Following track...")
     await EventClient(service_config).request_reply("/follow_track", StringValue(value="my_custom_track"))
+
+
+async def build_square(service_config: EventServiceConfig, side_length: float) -> FilterTrack:
+    """Build a square track, from the current pose of the robot.
+
+    Args:
+        service_config (EventServiceConfig): The controller service config.
+        side_length (float): The side length of the square.
+    """
+
+    # Query the controller for the current pose of the robot in the world frame
+    world_pose_robot: Pose3F64 = await get_pose(service_config)
+
+    # Create a container to store the track waypoints
+    track_waypoints: list[Pose3F64] = []
+
+    # Add the first goal at the current pose of the robot
+    world_pose_goal0: Pose3F64 = world_pose_robot * Pose3F64(a_from_b=Isometry3F64(), frame_a="robot", frame_b="goal0")
+    track_waypoints.append(world_pose_goal0)
+
+    # Drive forward 1 meter (first side of the square)
+    track_waypoints.append(create_straight_segment(track_waypoints[-1], "goal1", side_length))
+
+    # Turn left 90 degrees (first turn)
+    track_waypoints.append(create_turn_segment(track_waypoints[-1], "goal2", 90))
+
+    # Add second side and turn
+    track_waypoints.append(create_straight_segment(track_waypoints[-1], "goal3", side_length))
+    track_waypoints.append(create_turn_segment(track_waypoints[-1], "goal4", 90))
+
+    # Add third side and turn
+    track_waypoints.append(create_straight_segment(track_waypoints[-1], "goal5", side_length))
+    track_waypoints.append(create_turn_segment(track_waypoints[-1], "goal6", 90))
+
+    # Add fourth side and turn
+    track_waypoints.append(create_straight_segment(track_waypoints[-1], "goal7", side_length))
+    track_waypoints.append(create_turn_segment(track_waypoints[-1], "goal8", 90))
+
+    # Return the list of waypoints as a FilterTrack proto message
+    # This is the format currently expected by the controller service
+    return format_track(track_waypoints)
 
 
 def create_straight_segment(previous_pose: Pose3F64, next_frame_b: str, distance: float) -> Pose3F64:
@@ -116,42 +160,17 @@ async def main(service_config_path: Path, side_length: float) -> None:
         service_config_path (Path): The path to the controller service config.
     """
 
-    config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
+    # Extract the controller service config from the JSON file
+    service_config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
 
-    # Query the controller for the current pose of the robot in the world frame
-    world_pose_robot: Pose3F64 = await get_pose(config)
+    # Build the track and package in a FilterTrack proto message
+    filter_track: FilterTrack = await build_square(service_config, side_length)
 
-    # Create a container to store the track waypoints
-    track_waypoints: list[Pose3F64] = []
-
-    # Add the current pose to the track as the first goal
-    world_pose_goal0: Pose3F64 = world_pose_robot
-    world_pose_goal0.frame_b = "goal0"
-    track_waypoints.append(world_pose_goal0)
-
-    # Drive forward 1 meter (first side of the square)
-    track_waypoints.append(create_straight_segment(track_waypoints[-1], "goal1", side_length))
-
-    # Turn left 90 degrees (first turn)
-    track_waypoints.append(create_turn_segment(track_waypoints[-1], "goal2", 90))
-
-    # Add second side and turn
-    track_waypoints.append(create_straight_segment(track_waypoints[-1], "goal3", side_length))
-    track_waypoints.append(create_turn_segment(track_waypoints[-1], "goal4", 90))
-
-    # Add third side and turn
-    track_waypoints.append(create_straight_segment(track_waypoints[-1], "goal5", side_length))
-    track_waypoints.append(create_turn_segment(track_waypoints[-1], "goal6", 90))
-
-    # Add fourth side and turn
-    track_waypoints.append(create_straight_segment(track_waypoints[-1], "goal7", side_length))
-    track_waypoints.append(create_turn_segment(track_waypoints[-1], "goal8", 90))
-
-    # Package the track and send it to the controller
-    await set_track(config, track_waypoints)
+    # Send the track to the controller
+    await set_track(service_config, filter_track)
 
     # Follow the track
-    await follow_track(config)
+    await follow_track(service_config)
 
 
 async def stream_controller_state(service_config_path: Path) -> None:
