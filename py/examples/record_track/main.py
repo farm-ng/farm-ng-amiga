@@ -64,6 +64,6 @@ if __name__ == "__main__":
         raise ValueError(f"Invalid output directory: {args.output_dir}")
 
     if not args.track_name:
-        raise ValueError(f"No track name provided.")
+        raise ValueError("No track name provided.")
 
     asyncio.run(main(args.service_config, args.track_name, args.output_dir))
