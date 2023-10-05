@@ -1,0 +1,15 @@
+{
+    "name": "controller",
+    "port": 20101,
+    "host": "localhost",
+    "subscriptions": [
+        {
+            "uri": {
+            "path": "/state",
+            "query": "service_name=controller"
+            },
+            "every_n": 1
+        }
+    ],
+    "log_level": "INFO"
+}
