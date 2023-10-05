@@ -41,14 +41,15 @@ async def set_track(service_config: EventServiceConfig, filter_track: FilterTrac
     await EventClient(service_config).request_reply("/set_track", filter_track)
 
 
-async def follow_track(service_config: EventServiceConfig) -> None:
+async def follow_track(service_config: EventServiceConfig, track_name: str) -> None:
     """Follow the track.
 
     Args:
         service_config (EventServiceConfig): The controller service config.
+        track_name (str): The name of the track to follow.
     """
-    print("Following track...")
-    await EventClient(service_config).request_reply("/follow_track", StringValue(value="my_custom_track"))
+    print(f"Following track: {track_name}")
+    await EventClient(service_config).request_reply("/follow_track", StringValue(value=track_name))
 
 
 async def main(service_config_path: Path, track_path: Path) -> None:
@@ -68,7 +69,7 @@ async def main(service_config_path: Path, track_path: Path) -> None:
     await set_track(service_config, filter_track)
 
     # Follow the track
-    await follow_track(service_config)
+    await follow_track(service_config, filter_track.name)
 
 
 async def stream_controller_state(service_config_path: Path) -> None:
