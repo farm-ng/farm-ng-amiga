@@ -48,3 +48,10 @@ message ControllerState {
   // if the amiga is in auto mode or not.
   bool auto_mode = 12;
 }
+
+message ControllerTrack {
+  // The name of the track
+  string name = 1;
+  // The poses of the track
+  repeated farm_ng.core.proto.Pose poses = 2;
+}
