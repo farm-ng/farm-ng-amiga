@@ -84,6 +84,7 @@ async def build_square(service_config: EventServiceConfig, side_length: float, c
     # Create a container to store the track waypoints
     track_waypoints: list[Pose3F64] = []
 
+    # Set the angle of the turns, based on indicated direction
     angle: float = radians(-90) if clockwise else radians(90)
 
     # Add the first goal at the current pose of the robot
@@ -209,18 +210,21 @@ def format_track(track_waypoints: list[Pose3F64]) -> FilterTrack:
     return FilterTrack(states=[FilterState(pose=pose.to_proto()) for pose in track_waypoints], name="my_custom_track")
 
 
-async def main(service_config_path: Path, side_length: float) -> None:
+async def main(service_config_path: Path, side_length: float, clockwise: bool) -> None:
     """Run the controller square example. The robot will drive a square, turning left at each corner.
 
     Args:
         service_config_path (Path): The path to the controller service config.
+        side_length (float): The side length of the square.
+        clockwise (bool): True will drive the square clockwise (right hand turns).
+                        False is counter-clockwise (left hand turns).
     """
 
     # Extract the controller service config from the JSON file
     service_config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
 
     # Build the track and package in a FilterTrack proto message
-    filter_track: FilterTrack = await build_square(service_config, side_length)
+    filter_track: FilterTrack = await build_square(service_config, side_length, clockwise)
 
     # Send the track to the controller
     await set_track(service_config, filter_track)
@@ -251,7 +255,7 @@ async def stream_controller_state(service_config_path: Path) -> None:
 
 async def run(args) -> None:
     tasks: list[asyncio.Task] = [
-        asyncio.create_task(main(args.service_config, args.side_length)),
+        asyncio.create_task(main(args.service_config, args.side_length, args.clockwise)),
         asyncio.create_task(stream_controller_state(args.service_config)),
     ]
     await asyncio.gather(*tasks)
@@ -260,7 +264,12 @@ async def run(args) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="amiga-controller-square")
     parser.add_argument("--service-config", type=Path, required=True, help="The controller service config.")
-    parser.add_argument("--side-length", type=float, default=1.0, help="The side length of the square.")
+    parser.add_argument("--side-length", type=float, default=2.0, help="The side length of the square.")
+    parser.add_argument(
+        "--clockwise",
+        action="store_true",
+        help="Set to drive the square clockwise (right hand turns). Default is counter-clockwise (left hand turns).",
+    )
     args = parser.parse_args()
 
     loop = asyncio.get_event_loop()
