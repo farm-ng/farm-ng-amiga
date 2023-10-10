@@ -102,11 +102,11 @@ async def build_square(service_config: EventServiceConfig, side_length: float, c
     track_waypoints.extend(create_straight_segment(track_waypoints[-1], "goal3", side_length))
     track_waypoints.extend(create_turn_segment(track_waypoints[-1], "goal4", angle))
 
-    # # Add third side and turn
+    # Add third side and turn
     track_waypoints.extend(create_straight_segment(track_waypoints[-1], "goal5", side_length))
     track_waypoints.extend(create_turn_segment(track_waypoints[-1], "goal6", angle))
 
-    # # Add fourth side and turn
+    # Add fourth side and turn
     track_waypoints.extend(create_straight_segment(track_waypoints[-1], "goal7", side_length))
     track_waypoints.extend(create_turn_segment(track_waypoints[-1], "goal8", angle))
 
