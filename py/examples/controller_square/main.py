@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+from math import copysign
 from math import radians
 from pathlib import Path
 
@@ -137,7 +138,7 @@ def create_straight_segment(
 
     while abs(remaining_distance) > 0.01:
         # Compute the distance of the next segment
-        segment_distance: float = min(remaining_distance, spacing)
+        segment_distance: float = copysign(min(abs(remaining_distance), spacing), distance)
 
         # Compute the next pose
         straight_segment: Pose3F64 = Pose3F64(
@@ -178,7 +179,7 @@ def create_turn_segment(
 
     while abs(remaining_angle) > 0.01:
         # Compute the angle of the next segment
-        segment_angle: float = min(remaining_angle, spacing)
+        segment_angle: float = copysign(min(abs(remaining_angle), spacing), angle)
 
         # Compute the next pose
         turn_segment: Pose3F64 = Pose3F64(
