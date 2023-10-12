@@ -133,3 +133,7 @@ dmypy.json
 *_pb2.py
 *_pb2.pyi
 *_pb2_grpc.py
+
+# farm-ng log files
+*.bin
+*.mcap
