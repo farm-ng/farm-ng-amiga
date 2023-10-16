@@ -24,7 +24,7 @@ from farm_ng.core.events_file_reader import EventLogPosition
 from farm_ng.core.events_file_reader import EventsFileReader
 
 
-def main(file_name: str, can_interface: str) -> None:
+def main(file_name: str) -> None:
     # create the file reader
     reader = EventsFileReader(file_name)
     success: bool = reader.open()
@@ -58,8 +58,5 @@ def main(file_name: str, can_interface: str) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="Event file reader example for parsing CAN messages.")
     parser.add_argument("--file-name", type=str, required=True, help="Path to the `events.bin` file.")
-    parser.add_argument(
-        "--can-interface", type=str, default="can0", help="The name of the can interface to read. Default: oak0."
-    )
     args = parser.parse_args()
-    main(args.file_name, args.can_interface)
+    main(args.file_name)
