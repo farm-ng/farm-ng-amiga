@@ -71,4 +71,5 @@ message AmigaV6CanbusState {
   */
   AmigaTpdo1 amiga_tpdo1 = 1;  // State of the Amiga vehicle control unit (VCU)
   farm_ng.canbus.proto.MotorStates motor_states = 2;  // State of the Amiga motors
+  bool last_send_error = 3;  // True if the last send to the Amiga failed
 }
