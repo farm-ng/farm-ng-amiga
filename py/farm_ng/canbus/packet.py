@@ -238,7 +238,7 @@ class AmigaTpdo1(Packet):
         return amiga_v6_pb2.AmigaTpdo1(
             node_id=DASHBOARD_NODE_ID,
             stamp=self.stamp.stamp,
-            control_state=amiga_v6_pb2.AmigaControlState(self.state),
+            control_state=self.state,
             measured_speed=self.meas_speed,
             measured_angular_rate=self.meas_ang_rate,
             pto_bits=self.pto_bits,
