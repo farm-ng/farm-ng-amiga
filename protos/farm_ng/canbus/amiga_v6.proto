@@ -71,5 +71,8 @@ message AmigaV6CanbusState {
   */
   AmigaTpdo1 amiga_tpdo1 = 1;  // State of the Amiga vehicle control unit (VCU)
   farm_ng.canbus.proto.MotorStates motor_states = 2;  // State of the Amiga motors
-  bool last_send_error = 3;  // True if the last send to the Amiga failed
+  // Relative battery charge level on range [0.0, 1.0].
+  // Will be negative if the charge level cannot be measured.
+  double battery_charge_level = 3;
+  bool last_send_error = 4;  // True if the last send on the canbus failed
 }
