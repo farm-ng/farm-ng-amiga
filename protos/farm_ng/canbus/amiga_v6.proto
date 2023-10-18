@@ -64,7 +64,7 @@ message AmigaPdo2 {
   int32 motor_d_rpm = 6;  // RPM of motor D
 }
 
-message CanbusState {
+message AmigaV6CanbusState {
   /*
   State of the Amiga CAN bus.
   Encapsulates key information required to evaluate the state of the Amiga robot.
