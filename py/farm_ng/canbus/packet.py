@@ -18,6 +18,7 @@ from enum import IntEnum
 from struct import pack
 from struct import unpack
 
+from farm_ng.canbus import amiga_v6_pb2
 from farm_ng.canbus import canbus_pb2
 from farm_ng.core.stamp import timestamp_from_monotonic
 from farm_ng.core.timestamp_pb2 import Timestamp
@@ -231,6 +232,18 @@ class AmigaTpdo1(Packet):
             (self.state, meas_speed, meas_ang_rate, self.pto_bits, self.hbridge_bits) = unpack(self.format, data)
             self.meas_speed = meas_speed / 1000.0
             self.meas_ang_rate = meas_ang_rate / 1000.0
+
+    def to_proto(self) -> amiga_v6_pb2.AmigaTpdo1:
+        """Returns the data contained by the class encoded as CAN message data."""
+        return amiga_v6_pb2.AmigaTpdo1(
+            node_id=DASHBOARD_NODE_ID,
+            stamp=self.stamp.stamp,
+            control_state=amiga_v6_pb2.AmigaControlState(self.state),
+            measured_speed=self.meas_speed,
+            measured_angular_rate=self.meas_ang_rate,
+            pto_bits=self.pto_bits,
+            hbridge_bits=self.hbridge_bits,
+        )
 
     def __str__(self):
         return "AMIGA TPDO1 Amiga state {} Measured speed {:0.3f} Measured angular rate {:0.3f} @ time {}".format(
