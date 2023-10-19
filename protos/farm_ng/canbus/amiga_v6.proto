@@ -14,6 +14,8 @@
 
 syntax = "proto3";
 
+import "farm_ng/canbus/canbus.proto";
+
 package farm_ng.canbus.proto;
 
 enum AmigaControlState {
@@ -60,4 +62,17 @@ message AmigaPdo2 {
   int32 motor_b_rpm = 4;  // RPM of motor B
   int32 motor_c_rpm = 5;  // RPM of motor C
   int32 motor_d_rpm = 6;  // RPM of motor D
+}
+
+message AmigaV6CanbusState {
+  /*
+  State of the Amiga CAN bus.
+  Encapsulates key information required to evaluate the state of the Amiga robot.
+  */
+  AmigaTpdo1 amiga_tpdo1 = 1;  // State of the Amiga vehicle control unit (VCU)
+  farm_ng.canbus.proto.MotorStates motor_states = 2;  // State of the Amiga motors
+  // Relative battery charge level on range [0.0, 1.0].
+  // Will be negative if the charge level cannot be measured.
+  double battery_charge_level = 3;
+  bool last_send_error = 4;  // True if the last send on the canbus failed
 }
