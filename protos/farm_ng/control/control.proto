@@ -112,19 +112,21 @@ message ControllerPoseTree {
 
   // The pose of the robot in the world frame
   farm_ng.core.proto.Pose world_from_robot = 1;
-  // The pose of the current goal in the world frame
+  // The pose of the current goal (control target) in the world frame
+  // This pose may be interpolated between two poses along the track
   farm_ng.core.proto.Pose world_from_goal = 2;
-  // The closest point on the track in the world frame
+  // The closest point to the robot along the track in the world frame
+  // This pose may be interpolated between two poses along the track
   farm_ng.core.proto.Pose world_from_track = 3;
   // world_from_robot rotation about the z-axis, in radians
   double heading = 4;
 
   /* Pose differences */
-  // This is the difference between world_from_robot and another pose in the world frame
-  // Represents [dx, dy, dz, droll, dpitch, dyaw] in [m] and [rad]
+  // These are the difference between world_from_robot and another pose in the world frame,
+  // represented as [dx, dy, dz, droll, dpitch, dyaw] in [m] and [rad]
 
-  // The distance of the robot from the current goal
+  // The distance of the robot from the current goal (world_from_goal)
   farm_ng.core.proto.VecXF64 robot_from_goal = 5;
-  // The distance of the robot from the closest point along the track
+  // The distance of the robot from the closest point along the track (world_from_track)
   farm_ng.core.proto.VecXF64 robot_from_track = 6;
 }
