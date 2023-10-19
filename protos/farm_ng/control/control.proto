@@ -25,27 +25,34 @@ package farm_ng.control.proto;
 
 
 message ControllerState {
+  // The pose of the robot in the world frame
   farm_ng.core.proto.Pose world_from_robot = 1;
+  // The pose of the current goal in the robot frame
   farm_ng.core.proto.VecXF64 robot_from_goal = 2;
+  // The commanded velocity in the robot's egocentric frame
   farm_ng.core.proto.Isometry3F64Tangent commands = 3;
 
-  // Rotation about the z-axis contained in pose, in radians
+  // Rotation about the z-axis contained in the world_from_robot pose, in radians
   double heading = 4;
 
   // Which track are we following
   string track_name = 5;
-  // This is the closest point on the track
+  // The closest point on the track in the world frame
   farm_ng.core.proto.Pose world_from_track = 6;
+  // The pose of the current goal in the world frame
   farm_ng.core.proto.Pose world_from_goal = 7;
 
-
-  // the distance from the track
+  // The distance of the robot from the closest point along the track
+  // This is the difference between world_from_robot and world_from_track
   farm_ng.core.proto.VecXF64 robot_from_track = 8;
 
+  // The index of the current goal along the track
   int32 current_index = 9;
+  // The number of goals along the track
   int32 track_size = 10;
+  // Whether the robot is following a track or not
   bool following_track = 11;
-  // if the amiga is in auto mode or not.
+  // If the amiga dashboard is in auto mode or not.
   bool auto_mode = 12;
 }
 
