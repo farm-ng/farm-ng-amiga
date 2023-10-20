@@ -65,6 +65,8 @@ message ControllerTrackStatus {
   bool auto_mode = 4;
   // Whether the filter is converged or not
   bool filter_converged = 5;
+  // Whether control is paused or not
+  bool paused = 6;
 }
 
 // Progress metrics of the controller relative to the full track.
