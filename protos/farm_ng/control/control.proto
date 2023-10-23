@@ -31,11 +31,16 @@ message ControllerTrack {
   string name = 1;
   // The poses of the track
   repeated farm_ng.core.proto.Pose poses = 2;
+  // Request to drive the track in reverse order, if True.
+  // This means that the robot will drive from the last pose to the first pose.
+  // This is designed for use when extending / connecting tracks.
+  // If only setting a single track, this may be ignored by the controller.
+  // This is independent of reverse_driving (see below).
+  bool reverse_order = 3;
   // NOTE: Reverse driving is not yet implemented
   // // Whether to drive the robot along the track in reverse or not
-  // // This means negative velocity and is independent of driving the
-  // // track in the reverse order of poses along the track.
-  // bool reverse_driving = 3;
+  // // This means negative velocity and is independent of reverse_order
+  // bool reverse_driving = 4;
 }
 
 // The complete state of the controller.
