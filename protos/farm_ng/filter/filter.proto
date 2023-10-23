@@ -35,3 +35,10 @@ message FilterState {
 
   double heading = 6; // Rotation about the z-axis contained in pose, in radians
 }
+
+message FilterTrack {
+  // Deprecation warning: The FilterTrack message is deprecated.
+  // Please use the generic Track message in control.proto instead.
+  repeated FilterState states = 1;
+  string name = 2;
+}

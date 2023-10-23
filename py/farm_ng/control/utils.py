@@ -13,16 +13,16 @@
 # limitations under the License.
 from __future__ import annotations
 
-from farm_ng.control.control_pb2 import ControllerTrack
+from farm_ng.control.control_pb2 import Track
 from farm_ng.filter.filter_pb2 import FilterTrack
 
 
-def filter_track_to_controller_track(filter_track: FilterTrack) -> ControllerTrack:
-    """Converts a FilterTrack to a ControllerTrack.
+def filter_track_to_generic_track(filter_track: FilterTrack) -> Track:
+    """Converts a FilterTrack proto to a generic Track proto.
 
     Args:
         filter_track: A FilterTrack.
     Returns:
         A ControllerTrack.
     """
-    return ControllerTrack(name=filter_track.name, poses=[state.pose for state in filter_track.states])
+    return Track(name=filter_track.name, waypoints=[state.pose for state in filter_track.states])
