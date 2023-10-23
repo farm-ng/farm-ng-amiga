@@ -35,8 +35,3 @@ message FilterState {
 
   double heading = 6; // Rotation about the z-axis contained in pose, in radians
 }
-
-message FilterTrack {
-  repeated FilterState states = 1;
-  string name = 2;
-}

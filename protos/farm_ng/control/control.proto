@@ -23,30 +23,28 @@ import "farm_ng/core/pose.proto";
 
 package farm_ng.control.proto;
 
-
-// A track is a sequence of poses that the robot should follow.
-// This is sent to the controller by the user.
-message ControllerTrack {
+// A track is a sequence of waypoints that the robot should follow or already drove.
+message Track {
   // The name of the track
   string name = 1;
-  // The poses of the track
-  repeated farm_ng.core.proto.Pose poses = 2;
-  // Request to drive the track in reverse order, if True.
-  // This means that the robot will drive from the last pose to the first pose.
-  // This is designed for use when extending / connecting tracks.
-  // If only setting a single track, this may be ignored by the controller.
-  // This is independent of reverse_driving (see below).
-  bool reverse_order = 3;
-  // NOTE: Reverse driving is not yet implemented
-  // // Whether to drive the robot along the track in reverse or not
-  // // This means negative velocity and is independent of reverse_order
-  // bool reverse_driving = 4;
+  // The waypoints along the track
+  repeated farm_ng.core.proto.Pose waypoints = 2;
+}
+
+// This is sent to the controller service by a client to request a track be followed.
+message TrackFollowRequest {
+  // The track to follow
+  Track track = 1;
+  // Whether to drive the robot along the track in reverse or not.
+  // This means negative velocity and is independent of driving the waypoints in reverse order.
+  // See: track_reversed in ControllerTrackStatus
+  bool reverse_driving = 2;
 }
 
 // The complete state of the controller.
 message ControllerState {
   // The name of the track being followed
-  string name = 1;
+  string track_name = 1;
   // Status of the controller
   ControllerTrackStatus status = 2;
   // Progress along the track
@@ -63,29 +61,33 @@ message ControllerTrackStatus {
   bool has_track = 1;
   // Whether the robot is following a track or not
   bool following_track = 2;
+  // Whether the track waypoint order is reversed (last-to-first)
+  bool track_reversed = 3;
+  // Whether control is paused or not
+  bool is_paused = 4;
   // Whether the controller is able to control the robot or not
   // Encapsulates auto_mode, filter_converged, and other factors
-  bool is_controllable = 3;
+  bool is_controllable = 5;
   // Whether the amiga dashboard is in auto mode or not
-  bool auto_mode = 4;
+  bool auto_mode = 6;
   // Whether the filter is converged or not
-  bool filter_converged = 5;
-  // Whether control is paused or not
-  bool paused = 6;
+  bool filter_converged = 7;
 }
 
 // Progress metrics of the controller relative to the full track.
 // This is useful as a component of the ControllerState message.
 message ControllerTrackProgress {
   /* Index components */
-  // The number of goal poses along the track
+  // The number of waypoints along the track
   int32 track_size = 1;
-  // The index of the current goal along the track
+  // The index of the waypoint along the track being used as the control target.
   // The index order is reversed if the robot is driving the track in reverse order.
-  int32 current_goal_index = 2;
-  // The index of the closest point along the track
+  // See: track_reversed in ControllerTrackStatus
+  int32 goal_waypoint_index = 2;
+  // The index of the waypoint along the track the robot is closest to.
   // The index order is reversed if the robot is driving the track in reverse order.
-  int32 closest_index = 3;
+  // See: track_reversed in ControllerTrackStatus
+  int32 closest_waypoint_index = 3;
 
   /* Distance components */
   // Estimate of the total distance along the track
@@ -114,23 +116,12 @@ message ControllerTrackProgress {
 
 // Poses of the robot and relevant points along the track
 message ControllerPoseTree {
-  /* Poses */
   // The pose of the robot in the world frame
   farm_ng.core.proto.Pose world_from_robot = 1;
-  // The pose of the current goal (control target) in the world frame
-  // This pose may be interpolated between two poses along the track
-  farm_ng.core.proto.Pose world_from_goal = 2;
-  // The closest point to the robot along the track in the world frame
-  // This pose may be interpolated between two poses along the track
-  farm_ng.core.proto.Pose world_from_track = 3;
-  // world_from_robot rotation about the z-axis [rad]
-  double heading = 4;
-
-  /* Pose differences */
-  // The difference between world_from_robot and world_from_goal,
-  // represented as [dx, dy, dz, droll, dpitch, dyaw] in [m] and [rad]
-  farm_ng.core.proto.VecXF64 robot_from_goal = 5;
-  // The difference between world_from_robot and world_from_track,
-  // represented as [dx, dy, dz, droll, dpitch, dyaw] in [m] and [rad]
-  farm_ng.core.proto.VecXF64 robot_from_track = 6;
+  // The pose of the current goal (control target), in the robot frame.
+  // This may be interpolated between track waypoints.
+  farm_ng.core.proto.Pose robot_from_goal = 2;
+  // The pose along the track that the robot is closest to, in the robot frame.
+  // This may be interpolated between track waypoints.
+  farm_ng.core.proto.Pose robot_from_closest_waypoint = 3;
 }
