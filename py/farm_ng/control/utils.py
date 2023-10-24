@@ -17,11 +17,13 @@ from farm_ng.control.control_pb2 import Track
 from farm_ng.filter.filter_pb2 import FilterTrack
 
 
-def filter_track_to_generic_track(filter_track: FilterTrack) -> Track:
+def filter_track_to_track(filter_track: FilterTrack) -> Track:
     """Converts a FilterTrack proto to a generic Track proto.
 
     Args:
         filter_track: A FilterTrack proto.
     Returns: A Track proto.
     """
+    if not isinstance(filter_track, FilterTrack):
+        raise TypeError(f"Expected FilterTrack, got {type(filter_track)}")
     return Track(name=filter_track.name, waypoints=[state.pose for state in filter_track.states])

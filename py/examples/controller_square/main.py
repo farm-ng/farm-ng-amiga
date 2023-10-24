@@ -21,11 +21,11 @@ from math import radians
 from pathlib import Path
 
 from farm_ng.control.control_pb2 import ControllerState
+from farm_ng.control.control_pb2 import Track
+from farm_ng.control.control_pb2 import TrackFollowRequest
 from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfig
 from farm_ng.core.events_file_reader import proto_from_json_file
-from farm_ng.filter.filter_pb2 import FilterState
-from farm_ng.filter.filter_pb2 import FilterTrack
 from farm_ng_core_pybind import Isometry3F64
 from farm_ng_core_pybind import Pose3F64
 from farm_ng_core_pybind import Rotation3F64
@@ -43,19 +43,15 @@ async def get_pose(service_config: EventServiceConfig) -> Pose3F64:
     return Pose3F64.from_proto(reply)
 
 
-async def set_track(service_config: EventServiceConfig, filter_track: FilterTrack) -> None:
+async def set_track(service_config: EventServiceConfig, track: Track) -> None:
     """Set the track of the controller.
-
-    WARNING: This API will change in the future.
-    The controller service currently expects a FilterTrack proto message,
-    but this will change in the future to a more general message type.
 
     Args:
         service_config (EventServiceConfig): The controller service config.
-        filter_track (FilterTrack): The track for the controller to follow.
+        track (Track): The track for the controller to follow.
     """
-    print(f"Setting track:\n{filter_track}")
-    await EventClient(service_config).request_reply("/set_track", filter_track)
+    print(f"Setting track:\n{track}")
+    await EventClient(service_config).request_reply("/set_track", TrackFollowRequest(track=track))
 
 
 async def start(service_config: EventServiceConfig) -> None:
@@ -64,11 +60,11 @@ async def start(service_config: EventServiceConfig) -> None:
     Args:
         service_config (EventServiceConfig): The controller service config.
     """
-    print("Following track...")
+    print("Sending request to start following the track...")
     await EventClient(service_config).request_reply("/start", Empty())
 
 
-async def build_square(service_config: EventServiceConfig, side_length: float, clockwise: bool) -> FilterTrack:
+async def build_square(service_config: EventServiceConfig, side_length: float, clockwise: bool) -> Track:
     """Build a square track, from the current pose of the robot.
 
     Args:
@@ -76,6 +72,8 @@ async def build_square(service_config: EventServiceConfig, side_length: float, c
         side_length (float): The side length of the square.
         clockwise (bool): True will drive the square clockwise (right hand turns).
                         False is counter-clockwise (left hand turns).
+    Returns:
+        Track: The track for the controller to follow.
     """
 
     # Query the controller for the current pose of the robot in the world frame
@@ -109,8 +107,7 @@ async def build_square(service_config: EventServiceConfig, side_length: float, c
     track_waypoints.extend(create_straight_segment(track_waypoints[-1], "goal7", side_length))
     track_waypoints.extend(create_turn_segment(track_waypoints[-1], "goal8", angle))
 
-    # Return the list of waypoints as a FilterTrack proto message
-    # This is the format currently expected by the controller service
+    # Return the list of waypoints as a Track proto message
     return format_track(track_waypoints)
 
 
@@ -197,17 +194,13 @@ def create_turn_segment(
     return segment_poses
 
 
-def format_track(track_waypoints: list[Pose3F64]) -> FilterTrack:
-    """Pack the track waypoints into a FilterTrack proto message.
-
-    WARNING: This API will change in the future.
-    The controller service currently expects a FilterTrack proto message,
-    but this will change in the future to a more general message type.
+def format_track(track_waypoints: list[Pose3F64]) -> Track:
+    """Pack the track waypoints into a Track proto message.
 
     Args:
         track_waypoints (list[Pose3F64]): The track waypoints.
     """
-    return FilterTrack(states=[FilterState(pose=pose.to_proto()) for pose in track_waypoints], name="my_custom_track")
+    return Track(name="my_custom_track", waypoints=[pose.to_proto() for pose in track_waypoints])
 
 
 async def main(service_config_path: Path, side_length: float, clockwise: bool) -> None:
@@ -223,11 +216,11 @@ async def main(service_config_path: Path, side_length: float, clockwise: bool) -
     # Extract the controller service config from the JSON file
     service_config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
 
-    # Build the track and package in a FilterTrack proto message
-    filter_track: FilterTrack = await build_square(service_config, side_length, clockwise)
+    # Build the track and package in a Track proto message
+    track: Track = await build_square(service_config, side_length, clockwise)
 
     # Send the track to the controller
-    await set_track(service_config, filter_track)
+    await set_track(service_config, track)
 
     # Start following the track
     await start(service_config)

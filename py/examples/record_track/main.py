@@ -18,12 +18,12 @@ import argparse
 import asyncio
 from pathlib import Path
 
+from farm_ng.control.control_pb2 import Track
 from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfig
 from farm_ng.core.events_file_reader import proto_from_json_file
 from farm_ng.core.events_file_writer import proto_to_json_file
-from farm_ng.filter.filter_pb2 import FilterState
-from farm_ng.filter.filter_pb2 import FilterTrack
+from farm_ng.core.pose_pb2 import Pose
 from google.protobuf.empty_pb2 import Empty
 
 
@@ -41,24 +41,25 @@ async def main(service_config_path: Path, track_name: str, output_dir: Path) -> 
     # Clear the track so everything going forward is tracked
     await EventClient(config).request_reply("/clear_track", Empty())
 
-    # Create a list to store the filter track states
-    filter_track_states: list[FilterState] = []
+    # Create a Track message to store the waypoints in
+    track: Track = Track(name=track_name)
 
     # Subscribe to the filter track topic
+    message: Pose
     async for event, message in EventClient(config).subscribe(config.subscriptions[0], decode=True):
-
         print("###################")
         print("Adding to track:")
         print(message)
 
-        # Add the filter state to the list
-        filter_track_states.append(message)
+        # Add the pose to the Track message
+        next_waypoint = track.waypoints.add()
+        next_waypoint.pose.CopyFrom(message)
 
-        # Write the FilterTrack to disk, overwriting the file each time
-        if not proto_to_json_file(
-            output_dir / f"{track_name}.json", FilterTrack(states=filter_track_states, name=track_name)
-        ):
-            raise RuntimeError(f"Failed to write track to {output_dir}")
+        # Write the Track to disk, overwriting the file each time
+        if not proto_to_json_file(output_dir / f"{track_name}.json", track):
+            raise RuntimeError(f"Failed to write Track to {output_dir}")
+
+        print(f"Saved track of length {len(track.waypoints)} to {output_dir}")
 
 
 if __name__ == "__main__":

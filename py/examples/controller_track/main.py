@@ -19,6 +19,9 @@ import asyncio
 from pathlib import Path
 
 from farm_ng.control.control_pb2 import ControllerState
+from farm_ng.control.control_pb2 import Track
+from farm_ng.control.control_pb2 import TrackFollowRequest
+from farm_ng.control.utils import filter_track_to_track
 from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfig
 from farm_ng.core.events_file_reader import proto_from_json_file
@@ -26,29 +29,24 @@ from farm_ng.filter.filter_pb2 import FilterTrack
 from google.protobuf.empty_pb2 import Empty
 
 
-async def set_track(service_config: EventServiceConfig, filter_track: FilterTrack) -> None:
+async def set_track(service_config: EventServiceConfig, track: Track) -> None:
     """Set the track of the controller.
-
-    WARNING: This API will change in the future.
-    The controller service currently expects a FilterTrack proto message,
-    but this will change in the future to a more general message type.
 
     Args:
         service_config (EventServiceConfig): The controller service config.
-        filter_track (FilterTrack): The track for the controller to follow.
+        track (Track): The track for the controller to follow.
     """
-    print(f"Setting track:\n{filter_track}")
-    await EventClient(service_config).request_reply("/set_track", filter_track)
+    print(f"Setting track:\n{track}")
+    await EventClient(service_config).request_reply("/set_track", TrackFollowRequest(track=track))
 
 
-async def start(service_config: EventServiceConfig, track_name: str) -> None:
+async def start(service_config: EventServiceConfig) -> None:
     """Follow the track.
 
     Args:
         service_config (EventServiceConfig): The controller service config.
-        track_name (str): The name of the track to follow.
     """
-    print(f"Following track: {track_name}")
+    print("Sending request to start following the track...")
     await EventClient(service_config).request_reply("/start", Empty())
 
 
@@ -62,14 +60,22 @@ async def main(service_config_path: Path, track_path: Path) -> None:
     # Extract the controller service config from the JSON file
     service_config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
 
-    # Build the track and package in a FilterTrack proto message
-    filter_track: FilterTrack = proto_from_json_file(track_path, FilterTrack())
+    # Read the track and package in a Track proto message
+    track: Track
+    try:
+        track = proto_from_json_file(track_path, Track())
+    except Exception:
+        print(f"Failed to read Track from {track_path}")
+        print("Attempting to read as FilterTrack instead...")
+        track = filter_track_to_track(proto_from_json_file(track_path, FilterTrack()))
+        print("Converted deprecated FilterTrack to Track")
+        print("Consider re-recording or converting the FilterTrack to a Track proto")
 
     # Send the track to the controller
-    await set_track(service_config, filter_track)
+    await set_track(service_config, track)
 
     # Follow the track
-    await start(service_config, filter_track.name)
+    await start(service_config)
 
 
 async def stream_controller_state(service_config_path: Path) -> None:
