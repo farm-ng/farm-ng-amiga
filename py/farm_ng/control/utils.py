@@ -21,8 +21,7 @@ def filter_track_to_generic_track(filter_track: FilterTrack) -> Track:
     """Converts a FilterTrack proto to a generic Track proto.
 
     Args:
-        filter_track: A FilterTrack.
-    Returns:
-        A ControllerTrack.
+        filter_track: A FilterTrack proto.
+    Returns: A Track proto.
     """
     return Track(name=filter_track.name, waypoints=[state.pose for state in filter_track.states])

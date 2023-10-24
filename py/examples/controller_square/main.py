@@ -30,7 +30,6 @@ from farm_ng_core_pybind import Isometry3F64
 from farm_ng_core_pybind import Pose3F64
 from farm_ng_core_pybind import Rotation3F64
 from google.protobuf.empty_pb2 import Empty
-from google.protobuf.wrappers_pb2 import StringValue
 
 
 async def get_pose(service_config: EventServiceConfig) -> Pose3F64:
@@ -59,14 +58,14 @@ async def set_track(service_config: EventServiceConfig, filter_track: FilterTrac
     await EventClient(service_config).request_reply("/set_track", filter_track)
 
 
-async def follow_track(service_config: EventServiceConfig) -> None:
+async def start(service_config: EventServiceConfig) -> None:
     """Follow the track.
 
     Args:
         service_config (EventServiceConfig): The controller service config.
     """
     print("Following track...")
-    await EventClient(service_config).request_reply("/follow_track", StringValue(value="my_custom_track"))
+    await EventClient(service_config).request_reply("/start", Empty())
 
 
 async def build_square(service_config: EventServiceConfig, side_length: float, clockwise: bool) -> FilterTrack:
@@ -230,8 +229,8 @@ async def main(service_config_path: Path, side_length: float, clockwise: bool) -
     # Send the track to the controller
     await set_track(service_config, filter_track)
 
-    # Follow the track
-    await follow_track(service_config)
+    # Start following the track
+    await start(service_config)
 
 
 async def stream_controller_state(service_config_path: Path) -> None:
