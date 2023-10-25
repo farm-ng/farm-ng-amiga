@@ -21,11 +21,9 @@ from pathlib import Path
 from farm_ng.control.control_pb2 import ControllerState
 from farm_ng.control.control_pb2 import Track
 from farm_ng.control.control_pb2 import TrackFollowRequest
-from farm_ng.control.utils import filter_track_to_track
 from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfig
 from farm_ng.core.events_file_reader import proto_from_json_file
-from farm_ng.filter.filter_pb2 import FilterTrack
 from google.protobuf.empty_pb2 import Empty
 
 
@@ -61,15 +59,7 @@ async def main(service_config_path: Path, track_path: Path) -> None:
     service_config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
 
     # Read the track and package in a Track proto message
-    track: Track
-    try:
-        track = proto_from_json_file(track_path, Track())
-    except Exception:
-        print(f"Failed to read Track from {track_path}")
-        print("Attempting to read as FilterTrack instead...")
-        track = filter_track_to_track(proto_from_json_file(track_path, FilterTrack()))
-        print("Converted deprecated FilterTrack to Track")
-        print("Consider re-recording or converting the FilterTrack to a Track proto")
+    track: Track = proto_from_json_file(track_path, Track())
 
     # Send the track to the controller
     await set_track(service_config, track)

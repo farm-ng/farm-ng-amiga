@@ -13,8 +13,15 @@
 # limitations under the License.
 from __future__ import annotations
 
+from pathlib import Path
+
 from farm_ng.control.control_pb2 import Track
+from farm_ng.core.events_file_reader import proto_from_json_file
+from farm_ng.core.events_file_writer import proto_to_json_file
 from farm_ng.filter.filter_pb2 import FilterTrack
+
+# WARNING: These methods are a temporary convenience and will be removed
+# once the use of FilterTrack protos has been fully phased out.
 
 
 def filter_track_to_track(filter_track: FilterTrack) -> Track:
@@ -27,3 +34,14 @@ def filter_track_to_track(filter_track: FilterTrack) -> Track:
     if not isinstance(filter_track, FilterTrack):
         raise TypeError(f"Expected FilterTrack, got {type(filter_track)}")
     return Track(name=filter_track.name, waypoints=[state.pose for state in filter_track.states])
+
+
+def update_filter_track(track_path: Path) -> None:
+    """Updates a .json file with a FilterTrack proto to a generic Track proto.
+
+    Args:
+        track_path: The path to the .json file.
+    """
+    filter_track: FilterTrack = proto_from_json_file(track_path, FilterTrack())
+    track: Track = filter_track_to_track(filter_track)
+    proto_to_json_file(track_path, track)
