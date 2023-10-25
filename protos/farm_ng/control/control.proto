@@ -89,17 +89,26 @@ enum TrackStatusEnum {
   TRACK_PAUSED = 4;
   // Following the track completed successfully
   TRACK_COMPLETE = 5;
-  // Following the track failed
+  // Following the track failed (e.g., deviated too far from the track)
   TRACK_FAILED = 6;
+  // Following the track was aborted (e.g., ability to control was lost)
+  // See RobotStatus for more details
+  TRACK_ABORTED = 7;
 }
 
 // Message representing the status of a robot's controlability
 message RobotStatus {
   enum FailureMode {
+    // Timeout connection to the canbus service
+    CANBUS_TIMEOUT = 0;
     // The robot does not have auto control enabled
-    AUTO_MODE = 0;
+    AUTO_MODE_DISABLED = 1;
+    // Send error on the canbus socket
+    CANBUS_SEND_ERROR = 2;
+    // Timeout connection to the state estimation service
+    FILTER_TIMEOUT = 10;
     // The state estimation filter is not converged
-    FILTER_CONVERGED = 1;
+    FILTER_DIVERGED = 11;
   }
   // Whether the controller is able to control the robot or not
   bool controllable = 1;
