@@ -20,8 +20,8 @@ from math import copysign
 from math import radians
 from pathlib import Path
 
-from farm_ng.control.control_pb2 import ControllerState
 from farm_ng.control.control_pb2 import Track
+from farm_ng.control.control_pb2 import TrackFollowerState
 from farm_ng.control.control_pb2 import TrackFollowRequest
 from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfig
@@ -69,7 +69,7 @@ async def build_square(service_config: EventServiceConfig, side_length: float, c
 
     Args:
         service_config (EventServiceConfig): The controller service config.
-        side_length (float): The side length of the square.
+        side_length (float): The side length of the square, in meters.
         clockwise (bool): True will drive the square clockwise (right hand turns).
                         False is counter-clockwise (left hand turns).
     Returns:
@@ -119,7 +119,7 @@ def create_straight_segment(
     Args:
         previous_pose (Pose3F64): The previous pose.
         next_frame_b (str): The name of the child frame of the next pose.
-        distance (float): The side length of the square.
+        distance (float): The side length of the square, in meters.
         spacing (float): The spacing between waypoints, in meters.
 
     Returns:
@@ -240,7 +240,7 @@ async def stream_controller_state(service_config_path: Path) -> None:
     # create a client to the camera service
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
 
-    message: ControllerState
+    message: TrackFollowerState
     async for event, message in EventClient(config).subscribe(config.subscriptions[0], decode=True):
         print("###################")
         print(message)

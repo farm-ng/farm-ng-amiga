@@ -18,8 +18,8 @@ import argparse
 import asyncio
 from pathlib import Path
 
-from farm_ng.control.control_pb2 import ControllerState
 from farm_ng.control.control_pb2 import Track
+from farm_ng.control.control_pb2 import TrackFollowerState
 from farm_ng.control.control_pb2 import TrackFollowRequest
 from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfig
@@ -82,7 +82,7 @@ async def stream_controller_state(service_config_path: Path) -> None:
     # create a client to the camera service
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
 
-    message: ControllerState
+    message: TrackFollowerState
     async for event, message in EventClient(config).subscribe(config.subscriptions[0], decode=True):
         print("###################")
         print(message)
