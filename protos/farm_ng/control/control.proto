@@ -61,17 +61,17 @@ message TrackFollowerStatus {
   repeated TrackFollowMode modes = 3;
 }
 
-// Enum representing the modes the track is being followed.enum
-// There are sets of mutually exclusive modes (e.g., DIRECTION_ or ORDER_),
-// but the sets are not mutually exclusive.
+// Enum representing the modes in which the track is being followed.
+// The modes are grouped into sets of mutually exclusive options (DIRECTION_ and ORDER_),
+// but options from different sets can be used together.
 enum TrackFollowMode {
-  // Robot's driving direction - Forward
+  // Robot's driving direction - Forward.
   DIRECTION_FORWARD = 0;
-  // Robot's driving direction - Reverse
+  // Robot's driving direction - Reverse.
   DIRECTION_REVERSE = 1;
-  // Waypoint order - Traverse in the standard order
+  // Waypoint order - Traverse in the standard order.
   ORDER_STANDARD = 2;
-  // Waypoint order - Traverse in the reverse order
+  // Waypoint order - Traverse in the reverse order.
   ORDER_REVERSED = 3;
 }
 
