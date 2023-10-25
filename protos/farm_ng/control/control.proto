@@ -57,29 +57,37 @@ message TrackFollowerStatus {
   TrackStatusEnum track_status = 1;
   // The status of the robot, as related to track following
   RobotStatus robot_status = 2;
-  // The following mode(s) of the track following controller
-  repeated TrackFollowMode modes = 3;
+  // The direction in which the robot is driving the track
+  DrivingDirection driving_direction = 3;
+  // The order in which the waypoints along the track are traversed
+  WaypointOrder waypoint_order = 4;
 }
 
-// Enum representing the modes in which the track is being followed.
-// The modes are grouped into sets of mutually exclusive options (DIRECTION_ and ORDER_),
-// but options from different sets can be used together.
-enum TrackFollowMode {
-  // Robot's driving direction - Forward.
-  DIRECTION_FORWARD = 0;
-  // Robot's driving direction - Reverse.
-  DIRECTION_REVERSE = 1;
-  // Waypoint order - Traverse in the standard order.
-  ORDER_STANDARD = 2;
-  // Waypoint order - Traverse in the reverse order.
-  ORDER_REVERSED = 3;
+// Enum representing the direction in which the robot is driving.
+enum DrivingDirection {
+  // Driving direction is unknown
+  DIRECTION_UNSPECIFIED = 0;
+  // Driving the track with a positive velocity
+  DIRECTION_FORWARD = 1;
+  // Driving the track with a negative velocity
+  DIRECTION_REVERSE = 2;
+}
+
+// Enum representing the order in which the waypoints along the track are traversed.
+enum WaypointOrder {
+  // Waypoint order is unknown
+  ORDER_UNSPECIFIED = 0;
+  // Waypoints are traversed in the order of the Track message
+  ORDER_STANDARD = 1;
+  // Waypoints are traversed in the reverse order
+  ORDER_REVERSED = 2;
 }
 
 // Enum representing the status of the track from the track follower's perspective
 enum TrackStatusEnum {
-  // No track is loaded
+  // Track status is unknown
   TRACK_UNSPECIFIED = 0;
-  // The track has no waypoints
+  // No track is loaded
   TRACK_EMPTY = 1;
   // The track is loaded and ready to be followed
   TRACK_LOADED = 2;
@@ -99,16 +107,18 @@ enum TrackStatusEnum {
 // Message representing the status of a robot's controlability
 message RobotStatus {
   enum FailureMode {
+    // Failure mode is unknown
+    FAILURE_UNSPECIFIED = 0;
     // Timeout connection to the canbus service
-    CANBUS_TIMEOUT = 0;
+    CANBUS_TIMEOUT = 10;
     // The robot does not have auto control enabled
-    AUTO_MODE_DISABLED = 1;
+    AUTO_MODE_DISABLED = 11;
     // Send error on the canbus socket
-    CANBUS_SEND_ERROR = 2;
+    CANBUS_SEND_ERROR = 12;
     // Timeout connection to the state estimation service
-    FILTER_TIMEOUT = 10;
+    FILTER_TIMEOUT = 20;
     // The state estimation filter is not converged
-    FILTER_DIVERGED = 11;
+    FILTER_DIVERGED = 21;
   }
   // Whether the controller is able to control the robot or not
   bool controllable = 1;
