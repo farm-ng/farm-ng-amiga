@@ -33,10 +33,9 @@ message Track {
 message TrackFollowRequest {
   // The track to follow
   Track track = 1;
-  // Optional requests for the controller to follow the track in a specific way.
-  // If no modes are specified, default track following behavior is used.
-  // If modes are specified, but not possible, track following will fail.
-  repeated TrackFollowMode modes = 2;
+  // Optionally, request to drive the track with negative velocity
+  // NOTE: This is distinct from WaypointOrder.
+  DrivingDirection driving_direction = 2;
 }
 
 // The complete state of the controller.
@@ -134,11 +133,11 @@ message TrackFollowerProgress {
   int32 track_size = 1;
   // The index of the waypoint along the track being used as the control target.
   // The index order is reversed if the robot is driving the track in reverse order.
-  // See: TrackFollowMode in TrackFollowerStatus
+  // See: WaypointOrder
   int32 goal_waypoint_index = 2;
   // The index of the waypoint along the track the robot is closest to.
   // The index order is reversed if the robot is driving the track in reverse order.
-  // See: TrackFollowMode in TrackFollowerStatus
+  // See: WaypointOrder
   int32 closest_waypoint_index = 3;
 
   /* Distance components */
