@@ -200,7 +200,7 @@ def format_track(track_waypoints: list[Pose3F64]) -> Track:
     Args:
         track_waypoints (list[Pose3F64]): The track waypoints.
     """
-    return Track(name="my_custom_track", waypoints=[pose.to_proto() for pose in track_waypoints])
+    return Track(waypoints=[pose.to_proto() for pose in track_waypoints])
 
 
 async def main(service_config_path: Path, side_length: float, clockwise: bool) -> None:

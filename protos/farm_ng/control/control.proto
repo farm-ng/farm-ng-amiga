@@ -25,34 +25,30 @@ package farm_ng.control.proto;
 
 // A track is a sequence of waypoints that the robot should follow or already drove.
 message Track {
-  // The name of the track
-  string name = 1;
   // The waypoints along the track
-  repeated farm_ng.core.proto.Pose waypoints = 2;
+  repeated farm_ng.core.proto.Pose waypoints = 1;
 }
 
 // This is sent to the controller service by a client to request a track be followed.
 message TrackFollowRequest {
   // The track to follow
   Track track = 1;
-  // Whether to drive the robot along the track in reverse or not.
-  // This means negative velocity and is independent of driving the waypoints in reverse order.
-  // See: track_reversed in TrackFollowerStatus
-  bool reverse_driving = 2;
+  // Optional requests for the controller to follow the track in a specific way.
+  // If no modes are specified, default track following behavior is used.
+  // If modes are specified, but not possible, track following will fail.
+  repeated TrackFollowMode modes = 2;
 }
 
 // The complete state of the controller.
 message TrackFollowerState {
-  // The name of the track being followed
-  string track_name = 1;
   // Status of the controller
-  TrackFollowerStatus status = 2;
+  TrackFollowerStatus status = 1;
   // Progress along the track
-  TrackFollowerProgress progress = 3;
+  TrackFollowerProgress progress = 2;
   // Poses of the robot and relevant points along the track
-  TrackFollowerPoseTree poses = 4;
+  TrackFollowerPoseTree poses = 3;
   // The commanded velocity in the robot's egocentric frame
-  farm_ng.core.proto.Isometry3F64Tangent commands = 5;
+  farm_ng.core.proto.Isometry3F64Tangent commands = 4;
 }
 
 // Status metrics of the controller

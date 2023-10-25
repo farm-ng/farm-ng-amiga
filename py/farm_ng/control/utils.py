@@ -33,7 +33,7 @@ def filter_track_to_track(filter_track: FilterTrack) -> Track:
     """
     if not isinstance(filter_track, FilterTrack):
         raise TypeError(f"Expected FilterTrack, got {type(filter_track)}")
-    return Track(name=filter_track.name, waypoints=[state.pose for state in filter_track.states])
+    return Track(waypoints=[state.pose for state in filter_track.states])
 
 
 def update_filter_track(track_path: Path) -> None:

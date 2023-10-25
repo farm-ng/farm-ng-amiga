@@ -42,7 +42,7 @@ async def main(service_config_path: Path, track_name: str, output_dir: Path) -> 
     await EventClient(config).request_reply("/clear_track", Empty())
 
     # Create a Track message to store the waypoints in
-    track: Track = Track(name=track_name)
+    track: Track = Track()
 
     # Subscribe to the filter track topic
     message: Pose
