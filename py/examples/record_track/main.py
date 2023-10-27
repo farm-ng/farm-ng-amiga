@@ -53,7 +53,7 @@ async def main(service_config_path: Path, track_name: str, output_dir: Path) -> 
 
         # Add the pose to the Track message
         next_waypoint = track.waypoints.add()
-        next_waypoint.pose.CopyFrom(message)
+        next_waypoint.CopyFrom(message)
 
         # Write the Track to disk, overwriting the file each time
         if not proto_to_json_file(output_dir / f"{track_name}.json", track):
