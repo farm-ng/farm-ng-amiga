@@ -64,7 +64,6 @@ class StorageServer:
     async def remove_from_storage(self) -> None:
         """Remove from storage."""
         while True:
-
             if self._storage < self._batch_size:
                 await asyncio.sleep(0.05)
                 continue

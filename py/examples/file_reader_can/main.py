@@ -42,7 +42,6 @@ def main(file_name: str) -> None:
     print(f"Found {len(can_events)} packets of canbus_pb2.RawCanbusMessages")
 
     for event_log in can_events:
-
         # parse the message
         sample: canbus_pb2.RawCanbusMessages = event_log.read_message()
 
