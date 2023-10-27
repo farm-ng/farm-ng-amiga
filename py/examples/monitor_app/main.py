@@ -46,7 +46,6 @@ clients: dict[str, EventClient] = {}
 
 @app.get("/list_uris")
 async def list_uris() -> JSONResponse:
-
     all_uris = {}
 
     for service_name, client in clients.items():
@@ -68,7 +67,6 @@ async def list_uris() -> JSONResponse:
 
 @app.websocket("/subscribe/{service_name}/{uri_path}")
 async def subscribe(websocket: WebSocket, service_name: str, uri_path: str, every_n: int = 1):
-
     client: EventClient = clients[service_name]
 
     await websocket.accept()

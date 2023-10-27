@@ -65,7 +65,6 @@ def main(file_name: Path, output_dir: Path, split_mb: int) -> None:
 
 
 if __name__ == "__main__":
-
     # Get the current directory
     cwd = Path(__file__).resolve().parent
 
