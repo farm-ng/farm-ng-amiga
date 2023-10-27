@@ -234,7 +234,10 @@ class AmigaTpdo1(Packet):
             self.meas_ang_rate = meas_ang_rate / 1000.0
 
     def to_proto(self) -> amiga_v6_pb2.AmigaTpdo1:
-        """Returns the data contained by the class encoded as CAN message data."""
+        """Packs the class data into an AmigaTpdo1 proto message.
+
+        Returns: An instance of an AmigaTpdo1 proto.
+        """
         return amiga_v6_pb2.AmigaTpdo1(
             node_id=DASHBOARD_NODE_ID,
             stamp=self.stamp.stamp,
@@ -244,6 +247,26 @@ class AmigaTpdo1(Packet):
             pto_bits=self.pto_bits,
             hbridge_bits=self.hbridge_bits,
         )
+
+    @classmethod
+    def from_proto(cls, proto: amiga_v6_pb2.AmigaTpdo1) -> AmigaTpdo1:
+        """Creates an instance of the class from a proto message.
+
+        Args:
+            proto: The AmigaTpdo1 proto message to parse.
+        """
+        # Check for correct proto
+        if not isinstance(proto, amiga_v6_pb2.AmigaTpdo1):
+            raise TypeError(f"Expected amiga_v6_pb2.AmigaTpdo1 proto, received {type(proto)}")
+
+        obj = cls()  # Does not call __init__
+        obj.stamp_packet(proto.stamp)
+        obj.state = AmigaControlState(proto.control_state)
+        obj.meas_speed = proto.measured_speed
+        obj.meas_ang_rate = proto.measured_angular_rate
+        obj.pto_bits = proto.pto_bits
+        obj.hbridge_bits = proto.hbridge_bits
+        return obj
 
     def __str__(self):
         return "AMIGA TPDO1 Amiga state {} Measured speed {:0.3f} Measured angular rate {:0.3f} @ time {}".format(

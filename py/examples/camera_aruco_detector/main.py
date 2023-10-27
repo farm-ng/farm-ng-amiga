@@ -124,7 +124,7 @@ class ArucoDetector:
                 corner, self._marker_size, camera_matrix, distortion_coeff
             )
 
-            # sotre the results
+            # store the results
             rvec.append(_rvec)
             tvec.append(_tvec)
 

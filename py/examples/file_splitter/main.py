@@ -35,7 +35,7 @@ def main(file_name: Path, output_dir: Path, split_mb: int) -> None:
         raise RuntimeError(f"Failed to open events file: {file_name}")
 
     print(f"Opened events file: {file_name}")
-    print(f"File length: {int(reader.file_length/ 1e6)} MB")
+    print(f"File length: {int(reader.file_length / 1e6)} MB")
 
     # Create the output directory to write the split files to
     if not output_dir.is_dir():
@@ -65,7 +65,6 @@ def main(file_name: Path, output_dir: Path, split_mb: int) -> None:
 
 
 if __name__ == "__main__":
-
     # Get the current directory
     cwd = Path(__file__).resolve().parent
 

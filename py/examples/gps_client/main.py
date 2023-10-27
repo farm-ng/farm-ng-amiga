@@ -62,7 +62,6 @@ async def main(service_config_path: Path) -> None:
     # create a client to the camera service
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
     async for event, msg in EventClient(config).subscribe(config.subscriptions[0]):
-
         if isinstance(msg, gps_pb2.RelativePositionFrame):
             print_relative_position_frame(msg)
         elif isinstance(msg, gps_pb2.GpsFrame):
