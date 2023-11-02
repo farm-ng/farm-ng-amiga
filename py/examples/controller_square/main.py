@@ -20,12 +20,12 @@ from math import copysign
 from math import radians
 from pathlib import Path
 
-from farm_ng.control.control_pb2 import Track
-from farm_ng.control.control_pb2 import TrackFollowerState
-from farm_ng.control.control_pb2 import TrackFollowRequest
 from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfig
 from farm_ng.core.events_file_reader import proto_from_json_file
+from farm_ng.track.track_pb2 import Track
+from farm_ng.track.track_pb2 import TrackFollowerState
+from farm_ng.track.track_pb2 import TrackFollowRequest
 from farm_ng_core_pybind import Isometry3F64
 from farm_ng_core_pybind import Pose3F64
 from farm_ng_core_pybind import Rotation3F64

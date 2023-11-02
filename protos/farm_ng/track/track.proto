@@ -21,7 +21,7 @@ import "farm_ng/core/lie.proto";
 import "farm_ng/core/linalg.proto";
 import "farm_ng/core/pose.proto";
 
-package farm_ng.control.proto;
+package farm_ng.track.proto;
 
 // A track is a sequence of waypoints that the robot should follow or already drove.
 message Track {
