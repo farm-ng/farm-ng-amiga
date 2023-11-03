@@ -1,15 +1,14 @@
 {
-    "name": "controller",
-    "port": 20101,
-    "host": "localhost",
-    "subscriptions": [
-        {
-            "uri": {
-            "path": "/state",
-            "query": "service_name=controller"
-            },
-            "every_n": 1
-        }
-    ],
-    "log_level": "INFO"
+  "configs": [
+    {
+      "name": "controller",
+      "port": 20101,
+      "host": "localhost"
+    },
+    {
+      "name": "filter",
+      "port": 20001,
+      "host": "localhost"
+    }
+  ]
 }
