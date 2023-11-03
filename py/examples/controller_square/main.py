@@ -219,27 +219,26 @@ async def start_track(clients: dict[str, EventClient], side_length: float, clock
     track: Track = await build_square(clients, side_length, clockwise)
 
     # Send the track to the controller
-    await set_track(clients["controller"], track)
+    await set_track(clients, track)
 
     # Start following the track
-    await start(clients["controller"])
+    await start(clients)
 
 
-async def stream_track_state(client: EventClient) -> None:
+async def stream_track_state(clients: dict[str, EventClient]) -> None:
     """Stream the controller state.
 
     Args:
-        client (EventClient): The controller EventClient.
+        clients (dict[str, EventClient]): A dictionary of EventClients.
     """
 
-    # Brief wait to allow the controller to start
-    # (not necessary in practice, but allows you to see the track sent to the controller)
-    await asyncio.sleep(1)
-    print("Streaming controller state...")
+    # Brief wait to allow you to see the track sent to the controller
+    # Note that this is not necessary in practice
+    await asyncio.sleep(1.0)
 
     # Subscribe to the controller state and print each
     message: TrackFollowerState
-    async for event, message in client.subscribe("/state", decode=True):
+    async for event, message in clients["controller"].subscribe("/state", decode=True):
         print("###################")
         print(message)
 
@@ -261,7 +260,7 @@ async def run(args) -> None:
     # Start the asyncio tasks
     tasks: list[asyncio.Task] = [
         asyncio.create_task(start_track(clients, args.side_length, args.clockwise)),
-        asyncio.create_task(stream_track_state(clients["controller"])),
+        asyncio.create_task(stream_track_state(clients)),
     ]
     await asyncio.gather(*tasks)
 
