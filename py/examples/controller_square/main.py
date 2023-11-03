@@ -24,51 +24,53 @@ from farm_ng.control.control_pb2 import Track
 from farm_ng.control.control_pb2 import TrackFollowerState
 from farm_ng.control.control_pb2 import TrackFollowRequest
 from farm_ng.core.event_client import EventClient
-from farm_ng.core.event_service_pb2 import EventServiceConfig
+from farm_ng.core.event_service_pb2 import EventServiceConfigList
 from farm_ng.core.events_file_reader import proto_from_json_file
+from farm_ng.filter.filter_pb2 import FilterState
 from farm_ng_core_pybind import Isometry3F64
 from farm_ng_core_pybind import Pose3F64
 from farm_ng_core_pybind import Rotation3F64
 from google.protobuf.empty_pb2 import Empty
 
 
-async def get_pose(service_config: EventServiceConfig) -> Pose3F64:
-    """Get the current pose of the robot in the world frame, from the controller service.
+async def get_pose(clients: dict[str, EventClient]) -> Pose3F64:
+    """Get the current pose of the robot in the world frame, from the filter service.
 
     Args:
-        service_config (EventServiceConfig): The controller service config.
+        clients (dict[str, EventClient]): A dictionary of EventClients.
     """
-    reply = await EventClient(service_config).request_reply("/get_pose", Empty(), decode=True)
-    print(f"Current pose:\n{reply}")
-    return Pose3F64.from_proto(reply)
+    # We use the FilterState as the best source of the current pose of the robot
+    state: FilterState = await clients["filter"].request_reply("/get_state", Empty(), decode=True)
+    print(f"Current filter state:\n{state}")
+    return Pose3F64.from_proto(state.pose)
 
 
-async def set_track(service_config: EventServiceConfig, track: Track) -> None:
+async def set_track(clients: dict[str, EventClient], track: Track) -> None:
     """Set the track of the controller.
 
     Args:
-        service_config (EventServiceConfig): The controller service config.
+        clients (dict[str, EventClient]): A dictionary of EventClients.
         track (Track): The track for the controller to follow.
     """
     print(f"Setting track:\n{track}")
-    await EventClient(service_config).request_reply("/set_track", TrackFollowRequest(track=track))
+    await clients["controller"].request_reply("/set_track", TrackFollowRequest(track=track))
 
 
-async def start(service_config: EventServiceConfig) -> None:
-    """Follow the track.
+async def start(clients: dict[str, EventClient]) -> None:
+    """Request to start following the track.
 
     Args:
-        service_config (EventServiceConfig): The controller service config.
+        clients (dict[str, EventClient]): A dictionary of EventClients.
     """
     print("Sending request to start following the track...")
-    await EventClient(service_config).request_reply("/start", Empty())
+    await clients["controller"].request_reply("/start", Empty())
 
 
-async def build_square(service_config: EventServiceConfig, side_length: float, clockwise: bool) -> Track:
+async def build_square(clients: dict[str, EventClient], side_length: float, clockwise: bool) -> Track:
     """Build a square track, from the current pose of the robot.
 
     Args:
-        service_config (EventServiceConfig): The controller service config.
+        clients (dict[str, EventClient]): A dictionary of EventClients.
         side_length (float): The side length of the square, in meters.
         clockwise (bool): True will drive the square clockwise (right hand turns).
                         False is counter-clockwise (left hand turns).
@@ -77,7 +79,7 @@ async def build_square(service_config: EventServiceConfig, side_length: float, c
     """
 
     # Query the controller for the current pose of the robot in the world frame
-    world_pose_robot: Pose3F64 = await get_pose(service_config)
+    world_pose_robot: Pose3F64 = await get_pose(clients)
 
     # Create a container to store the track waypoints
     track_waypoints: list[Pose3F64] = []
@@ -203,53 +205,63 @@ def format_track(track_waypoints: list[Pose3F64]) -> Track:
     return Track(waypoints=[pose.to_proto() for pose in track_waypoints])
 
 
-async def main(service_config_path: Path, side_length: float, clockwise: bool) -> None:
+async def start_track(clients: dict[str, EventClient], side_length: float, clockwise: bool) -> None:
     """Run the controller square example. The robot will drive a square, turning left at each corner.
 
     Args:
-        service_config_path (Path): The path to the controller service config.
+        clients (dict[str, EventClient]): A dictionary of EventClients.
         side_length (float): The side length of the square.
         clockwise (bool): True will drive the square clockwise (right hand turns).
                         False is counter-clockwise (left hand turns).
     """
 
-    # Extract the controller service config from the JSON file
-    service_config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
-
     # Build the track and package in a Track proto message
-    track: Track = await build_square(service_config, side_length, clockwise)
+    track: Track = await build_square(clients, side_length, clockwise)
 
     # Send the track to the controller
-    await set_track(service_config, track)
+    await set_track(clients["controller"], track)
 
     # Start following the track
-    await start(service_config)
+    await start(clients["controller"])
 
 
-async def stream_controller_state(service_config_path: Path) -> None:
+async def stream_track_state(client: EventClient) -> None:
     """Stream the controller state.
 
     Args:
-        service_config_path (Path): The path to the controller service config.
+        client (EventClient): The controller EventClient.
     """
 
-    # Brief wait to allow the controller to start (not necessary in practice)
+    # Brief wait to allow the controller to start
+    # (not necessary in practice, but allows you to see the track sent to the controller)
     await asyncio.sleep(1)
     print("Streaming controller state...")
 
-    # create a client to the camera service
-    config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
-
+    # Subscribe to the controller state and print each
     message: TrackFollowerState
-    async for event, message in EventClient(config).subscribe(config.subscriptions[0], decode=True):
+    async for event, message in client.subscribe("/state", decode=True):
         print("###################")
         print(message)
 
 
 async def run(args) -> None:
+    # Create a dictionary of EventClients to the services required by this example
+    clients: dict[str, EventClient] = {}
+    expected_configs = ["controller", "filter"]
+    config_list = proto_from_json_file(args.service_config, EventServiceConfigList())
+    for config in config_list.configs:
+        if config.name in expected_configs:
+            clients[config.name] = EventClient(config)
+
+    # Confirm that EventClients were created for all required services
+    for config in expected_configs:
+        if config not in clients:
+            raise RuntimeError(f"No {config} service config in {args.service_config}")
+
+    # Start the asyncio tasks
     tasks: list[asyncio.Task] = [
-        asyncio.create_task(main(args.service_config, args.side_length, args.clockwise)),
-        asyncio.create_task(stream_controller_state(args.service_config)),
+        asyncio.create_task(start_track(clients, args.side_length, args.clockwise)),
+        asyncio.create_task(stream_track_state(clients["controller"])),
     ]
     await asyncio.gather(*tasks)
 
@@ -265,5 +277,6 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
+    # Create the asyncio event loop and run the main function
     loop = asyncio.get_event_loop()
     loop.run_until_complete(run(args))
