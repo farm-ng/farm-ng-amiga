@@ -1,4 +1,4 @@
-"""Example using the controller service to drive a pre-recorded track."""
+"""Example using the track_follower service to drive a pre-recorded track."""
 # Copyright (c) farm-ng, inc.
 #
 # Licensed under the Amiga Development Kit License (the "License");
@@ -18,21 +18,21 @@ import argparse
 import asyncio
 from pathlib import Path
 
-from farm_ng.control.control_pb2 import Track
-from farm_ng.control.control_pb2 import TrackFollowerState
-from farm_ng.control.control_pb2 import TrackFollowRequest
 from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfig
 from farm_ng.core.events_file_reader import proto_from_json_file
+from farm_ng.track.track_pb2 import Track
+from farm_ng.track.track_pb2 import TrackFollowerState
+from farm_ng.track.track_pb2 import TrackFollowRequest
 from google.protobuf.empty_pb2 import Empty
 
 
 async def set_track(service_config: EventServiceConfig, track: Track) -> None:
-    """Set the track of the controller.
+    """Set the track of the track_follower.
 
     Args:
-        service_config (EventServiceConfig): The controller service config.
-        track (Track): The track for the controller to follow.
+        service_config (EventServiceConfig): The track_follower service config.
+        track (Track): The track for the track_follower to follow.
     """
     print(f"Setting track:\n{track}")
     await EventClient(service_config).request_reply("/set_track", TrackFollowRequest(track=track))
@@ -42,26 +42,26 @@ async def start(service_config: EventServiceConfig) -> None:
     """Follow the track.
 
     Args:
-        service_config (EventServiceConfig): The controller service config.
+        service_config (EventServiceConfig): The track_follower service config.
     """
     print("Sending request to start following the track...")
     await EventClient(service_config).request_reply("/start", Empty())
 
 
 async def main(service_config_path: Path, track_path: Path) -> None:
-    """Run the controller track example. The robot will drive the pre-recorded track.
+    """Run the track_follower track example. The robot will drive the pre-recorded track.
 
     Args:
-        service_config_path (Path): The path to the controller service config.
+        service_config_path (Path): The path to the track_follower service config.
     """
 
-    # Extract the controller service config from the JSON file
+    # Extract the track_follower service config from the JSON file
     service_config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
 
     # Read the track and package in a Track proto message
     track: Track = proto_from_json_file(track_path, Track())
 
-    # Send the track to the controller
+    # Send the track to the track_follower
     await set_track(service_config, track)
 
     # Follow the track
@@ -69,15 +69,15 @@ async def main(service_config_path: Path, track_path: Path) -> None:
 
 
 async def stream_controller_state(service_config_path: Path) -> None:
-    """Stream the controller state.
+    """Stream the track_follower state.
 
     Args:
-        service_config_path (Path): The path to the controller service config.
+        service_config_path (Path): The path to the track_follower service config.
     """
 
-    # Brief wait to allow the controller to start (not necessary in practice)
+    # Brief wait to allow the track_follower to start (not necessary in practice)
     await asyncio.sleep(1)
-    print("Streaming controller state...")
+    print("Streaming track_follower state...")
 
     # create a client to the camera service
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
@@ -97,8 +97,8 @@ async def run(args) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="amiga-controller-track")
-    parser.add_argument("--service-config", type=Path, required=True, help="The controller service config.")
+    parser = argparse.ArgumentParser(prog="amiga-track_follower-track")
+    parser.add_argument("--service-config", type=Path, required=True, help="The track_follower service config.")
     parser.add_argument("--track", type=Path, required=True, help="The filepath of the track to follow.")
     args = parser.parse_args()
 

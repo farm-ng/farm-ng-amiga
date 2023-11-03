@@ -1,4 +1,4 @@
-"""Example using the controller service to drive a 1 meter square."""
+"""Example using the track_follower service to drive a 1 meter square."""
 # Copyright (c) farm-ng, inc.
 #
 # Licensed under the Amiga Development Kit License (the "License");
@@ -20,13 +20,15 @@ from math import copysign
 from math import radians
 from pathlib import Path
 
-from farm_ng.control.control_pb2 import Track
-from farm_ng.control.control_pb2 import TrackFollowerState
-from farm_ng.control.control_pb2 import TrackFollowRequest
 from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfigList
+from farm_ng.core.event_service_pb2 import SubscribeRequest
 from farm_ng.core.events_file_reader import proto_from_json_file
+from farm_ng.core.uri_pb2 import Uri
 from farm_ng.filter.filter_pb2 import FilterState
+from farm_ng.track.track_pb2 import Track
+from farm_ng.track.track_pb2 import TrackFollowerState
+from farm_ng.track.track_pb2 import TrackFollowRequest
 from farm_ng_core_pybind import Isometry3F64
 from farm_ng_core_pybind import Pose3F64
 from farm_ng_core_pybind import Rotation3F64
@@ -46,14 +48,14 @@ async def get_pose(clients: dict[str, EventClient]) -> Pose3F64:
 
 
 async def set_track(clients: dict[str, EventClient], track: Track) -> None:
-    """Set the track of the controller.
+    """Set the track of the track_follower.
 
     Args:
         clients (dict[str, EventClient]): A dictionary of EventClients.
-        track (Track): The track for the controller to follow.
+        track (Track): The track for the track_follower to follow.
     """
     print(f"Setting track:\n{track}")
-    await clients["controller"].request_reply("/set_track", TrackFollowRequest(track=track))
+    await clients["track_follower"].request_reply("/set_track", TrackFollowRequest(track=track))
 
 
 async def start(clients: dict[str, EventClient]) -> None:
@@ -63,7 +65,7 @@ async def start(clients: dict[str, EventClient]) -> None:
         clients (dict[str, EventClient]): A dictionary of EventClients.
     """
     print("Sending request to start following the track...")
-    await clients["controller"].request_reply("/start", Empty())
+    await clients["track_follower"].request_reply("/start", Empty())
 
 
 async def build_square(clients: dict[str, EventClient], side_length: float, clockwise: bool) -> Track:
@@ -75,10 +77,10 @@ async def build_square(clients: dict[str, EventClient], side_length: float, cloc
         clockwise (bool): True will drive the square clockwise (right hand turns).
                         False is counter-clockwise (left hand turns).
     Returns:
-        Track: The track for the controller to follow.
+        Track: The track for the track_follower to follow.
     """
 
-    # Query the controller for the current pose of the robot in the world frame
+    # Query the state estimation filter for the current pose of the robot in the world frame
     world_pose_robot: Pose3F64 = await get_pose(clients)
 
     # Create a container to store the track waypoints
@@ -206,7 +208,7 @@ def format_track(track_waypoints: list[Pose3F64]) -> Track:
 
 
 async def start_track(clients: dict[str, EventClient], side_length: float, clockwise: bool) -> None:
-    """Run the controller square example. The robot will drive a square, turning left at each corner.
+    """Run the track_follower square example. The robot will drive a square, turning left at each corner.
 
     Args:
         clients (dict[str, EventClient]): A dictionary of EventClients.
@@ -218,7 +220,7 @@ async def start_track(clients: dict[str, EventClient], side_length: float, clock
     # Build the track and package in a Track proto message
     track: Track = await build_square(clients, side_length, clockwise)
 
-    # Send the track to the controller
+    # Send the track to the track_follower
     await set_track(clients, track)
 
     # Start following the track
@@ -226,19 +228,19 @@ async def start_track(clients: dict[str, EventClient], side_length: float, clock
 
 
 async def stream_track_state(clients: dict[str, EventClient]) -> None:
-    """Stream the controller state.
+    """Stream the track_follower state.
 
     Args:
         clients (dict[str, EventClient]): A dictionary of EventClients.
     """
 
-    # Brief wait to allow you to see the track sent to the controller
+    # Brief wait to allow you to see the track sent to the track_follower
     # Note that this is not necessary in practice
     await asyncio.sleep(1.0)
 
-    # Subscribe to the controller state and print each
+    # Subscribe to the track_follower state and print each
     message: TrackFollowerState
-    async for event, message in clients["controller"].subscribe("/state", decode=True):
+    async for _, message in clients["track_follower"].subscribe(SubscribeRequest(uri=Uri(path="/state"))):
         print("###################")
         print(message)
 
@@ -246,7 +248,7 @@ async def stream_track_state(clients: dict[str, EventClient]) -> None:
 async def run(args) -> None:
     # Create a dictionary of EventClients to the services required by this example
     clients: dict[str, EventClient] = {}
-    expected_configs = ["controller", "filter"]
+    expected_configs = ["track_follower", "filter"]
     config_list = proto_from_json_file(args.service_config, EventServiceConfigList())
     for config in config_list.configs:
         if config.name in expected_configs:
@@ -266,8 +268,8 @@ async def run(args) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="amiga-controller-square")
-    parser.add_argument("--service-config", type=Path, required=True, help="The controller service config.")
+    parser = argparse.ArgumentParser(prog="amiga-track_follower-square")
+    parser.add_argument("--service-config", type=Path, required=True, help="The service config.")
     parser.add_argument("--side-length", type=float, default=2.0, help="The side length of the square.")
     parser.add_argument(
         "--clockwise",

@@ -21,7 +21,7 @@ import "farm_ng/core/lie.proto";
 import "farm_ng/core/linalg.proto";
 import "farm_ng/core/pose.proto";
 
-package farm_ng.control.proto;
+package farm_ng.track.proto;
 
 // A track is a sequence of waypoints that the robot should follow or already drove.
 message Track {
@@ -29,7 +29,7 @@ message Track {
   repeated farm_ng.core.proto.Pose waypoints = 1;
 }
 
-// This is sent to the controller service by a client to request a track be followed.
+// This is sent to the track_follower service by a client to request a track be followed.
 message TrackFollowRequest {
   // The track to follow
   Track track = 1;
@@ -38,9 +38,9 @@ message TrackFollowRequest {
   DrivingDirection driving_direction = 2;
 }
 
-// The complete state of the controller.
+// The complete state of the track_follower.
 message TrackFollowerState {
-  // Status of the controller
+  // Status of the track_follower
   TrackFollowerStatus status = 1;
   // Progress along the track
   TrackFollowerProgress progress = 2;
@@ -50,7 +50,7 @@ message TrackFollowerState {
   farm_ng.core.proto.Isometry3F64Tangent commands = 4;
 }
 
-// Status metrics of the controller
+// Status metrics of the track_follower
 message TrackFollowerStatus {
   // The status of the track
   TrackStatusEnum track_status = 1;
@@ -119,13 +119,13 @@ message RobotStatus {
     // The state estimation filter is not converged
     FILTER_DIVERGED = 21;
   }
-  // Whether the controller is able to control the robot or not
+  // Whether the track_follower is able to control the robot or not
   bool controllable = 1;
-  // The reason(s) why the controller is not able to control the robot
+  // The reason(s) why the track_follower is not able to control the robot
   repeated FailureMode failure_modes = 2;
 }
 
-// Progress metrics of the controller relative to the full track.
+// Progress metrics of the track_follower relative to the full track.
 // This is useful as a component of the TrackFollowerState message.
 message TrackFollowerProgress {
   /* Index components */
@@ -151,11 +151,11 @@ message TrackFollowerProgress {
   /* Time components */
   // Estimate of the time [sec] it will take to traverse the full track
   // This is based on the anticipated velocity of the control commands,
-  // as determined by controller parameters (e.g., max speed)
+  // as determined by track_follower parameters (e.g., max speed)
   double duration_total = 6;
   // Estimate of the time [sec] it will take to traverse the remaining track
   // This is based on the anticipated velocity of the control commands,
-  // as determined by controller parameters (e.g., max speed)
+  // as determined by track_follower parameters (e.g., max speed)
   double duration_remaining = 7;
 }
 
