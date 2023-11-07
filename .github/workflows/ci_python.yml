@@ -4,11 +4,9 @@ on:
   push:
     branches:
       - main
-      - main-v2
   pull_request:
     branches:
       - main
-      - main-v2
 
 jobs:
   py-cpu:
