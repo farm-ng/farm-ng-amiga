@@ -1,0 +1,14 @@
+{
+  "configs": [
+    {
+      "name": "track_follower",
+      "port": 20101,
+      "host": "localhost"
+    },
+    {
+      "name": "filter",
+      "port": 20001,
+      "host": "localhost"
+    }
+  ]
+}

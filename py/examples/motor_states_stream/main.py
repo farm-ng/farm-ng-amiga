@@ -13,83 +13,38 @@
 # limitations under the License.
 import argparse
 import asyncio
-from typing import List
+from pathlib import Path
 
-import grpc
-from farm_ng.canbus import canbus_pb2
-from farm_ng.canbus.canbus_client import CanbusClient
 from farm_ng.canbus.packet import MotorState
-from farm_ng.service import service_pb2
-from farm_ng.service.service_client import ClientConfig
+from farm_ng.core.event_client import EventClient
+from farm_ng.core.event_service_pb2 import EventServiceConfig
+from farm_ng.core.events_file_reader import proto_from_json_file
 
 
-class MotorStatesApp:
-    def __init__(self, address: str, canbus_port: int) -> None:
-        self.address: str = address
-        self.canbus_port: int = canbus_port
+async def main(service_config_path: Path) -> None:
+    """Run the camera service client.
 
-        self.async_tasks: List[asyncio.Task] = []
+    Args:
+        service_config_path (Path): The path to the camera service config.
+    """
+    # create a client to the camera service
+    config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
 
-    async def app_func(self):
-        # configure the canbus client
-        canbus_config: ClientConfig = ClientConfig(address=self.address, port=self.canbus_port)
-        canbus_client: CanbusClient = CanbusClient(canbus_config)
-        await asyncio.gather(self.stream_motors(canbus_client))
+    async for event, message in EventClient(config).subscribe(config.subscriptions[0], decode=True):
+        # Unpack the motor states
+        motors = []
+        for motor in message.motors:
+            motors.append(MotorState.from_proto(motor))
 
-    async def stream_motors(self, client: CanbusClient) -> None:
-        """This task:
-
-        - listens to the canbus client's stream
-        - filters for AmigaTpdo1 messages
-        - extracts useful values from AmigaTpdo1 messages
-        """
-
-        response_stream = None
-
-        while True:
-            # check the state of the service
-            state = await client.get_state()
-
-            if state.value not in [service_pb2.ServiceState.IDLE, service_pb2.ServiceState.RUNNING]:
-                if response_stream is not None:
-                    response_stream.cancel()
-                    response_stream = None
-
-                print("Canbus service is not streaming or ready to stream")
-                await asyncio.sleep(0.1)
-                continue
-
-            if response_stream is None and state.value != service_pb2.ServiceState.UNAVAILABLE:
-                # get the streaming object
-                response_stream = client.stream_motors()
-
-            try:
-                # try/except so app doesn't crash on killed service
-                response: canbus_pb2.StreamCanbusReply = await response_stream.read()
-                assert response and response != grpc.aio.EOF, "End of stream"
-            except Exception as e:
-                print(e)
-                response_stream.cancel()
-                response_stream = None
-                continue
-
-            print('--')
-            for motor in response.motors:
-                print(MotorState.from_proto(motor))
+        # Print the motor states
+        print("\n###################\n")
+        for motor in sorted(motors, key=lambda m: m.id):
+            print(motor)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="virtual-joystick")
-    parser.add_argument("--address", type=str, default="localhost", help="The server address")
-    parser.add_argument(
-        "--canbus-port", type=int, required=True, help="The grpc port where the canbus service is running."
-    )
-
+    parser = argparse.ArgumentParser(prog="Stream motor states from the canbus service.")
+    parser.add_argument("--service-config", type=Path, required=True, help="The camera config.")
     args = parser.parse_args()
 
-    loop = asyncio.get_event_loop()
-    try:
-        loop.run_until_complete(MotorStatesApp(args.address, args.canbus_port).app_func())
-    except asyncio.CancelledError:
-        pass
-    loop.close()
+    asyncio.run(main(args.service_config))
