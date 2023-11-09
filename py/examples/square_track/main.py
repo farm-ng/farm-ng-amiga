@@ -1,4 +1,4 @@
-"""Example using the track_follower service to drive a 1 meter square."""
+"""Example using the track_follower service to drive a square."""
 # Copyright (c) farm-ng, inc.
 #
 # Licensed under the Amiga Development Kit License (the "License");
