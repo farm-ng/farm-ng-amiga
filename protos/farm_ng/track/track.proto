@@ -18,7 +18,6 @@ syntax = "proto3";
 
 
 import "farm_ng/core/lie.proto";
-import "farm_ng/core/linalg.proto";
 import "farm_ng/core/pose.proto";
 
 package farm_ng.track.proto;
