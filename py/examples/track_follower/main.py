@@ -68,7 +68,7 @@ async def main(service_config_path: Path, track_path: Path) -> None:
     await start(service_config)
 
 
-async def stream_controller_state(service_config_path: Path) -> None:
+async def stream_track_state(service_config_path: Path) -> None:
     """Stream the track_follower state.
 
     Args:
@@ -91,13 +91,13 @@ async def stream_controller_state(service_config_path: Path) -> None:
 async def run(args) -> None:
     tasks: list[asyncio.Task] = [
         asyncio.create_task(main(args.service_config, args.track)),
-        asyncio.create_task(stream_controller_state(args.service_config)),
+        asyncio.create_task(stream_track_state(args.service_config)),
     ]
     await asyncio.gather(*tasks)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="amiga-track_follower-track")
+    parser = argparse.ArgumentParser(prog="amiga-track-follower")
     parser.add_argument("--service-config", type=Path, required=True, help="The track_follower service config.")
     parser.add_argument("--track", type=Path, required=True, help="The filepath of the track to follow.")
     args = parser.parse_args()
