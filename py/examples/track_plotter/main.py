@@ -57,12 +57,18 @@ def plot_track(track: Track) -> None:
         plt.arrow(x, y, dx, dy, head_width=0.035, fc=plt.cm.plasma(norm(color)), ec=plt.cm.plasma(norm(color)))
 
     plt.title('Track waypoints')
-    plt.xlabel('X')
-    plt.ylabel('Y')
+    plt.xlabel('X [m]')
+    plt.ylabel('Y [m]')
 
     # Add colorbar below the plot with a smaller height
-    cbar = plt.colorbar(plt.cm.ScalarMappable(cmap=plt.cm.plasma, norm=norm), orientation='horizontal')
-    cbar.set_label('Waypoint idx along the track')
+    cbar = plt.colorbar(
+        plt.cm.ScalarMappable(cmap=plt.cm.plasma, norm=norm),
+        orientation='horizontal',
+        ax=plt.gca(),
+        fraction=0.046,
+        pad=0.1,
+    )
+    cbar.set_label('Waypoint idx along the Track')
 
     plt.grid(True)
     plt.show()
