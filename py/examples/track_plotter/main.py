@@ -25,11 +25,15 @@ from farm_ng.track.track_pb2 import Track
 from farm_ng_core_pybind import Pose3F64
 
 
-def plot_track(track: Track) -> None:
-    """Plot a track from a Track proto message.
+def unpack_track(track: Track) -> tuple[list[float], list[float], list[float]]:
+    """Unpack a track from a Track proto message into lists of x, y, and heading values.
 
     Args:
-        track: (Track) The Track proto message to plot.
+        track: (Track) The Track proto message to unpack.
+    Returns:
+        x_values: (list[float]) The x values of the track.
+        y_values: (list[float]) The y values of the track.
+        headings: (list[float]) The heading values of the track.
     """
     x_values: list[float] = []
     y_values: list[float] = []
@@ -42,6 +46,18 @@ def plot_track(track: Track) -> None:
         x_values.append(goal.translation[0])
         y_values.append(goal.translation[1])
         headings.append(goal.rotation.log()[-1])
+
+    return x_values, y_values, headings
+
+
+def plot_track(x_values: list[float], y_values: list[float], headings: list[float]) -> None:
+    """Plot a track from a Track proto message.
+
+    Args:
+        x_values: (list[float]) The x coordinates of the track.
+        y_values: (list[float]) The y coordinates of the track.
+        headings: (list[float]) The heading values of the track.
+    """
 
     # Plotting
     plt.figure(figsize=(8, 8))
@@ -90,7 +106,11 @@ def main(track_path: Path) -> None:
     # filter_track: FilterTrack = proto_from_json_file(track_path, FilterTrack())
     # track: Track = filter_track_to_track(filter_track)
 
-    plot_track(track)
+    # Unpack the track into lists of x, y, and heading values
+    x_values, y_values, headings = unpack_track(track)
+
+    # Plot the track
+    plot_track(x_values, y_values, headings)
 
 
 if __name__ == "__main__":
