@@ -53,6 +53,7 @@ async def main(service_config_path: Path, track_path: Path) -> None:
 
     Args:
         service_config_path (Path): The path to the track_follower service config.
+        track_path: (Path) The filepath of the track to follow.
     """
 
     # Extract the track_follower service config from the JSON file
