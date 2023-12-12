@@ -1,3 +1,4 @@
+"""Example using the track_follower service to drive a 1 meter square."""
 # Copyright (c) farm-ng, inc.
 #
 # Licensed under the Amiga Development Kit License (the "License");
@@ -17,43 +18,19 @@ import asyncio
 from math import copysign
 from pathlib import Path
 
+import matplotlib
 import numpy as np
 from farm_ng.core.event_client import EventClient
 from farm_ng.core.events_file_reader import proto_from_json_file
 from farm_ng.core.events_file_writer import proto_to_json_file
 from farm_ng.filter.filter_pb2 import FilterState
-from farm_ng.filter.filter_pb2 import FilterTrack
 from farm_ng.track.track_pb2 import Track
 from farm_ng_core_pybind import Isometry3F64
 from farm_ng_core_pybind import Pose3F64
 from farm_ng_core_pybind import Rotation3F64
 from google.protobuf.empty_pb2 import Empty
 
-# WARNING: These methods are a temporary convenience and will be removed
-# once the use of FilterTrack protos has been fully phased out.
-
-
-def filter_track_to_track(filter_track: FilterTrack) -> Track:
-    """Converts a FilterTrack proto to a generic Track proto.
-
-    Args:
-        filter_track: A FilterTrack proto.
-    Returns: A Track proto.
-    """
-    if not isinstance(filter_track, FilterTrack):
-        raise TypeError(f"Expected FilterTrack, got {type(filter_track)}")
-    return Track(waypoints=[state.pose for state in filter_track.states])
-
-
-def update_filter_track(track_path: Path) -> None:
-    """Updates a .json file with a FilterTrack proto to a generic Track proto.
-
-    Args:
-        track_path: The path to the .json file.
-    """
-    filter_track: FilterTrack = proto_from_json_file(track_path, FilterTrack())
-    track: Track = filter_track_to_track(filter_track)
-    proto_to_json_file(track_path, track)
+matplotlib.use("Agg")  # Set the backend to Agg for non-GUI environments
 
 
 class TrackBuilder:
