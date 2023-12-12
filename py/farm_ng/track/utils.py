@@ -146,9 +146,7 @@ class TrackBuilder:
         self._segment_indices.append(len(self.track_waypoints))
         self._loaded = False
 
-    def create_ab_segment(
-        self, next_frame_b: str, initial_pose: Pose3F64, final_pose: Pose3F64, spacing: float = 0.1
-    ) -> None:
+    def create_ab_segment(self, next_frame_b: str, final_pose: Pose3F64, spacing: float = 0.1) -> None:
         """Compute an AB line segment.
         Args:
             next_frame_b (str): The name of the child frame of the next pose.
@@ -161,6 +159,7 @@ class TrackBuilder:
         """
 
         # Calculate distance between initial and final pose
+        initial_pose: Pose3F64 = self.track_waypoints[-1]
         distance: float = np.linalg.norm(initial_pose.a_from_b.translation - final_pose.a_from_b.translation)
 
         # Calculate number of waypoints in the segment
