@@ -16,7 +16,6 @@ from __future__ import annotations
 import argparse
 import asyncio
 from math import radians
-from math import sqrt
 from pathlib import Path
 
 import matplotlib
@@ -38,9 +37,11 @@ from google.protobuf.empty_pb2 import Empty
 
 matplotlib.use("TkAgg")  # Set the backend to Agg for non-GUI environments
 
+# Create a couple of helper functions to easily create poses and quaternions
 
-def yaw_to_quaternion(yaw_degrees):
-    """Convert yaw angle to radians
+
+def yaw_to_quaternion(yaw_degrees: float):
+    """Convert yaw angle to quaternion
     Args: yaw angle in degrees
     Returns: quaternion (x, y, z, w)"""
 
@@ -56,6 +57,23 @@ def yaw_to_quaternion(yaw_degrees):
     z = np.sin(yaw_half)
 
     return np.array([x, y, z, w])
+
+
+def create_pose(x: float, y: float, heading: float) -> Pose3F64:
+    """Create a Pose3F64 from x, y, heading
+    Args: x (meters), y (meters), heading (degrees)
+    Returns: Pose3F64"""
+
+    # Set the initial pose of the robot
+    quaternion = yaw_to_quaternion(heading)
+    rotation = Rotation3F64(quaternion.reshape((4, 1)))
+    a_from_b = Isometry3F64(rotation=rotation, translation=[x, y, 0.0])
+
+    pose = Pose3F64(
+        a_from_b=a_from_b, frame_a="world", frame_b="robot", tangent_of_b_in_a=np.zeros((6, 1), dtype=np.float64)
+    )
+
+    return pose
 
 
 async def set_track(clients: dict[str, EventClient], track: Track) -> None:
@@ -79,64 +97,11 @@ async def start(clients: dict[str, EventClient]) -> None:
     await clients["track_follower"].request_reply("/start", Empty())
 
 
-async def build_square(clients: dict[str, EventClient], side_length: float, clockwise: bool) -> Track:
-    """Build a square track, from the current pose of the robot.
-
-    Args:
-        clients (dict[str, EventClient]): A dictionary of EventClients.
-        side_length (float): The side length of the square, in meters.
-        clockwise (bool): True will drive the square clockwise (right hand turns).
-                        False is counter-clockwise (left hand turns).
-    Returns:
-        Track: The track for the track_follower to follow.
-    """
-    print("Building square track...")
-    track_builder = await TrackBuilder.create(clients=clients)
-
-    # Set the angle of the turns, based on indicated direction
-    angle: float = -90 if clockwise else 90
-
-    # Drive forward 1 meter (first side of the square)
-    track_builder.create_straight_segment("goal1", side_length)
-
-    # Turn left 90 degrees (first turn)
-    track_builder.create_turn_segment("goal2", radians(angle))
-
-    # Add second side and turn
-    track_builder.create_straight_segment("goal3", side_length)
-    track_builder.create_turn_segment("goal4", radians(angle))
-
-    # Add third side and turn
-    track_builder.create_straight_segment("goal5", side_length)
-    track_builder.create_turn_segment("goal6", radians(angle))
-
-    # Add fourth side and turn
-    track_builder.create_straight_segment("goal7", side_length)
-    track_builder.create_turn_segment("goal8", radians(angle))
-
-    # Return the list of waypoints as a Track proto message
-    track_builder.format_track()
-    print(len(track_builder.track_waypoints))
-
-    # Remove the last two segments (turn and straight segment - for testing purposes)
-    track_builder.pop_last_segment()
-    track_builder.pop_last_segment()
-    print(len(track_builder.track_waypoints))
-
-    # Plot the track
-    waypoints = track_builder.unpack_track()
-    x = waypoints[0]
-    y = waypoints[1]
-    plt.plot(x, y)
-    plt.savefig("build_square.png")
-
-    return track_builder.track
-
-
-async def build_pi_turn(
+async def build_track(
     clients: dict[str, EventClient], side_length: float, angle: float, clockwise: bool = False
 ) -> Track:
-    """Build a track with a U-turn, from the current pose of the robot.
+    """Build a custom track. Here, we will use all the functions in the TrackBuilder class for educational
+    purposes.
 
     Args:
         clients (dict[str, EventClient]): A dictionary of EventClients.
@@ -146,129 +111,43 @@ async def build_pi_turn(
     Returns:
         Track: The track for the track_follower to follow.
     """
-    print("Building pi-turn track...")
-
-    # Set the initial pose of the robot
-    # Set the initial heading of the robot
-    # unit_quaternion = np.array([0.0, 0.0, 0.0, 1.0])  # Start at 0 degrees
-    unit_quaternion = np.array([0.0, 0.0, sqrt(0.5), sqrt(0.5)])  # Start at 90 degrees
-    # unit_quaternion = np.array([0.0, 0.0, sqrt(1 - 0.924**2), 0.924])  #  Start at 45 degrees
-    rotation = Rotation3F64(unit_quaternion.reshape((4, 1)))
-    # Set the initial position of the robot
-    a_from_b = Isometry3F64(rotation=rotation, translation=[7.0, 10.0, 0.0])
-
-    initial_pose = Pose3F64(
-        a_from_b=a_from_b, frame_a="world", frame_b="robot", tangent_of_b_in_a=np.zeros((6, 1), dtype=np.float64)
-    )
-
-    track_builder = await TrackBuilder.create(clients=clients, pose=initial_pose)
+    print("Building track...")
 
     # Set the angle of the turns, based on indicated direction
     if clockwise:
         angle = -angle
 
-    # Drive forward 1 meter (first side of the square)
-    track_builder.create_straight_segment("goal1", 10)
-
-    # Turn left 90 degrees (first turn)
-    track_builder.create_arc_segment("goal2", radius=48 * 0.0254, angle=radians(angle), spacing=0.1)
-
-    # Add second side and turn
-    track_builder.create_straight_segment("goal3", 10)
-
-    # Add third side and turn
-    track_builder.create_arc_segment("goal3", radius=48 * 0.0254, angle=radians(angle), spacing=0.1)
-
-    print(len(track_builder.track_waypoints))
-
-    # Plot the track
-    waypoints = track_builder.unpack_track()
-    x = waypoints[0]
-    y = waypoints[1]
-    plt.plot(x, y)
-    plt.axis("equal")
-    plt.savefig("pi_turn.png")
-    plt.show()
-
-    track_builder.format_track()
-    script_path = Path(__file__)  # Current script's path
-    parent_directory = script_path.parent
-    file_path = parent_directory / "pi_turn.json"
-
-    track_builder.save_track(file_path)
-
-    return track_builder.track
-
-
-async def build_test_track(
-    clients: dict[str, EventClient], side_length: float, angle: float, clockwise: bool = False
-) -> Track:
-    """Build a custom track for assessing the performance of the autoplot app.
-
-    Args:
-        clients (dict[str, EventClient]): A dictionary of EventClients.
-        side_length (float): The side length of the square, in meters.
-        clockwise (bool): True will drive the square clockwise (right hand turns).
-                        False is counter-clockwise (left hand turns).
-    Returns:
-        Track: The track for the track_follower to follow.
-    """
-    print("Building autoplot test track...")
-
     # Set the initial pose of the robot
-    unit_quaternion = yaw_to_quaternion(-135)  # Start at 90 degrees (facing East)
-    rotation = Rotation3F64(unit_quaternion.reshape((4, 1)))
-    a_from_b = Isometry3F64(rotation=rotation, translation=[7.0, 10.0, 0.0])
+    initial_pose = create_pose(x=7.0, y=10.0, heading=-135)
 
-    initial_pose = Pose3F64(
-        a_from_b=a_from_b, frame_a="world", frame_b="robot", tangent_of_b_in_a=np.zeros((6, 1), dtype=np.float64)
-    )
+    # Set the second pose of the robot to demonstrate how to create an ab_segment
+    second_pose = create_pose(x=9.0, y=10.0, heading=-135)
 
+    # Start the track builder
     track_builder = await TrackBuilder.create(clients=clients, pose=initial_pose)
 
-    # Set the angle of the turns, based on indicated direction
-    if clockwise:
-        angle = -angle
+    # Drive forward from the initial pose to the second pose
+    track_builder.create_ab_segment("goal1", second_pose)
 
-    # Drive forward 2 meter (first side of the square)
-    track_builder.create_straight_segment("goal1", 2)
-
-    # Turn in place 90 degrees (first turn)
+    # Turn in place 90 degrees
     track_builder.create_turn_segment("goal2", radians(90))
 
-    # Drive forward 2 meter (second side of the square)
-    track_builder.create_straight_segment("goal3", 2)
+    # Drive forward 3 meters
+    track_builder.create_straight_segment("goal3", 3)
 
-    # Turn in place -45 degrees (second turn)
-    track_builder.create_turn_segment("goal4", radians(-45))
+    # Smooth u-turn (radius = 60 inches)
+    track_builder.create_arc_segment("goal8", radius=60 * 0.0254, angle=radians(180), spacing=0.1)
 
-    # Drive forward 2 meter (third side of the square)
-    track_builder.create_straight_segment("goal5", 2)
+    # Drive forward 3.1 meters
+    track_builder.create_straight_segment("goal9", 3.1)
 
-    # Turn in place -90 degrees (third turn)
-    track_builder.create_turn_segment("goal6", radians(-90))
+    # Turn in place 90 degrees
+    track_builder.create_turn_segment("goal4", radians(90))
 
-    # Drive forward 2 meter (fourth side of the square)
-    track_builder.create_straight_segment("goal7", 2)
+    # Drive forward 0.85 meters to "close" the loop
+    track_builder.create_straight_segment("goal5", 0.85)
 
-    # S curve
-    track_builder.create_arc_segment("goal8", radius=40 * 0.0254, angle=radians(180), spacing=0.1)
-    track_builder.create_straight_segment("goal9", 2)
-    track_builder.create_arc_segment("goal10", radius=60 * 0.0254, angle=radians(-180), spacing=0.1)
-    track_builder.create_straight_segment("goal11", 2.0)
-    track_builder.create_arc_segment("goal12", radius=48 * 0.0254, angle=radians(-90), spacing=0.1)
-    track_builder.create_straight_segment("goal13", 9)
-
-    # Turn in place 90 degrees (fourth turn)
-    track_builder.create_turn_segment("goal14", radians(-90))
-
-    # Drive back to origin
-    track_builder.create_straight_segment("goal15", 3.2)
-
-    # Get closer to original orientation
-    track_builder.create_turn_segment("goal16", radians(-125))
-    # track_builder.create_straight_segment("goal17", 2.5) # uncomment for visualization purposes
-
+    # Print the number of waypoints in the track
     print(len(track_builder.track_waypoints))
 
     # Plot the track
@@ -277,78 +156,14 @@ async def build_test_track(
     y = waypoints[1]
     plt.plot(x, y)
     plt.axis("equal")
-    plt.savefig("autoplot.png")
+    plt.savefig("my_track.png")  # Save the image of the track for visualization purposes
     plt.show()
 
+    # Save the track to a file
     track_builder.format_track()
     script_path = Path(__file__)  # Current script's path
     parent_directory = script_path.parent
-    file_path = parent_directory / "autoplot_test.json"
-
-    track_builder.save_track(file_path)
-
-    return track_builder.track
-
-
-async def pose_segment(clients: dict[str, EventClient]) -> Track:
-    """Build a track with a U-turn, from the current pose of the robot.
-
-    Args:
-        clients (dict[str, EventClient]): A dictionary of EventClients.
-        side_length (float): The side length of the square, in meters.
-        clockwise (bool): True will drive the square clockwise (right hand turns).
-                        False is counter-clockwise (left hand turns).
-    Returns:
-        Track: The track for the track_follower to follow.
-    """
-    print("Building pose_segment track...")
-
-    # Set the initial pose of the robot
-    xi = 6.7306
-    yi = 1.58
-    xf = 5.296
-    yf = 26.2896
-    dx = xf - xi
-    dy = yf - yi
-    dl = sqrt(dx**2 + dy**2)
-    heading = np.degrees(np.arccos(dx / dl))
-    print(f"Heading: {heading}")
-    quaternion = yaw_to_quaternion(heading)
-    rotation = Rotation3F64(quaternion.reshape((4, 1)))
-    a_from_b_initial = Isometry3F64(rotation=rotation, translation=[xi, yi, 0.0])
-    a_from_b_final = Isometry3F64(rotation=rotation, translation=[xf, yf, 0.0])
-
-    initial_pose = Pose3F64(
-        a_from_b=a_from_b_initial,
-        frame_a="world",
-        frame_b="robot",
-        tangent_of_b_in_a=np.zeros((6, 1), dtype=np.float64),
-    )
-
-    final_pose = Pose3F64(
-        a_from_b=a_from_b_final, frame_a="world", frame_b="robot", tangent_of_b_in_a=np.zeros((6, 1), dtype=np.float64)
-    )
-
-    track_builder = await TrackBuilder.create(clients=clients, pose=initial_pose)
-
-    # Drive forward 1 meter (first side of the square)
-    track_builder.create_ab_segment("goal1", final_pose)
-
-    print(len(track_builder.track_waypoints))
-
-    # Plot the track
-    waypoints = track_builder.unpack_track()
-    x = waypoints[0]
-    y = waypoints[1]
-    plt.plot(x, y)
-    plt.axis("equal")
-    plt.savefig("AB.png")
-    plt.show()
-
-    track_builder.format_track()
-    script_path = Path(__file__)  # Current script's path
-    parent_directory = script_path.parent
-    file_path = parent_directory / "AB.json"
+    file_path = parent_directory / "my_track.json"
 
     track_builder.save_track(file_path)
 
@@ -365,11 +180,7 @@ async def start_track(clients: dict[str, EventClient], side_length: float, clock
                         False is counter-clockwise (left hand turns).
     """
 
-    # Build the track and package in a Track proto message
-    # await build_square(clients, side_length, clockwise)
-    # await build_pi_turn(clients, side_length, 180, clockwise=clockwise)
-    # await build_test_track(clients, side_length, 180, clockwise=clockwise)
-    await pose_segment(clients)
+    await build_track(clients, side_length, 180, clockwise=clockwise)
 
     # Send the track to the track_follower
     # await set_track(clients, track)
