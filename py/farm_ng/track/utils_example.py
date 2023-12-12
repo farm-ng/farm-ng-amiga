@@ -97,9 +97,7 @@ async def start(clients: dict[str, EventClient]) -> None:
     await clients["track_follower"].request_reply("/start", Empty())
 
 
-async def build_track(
-    clients: dict[str, EventClient], side_length: float, angle: float, clockwise: bool = False
-) -> Track:
+async def build_track(clients: dict[str, EventClient]) -> Track:
     """Build a custom track. Here, we will use all the functions in the TrackBuilder class for educational
     purposes.
 
@@ -112,10 +110,6 @@ async def build_track(
         Track: The track for the track_follower to follow.
     """
     print("Building track...")
-
-    # Set the angle of the turns, based on indicated direction
-    if clockwise:
-        angle = -angle
 
     # Set the initial pose of the robot
     initial_pose = create_pose(x=7.0, y=10.0, heading=-135)
@@ -170,7 +164,7 @@ async def build_track(
     return track_builder.track
 
 
-async def start_track(clients: dict[str, EventClient], side_length: float, clockwise: bool) -> None:
+async def start_track(clients: dict[str, EventClient]) -> None:
     """Build the track, send it to the track_follower, and start following the track.
 
     Args:
@@ -180,12 +174,12 @@ async def start_track(clients: dict[str, EventClient], side_length: float, clock
                         False is counter-clockwise (left hand turns).
     """
 
-    await build_track(clients, side_length, 180, clockwise=clockwise)
+    track: Track = await build_track(clients)
 
-    # Send the track to the track_follower
+    # # Send the track to the track_follower
     # await set_track(clients, track)
 
-    # Start following the track
+    # # Start following the track
     # await start(clients)
 
 
@@ -223,7 +217,7 @@ async def run(args) -> None:
 
     # Start the asyncio tasks
     tasks: list[asyncio.Task] = [
-        asyncio.create_task(start_track(clients, args.side_length, args.clockwise)),
+        asyncio.create_task(start_track(clients)),
         asyncio.create_task(stream_track_state(clients)),
     ]
     await asyncio.gather(*tasks)
@@ -232,12 +226,6 @@ async def run(args) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="amiga-track_follower-square")
     parser.add_argument("--service-config", type=Path, required=True, help="The service config.")
-    parser.add_argument("--side-length", type=float, default=2.0, help="The side length of the square.")
-    parser.add_argument(
-        "--clockwise",
-        action="store_true",
-        help="Set to drive the square clockwise (right hand turns). Default is counter-clockwise (left hand turns).",
-    )
     args = parser.parse_args()
 
     # Create the asyncio event loop and run the main function
