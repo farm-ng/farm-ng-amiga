@@ -180,7 +180,7 @@ class TrackBuilder:
             fraction_segment: Pose3F64 = Pose3F64(
                 a_from_b=Isometry3F64([delta_distance, 0, 0], Rotation3F64.Rz(0)),
                 frame_a=segment_poses[-1].frame_b,
-                frame_b=f"{next_frame_b}_{i-1}",
+                frame_b=f"{next_frame_b}_{i - 1}",
             )
             segment_poses.append(segment_poses[-1] * fraction_segment)
 
@@ -261,7 +261,7 @@ class TrackBuilder:
             turn_segment: Pose3F64 = Pose3F64(
                 a_from_b=Isometry3F64([delta_distance, 0, 0], Rotation3F64.Rz(delta_angle)),
                 frame_a=segment_poses[-1].frame_b,
-                frame_b=f"{next_frame_b}_{i-1}",
+                frame_b=f"{next_frame_b}_{i - 1}",
             )
             segment_poses.append(segment_poses[-1] * turn_segment)
 
