@@ -32,7 +32,7 @@ from farm_ng_core_pybind import Rotation3F64
 
 matplotlib.use("TkAgg")  # Set the backend to Agg for non-GUI environments
 
-# Create a couple of helper functions to easily create poses and quaternions
+# Create a few helper functions to easily create poses and quaternions, and print data
 
 
 def yaw_to_quaternion(yaw_degrees: float):
@@ -71,9 +71,43 @@ def create_pose(x: float, y: float, heading: float) -> Pose3F64:
     return pose
 
 
+def plot_track(waypoints: list[list[float]]) -> None:
+    x = waypoints[0]
+    y = waypoints[1]
+    headings = waypoints[2]
+
+    # Calculate the arrow directions
+    U = np.cos(headings)
+    V = np.sin(headings)
+
+    # Parameters for arrow plotting
+    arrow_interval = 25  # Adjust this to change the frequency of arrows
+    turn_threshold = np.radians(10)  # Threshold in radians for when to skip plotting
+
+    plt.figure(figsize=(8, 8))
+    plt.plot(x, y, color='orange', linewidth=1.0)
+
+    for i in range(0, len(x), arrow_interval):
+        # Calculate the heading change
+        if i > 0:
+            heading_change = np.abs(headings[i] - headings[i - 1])
+        else:
+            heading_change = 0
+
+        # Plot the arrow if the heading change is below the threshold
+        if heading_change < turn_threshold:
+            plt.quiver(x[i], y[i], U[i], V[i], angles='xy', scale_units='xy', scale=2.25, color='blue')
+
+    plt.axis("equal")
+    plt.savefig("my_track_with_filtered_arrows.png")  # Save the image of the track with filtered arrows
+    plt.show()
+
+
 async def build_track(clients: dict[str, EventClient]) -> Track:
-    """Build a custom track. Here, we will use all the functions in the TrackBuilder class for educational
-    purposes.
+    """Build a custom track. Here, we will use all the building functions in the TrackBuilder class for educational
+    purposes. This specific track will resemble three 60-foot rows spaced 48 inches. To transition from the end of
+    the first row to the second, the robot will turn in place 90 degrees. To transition from the end of the second
+    row to the third, the robot will perform a smooth u-turn.
 
     Args:
         clients (dict[str, EventClient]): A dictionary of EventClients.
@@ -86,49 +120,43 @@ async def build_track(clients: dict[str, EventClient]) -> Track:
     print("Building track...")
 
     # Set the initial pose of the robot
-    initial_pose = create_pose(x=7.0, y=10.0, heading=-135)
+    initial_pose = create_pose(x=5.0, y=10.0, heading=90)
 
     # Set the second pose of the robot to demonstrate how to create an ab_segment
-    second_pose = create_pose(x=9.0, y=10.0, heading=-135)
+    second_pose = create_pose(x=25.0, y=10.0, heading=90)
 
     # Start the track builder
     track_builder = await TrackBuilder.create(clients=clients, pose=initial_pose)
 
-    # Drive forward from the initial pose to the second pose
+    # Drive forward from the initial pose to the second pose (about 60 ft)
     track_builder.create_ab_segment("goal1", second_pose)
 
     # Turn in place 90 degrees
-    track_builder.create_turn_segment("goal2", radians(90))
+    track_builder.create_turn_segment("goal2", radians(-90))
 
-    # Drive forward 3 meters
-    track_builder.create_straight_segment("goal3", 3)
-
-    # Smooth u-turn (radius = 60 inches)
-    track_builder.create_arc_segment("goal8", radius=60 * 0.0254, angle=radians(180), spacing=0.1)
-
-    # Drive forward 3.1 meters
-    track_builder.create_straight_segment("goal9", 3.1)
+    # Drive forward 48 inches
+    track_builder.create_straight_segment("goal3", 48 * 0.0254)
 
     # Turn in place 90 degrees
-    track_builder.create_turn_segment("goal4", radians(90))
+    track_builder.create_turn_segment("goal4", radians(-90))
 
-    # Drive forward 0.85 meters to "close" the loop
-    track_builder.create_straight_segment("goal5", 0.85)
+    # Drive forward 60 feet
+    track_builder.create_straight_segment("goal5", 20 - 24 * 0.0254)
+
+    # Smooth turn at the end of the row
+    track_builder.create_arc_segment("goal6", 24 * 0.0254, radians(180))
+
+    # Drive forward 60 feet
+    track_builder.create_straight_segment("goal7", 20 - 24 * 0.0254)
 
     # Print the number of waypoints in the track
-    print(len(track_builder.track_waypoints))
+    print(f" Track created with {len(track_builder.track_waypoints)} waypoints")
 
     # Plot the track
     waypoints = track_builder.unpack_track()
-    x = waypoints[0]
-    y = waypoints[1]
-    plt.plot(x, y)
-    plt.axis("equal")
-    plt.savefig("my_track.png")  # Save the image of the track for visualization purposes
-    plt.show()
+    plot_track(waypoints)
 
     # Save the track to a file
-    track_builder.format_track()
     script_path = Path(__file__)  # Current script's path
     parent_directory = script_path.parent
     file_path = parent_directory / "my_track.json"

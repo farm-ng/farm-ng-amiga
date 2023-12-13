@@ -63,7 +63,6 @@ class TrackBuilder:
         self.clients: dict[str, EventClient] = clients
         self._start: Pose3F64
         self.track_waypoints: list[Pose3F64] = []
-        self.track: Track | None = None
         self._segment_indices: list[int] = [0]
         self._loaded: bool = False
 
@@ -94,6 +93,11 @@ class TrackBuilder:
         # Initialize the track_waypoints with the start pose
         self.track_waypoints = [self._start]
         return self
+
+    @property
+    def track(self) -> Track:
+        """Pack the track waypoints into a Track proto message."""
+        return Track(waypoints=[pose.to_proto() for pose in self.track_waypoints])
 
     async def get_pose(self) -> Pose3F64:
         """Get the current pose of the robot in the world frame, from the filter service.
@@ -298,14 +302,6 @@ class TrackBuilder:
             y.append(pose.a_from_b.translation[1])
             heading.append(pose.a_from_b.rotation.log()[-1])
         return (x, y, heading)
-
-    def format_track(self) -> Track:
-        """Pack the track waypoints into a Track proto message.
-
-        Args:
-            track_waypoints (list[Pose3F64]): The track waypoints.
-        """
-        self.track = Track(waypoints=[pose.to_proto() for pose in self.track_waypoints])
 
     def save_track(self, path: Path) -> None:
         """Save the track to a json file.
