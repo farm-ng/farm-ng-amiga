@@ -23,17 +23,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfigList
-from farm_ng.core.event_service_pb2 import SubscribeRequest
 from farm_ng.core.events_file_reader import proto_from_json_file
-from farm_ng.core.uri_pb2 import Uri
 from farm_ng.track.track_pb2 import Track
-from farm_ng.track.track_pb2 import TrackFollowerState
-from farm_ng.track.track_pb2 import TrackFollowRequest
 from farm_ng.track.utils import TrackBuilder
 from farm_ng_core_pybind import Isometry3F64
 from farm_ng_core_pybind import Pose3F64
 from farm_ng_core_pybind import Rotation3F64
-from google.protobuf.empty_pb2 import Empty
 
 matplotlib.use("TkAgg")  # Set the backend to Agg for non-GUI environments
 
@@ -74,27 +69,6 @@ def create_pose(x: float, y: float, heading: float) -> Pose3F64:
     )
 
     return pose
-
-
-async def set_track(clients: dict[str, EventClient], track: Track) -> None:
-    """Set the track of the track_follower.
-
-    Args:
-        clients (dict[str, EventClient]): A dictionary of EventClients.
-        track (Track): The track for the track_follower to follow.
-    """
-    print(f"Setting track:\n{track}")
-    await clients["track_follower"].request_reply("/set_track", TrackFollowRequest(track=track))
-
-
-async def start(clients: dict[str, EventClient]) -> None:
-    """Request to start following the track.
-
-    Args:
-        clients (dict[str, EventClient]): A dictionary of EventClients.
-    """
-    print("Sending request to start following the track...")
-    await clients["track_follower"].request_reply("/start", Empty())
 
 
 async def build_track(clients: dict[str, EventClient]) -> Track:
@@ -164,43 +138,6 @@ async def build_track(clients: dict[str, EventClient]) -> Track:
     return track_builder.track
 
 
-async def start_track(clients: dict[str, EventClient]) -> None:
-    """Build the track, send it to the track_follower, and start following the track.
-
-    Args:
-        clients (dict[str, EventClient]): A dictionary of EventClients.
-        side_length (float): The side length of the square.
-        clockwise (bool): True will drive the square clockwise (right hand turns).
-                        False is counter-clockwise (left hand turns).
-    """
-
-    track: Track = await build_track(clients)
-
-    # # Send the track to the track_follower
-    # await set_track(clients, track)
-
-    # # Start following the track
-    # await start(clients)
-
-
-async def stream_track_state(clients: dict[str, EventClient]) -> None:
-    """Stream the track_follower state.
-
-    Args:
-        clients (dict[str, EventClient]): A dictionary of EventClients.
-    """
-
-    # Brief wait to allow you to see the track sent to the track_follower
-    # Note that this is not necessary in practice
-    await asyncio.sleep(1.0)
-
-    # Subscribe to the track_follower state and print each
-    message: TrackFollowerState
-    async for _, message in clients["track_follower"].subscribe(SubscribeRequest(uri=Uri(path="/state"))):
-        print("-" * 50)
-        print(message)
-
-
 async def run(args) -> None:
     # Create a dictionary of EventClients to the services required by this example
     clients: dict[str, EventClient] = {}
@@ -216,10 +153,7 @@ async def run(args) -> None:
             raise RuntimeError(f"No {config} service config in {args.service_config}")
 
     # Start the asyncio tasks
-    tasks: list[asyncio.Task] = [
-        asyncio.create_task(start_track(clients)),
-        asyncio.create_task(stream_track_state(clients)),
-    ]
+    tasks: list[asyncio.Task] = [asyncio.create_task(build_track(clients))]
     await asyncio.gather(*tasks)
 
 
