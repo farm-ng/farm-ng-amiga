@@ -20,7 +20,7 @@ from farm_ng.core.events_file_reader import EventLogPosition
 from farm_ng.core.events_file_reader import EventsFileReader
 
 
-def main(file_name: str, skip_calibrations: bool, skip_headers: bool) -> None:
+def main(file_name: str, skip_calibrations: bool) -> None:
     # create the file reader
     reader = EventsFileReader(file_name)
     success: bool = reader.open()
@@ -41,7 +41,9 @@ def main(file_name: str, skip_calibrations: bool, skip_headers: bool) -> None:
 
     header_events = []
     for key in events_dict.keys():
-        if (not skip_calibrations and "calibration" in key) or (not skip_headers and "header" in key):
+        if "header" in key:
+            if skip_calibrations and "calibration" in key:
+                continue
             header_events.extend(events_dict[key])
 
     print("Header events:")
@@ -56,7 +58,6 @@ def main(file_name: str, skip_calibrations: bool, skip_headers: bool) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="Event file reader example for parsing header messages.")
     parser.add_argument("--file-name", type=str, required=True, help="Path to the `events.bin` file.")
-    parser.add_argument("--skip-calibrations", action="store_true", help="Skip camera calibration messages.")
-    parser.add_argument("--skip-headers", action="store_true", help="Skip messages with header in the uri path.")
+    parser.add_argument("--skip-calibrations", action="store_true", help="Skip camera calibration header messages.")
     args = parser.parse_args()
-    main(args.file_name, args.skip_calibrations, args.skip_headers)
+    main(args.file_name, args.skip_calibrations)
