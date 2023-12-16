@@ -100,6 +100,13 @@ class TrackBuilder:
         """Pack the track waypoints into a Track proto message."""
         return Track(waypoints=[pose.to_proto() for pose in self.track_waypoints])
 
+    @track.setter
+    def track(self, loaded_track: Track) -> None:
+        """Unpack a Track proto message into the track waypoints."""
+        self._track = loaded_track
+        self.track_waypoints = [Pose3F64.from_proto(pose) for pose in self.track.waypoints]
+        self._loaded = True
+
     async def get_pose(self) -> Pose3F64:
         """Get the current pose of the robot in the world frame, from the filter service.
 
@@ -323,6 +330,5 @@ class TrackBuilder:
         Args:
             path (Path): The path of the file to import.
         """
-        self._track = proto_from_json_file(path, Track())
-        self.track_waypoints = [Pose3F64.from_proto(waypoint) for waypoint in self._track.waypoints]
-        self._loaded = True
+        loaded_track = proto_from_json_file(path, Track())
+        self.track = loaded_track
