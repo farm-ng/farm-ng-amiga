@@ -332,3 +332,28 @@ class TrackBuilder:
         """
         loaded_track = proto_from_json_file(path, Track())
         self.track = loaded_track
+
+    def merge_tracks(self, track_to_merge: Track, threshold: float = 0.5) -> bool:
+        """Merge a track with the current track.
+
+        Args:
+            track (Track): The track to merge.
+        """
+        # TODO: Check if we can invert the track_to_merge and append it to the current track
+        # Calculate the distance from the current track to the beginning and end of the track to merge
+        dist_to_current_track = np.linalg.norm(
+            self.track_waypoints[1].a_from_b.translation - track_to_merge.waypoints[0].translation
+        )
+        if dist_to_current_track > threshold:
+            print("Track to merge is too far from the current track, cannot merge.")
+            return False
+
+        self.track_waypoints.extend([Pose3F64.from_proto(pose) for pose in track_to_merge.waypoints])
+        self._segment_indices.append(len(self.track_waypoints))
+        self._loaded = True
+        return True
+
+    def reverse_track(self) -> None:
+        """Reverse the track."""
+        self.track_waypoints.reverse()
+        self._segment_indices.reverse()
