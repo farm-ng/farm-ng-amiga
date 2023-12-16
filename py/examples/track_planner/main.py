@@ -141,6 +141,9 @@ async def build_track(save_track: bool) -> None:
     # Drive forward 60 feet
     track_builder.create_straight_segment("goal7", 20 - 24 * 0.0254)
 
+    # Reverse track (for demonstration purposes)
+    track_builder.reverse_track()
+    
     # Save the track to a file
     script_path = Path(__file__)  # Current script's path
     parent_directory = script_path.parent

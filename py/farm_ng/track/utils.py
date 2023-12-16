@@ -342,7 +342,7 @@ class TrackBuilder:
         # TODO: Check if we can invert the track_to_merge and append it to the current track
         # Calculate the distance from the current track to the beginning and end of the track to merge
         dist_to_current_track = np.linalg.norm(
-            self.track_waypoints[1].a_from_b.translation - track_to_merge.waypoints[0].translation
+            self.track_waypoints[-1].a_from_b.translation - track_to_merge.waypoints[0].translation
         )
         if dist_to_current_track > threshold:
             print("Track to merge is too far from the current track, cannot merge.")
@@ -355,5 +355,13 @@ class TrackBuilder:
 
     def reverse_track(self) -> None:
         """Reverse the track."""
-        self.track_waypoints.reverse()
+        self.track_waypoints = [
+            Pose3F64(
+                a_from_b=pose.a_from_b * Isometry3F64.Rz(np.pi),
+                frame_a=pose.frame_a,
+                frame_b=pose.frame_b,
+                tangent_of_b_in_a=pose.tangent_of_b_in_a
+            )
+            for pose in reversed(self.track_waypoints)
+        ]
         self._segment_indices.reverse()
