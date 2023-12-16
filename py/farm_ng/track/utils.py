@@ -360,7 +360,7 @@ class TrackBuilder:
                 a_from_b=pose.a_from_b * Isometry3F64.Rz(np.pi),
                 frame_a=pose.frame_a,
                 frame_b=pose.frame_b,
-                tangent_of_b_in_a=pose.tangent_of_b_in_a
+                tangent_of_b_in_a=pose.tangent_of_b_in_a,
             )
             for pose in reversed(self.track_waypoints)
         ]

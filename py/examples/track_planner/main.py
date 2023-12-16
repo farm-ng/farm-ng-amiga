@@ -143,7 +143,7 @@ async def build_track(save_track: bool) -> None:
 
     # Reverse track (for demonstration purposes)
     track_builder.reverse_track()
-    
+
     # Save the track to a file
     script_path = Path(__file__)  # Current script's path
     parent_directory = script_path.parent
