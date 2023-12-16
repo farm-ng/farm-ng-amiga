@@ -156,7 +156,7 @@ async def build_track(clients: dict[str, EventClient], save_track: bool) -> Trac
 
     if save_track:
         track_builder.save_track(file_path)
-    
+
     # Print the number of waypoints in the track
     print(f" Track created with {len(track_builder.track_waypoints)} waypoints")
 
@@ -184,7 +184,7 @@ async def run(args) -> None:
 
     # Create flag for saving track
     save_track: bool = args.save_track
-    
+
     # Start the asyncio tasks
     tasks: list[asyncio.Task] = [asyncio.create_task(build_track(clients, save_track))]
     await asyncio.gather(*tasks)
