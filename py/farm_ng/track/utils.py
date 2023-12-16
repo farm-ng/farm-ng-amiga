@@ -59,37 +59,35 @@ def update_filter_track(track_path: Path) -> None:
 class TrackBuilder:
     """A class for building tracks."""
 
-    def __init__(self, clients) -> None:
-        self.clients: dict[str, EventClient] = clients
-        self._start: Pose3F64
+    def __init__(self, clients: dict[str, EventClient] | None = None, start: Pose3F64 | None = None) -> None:
+        """Initialize the TrackBuilder."""
+        self.clients = clients if clients is not None else {}
+        self._start: Pose3F64()
         self.track_waypoints: list[Pose3F64] = []
         self._segment_indices: list[int] = [0]
         self._loaded: bool = False
-        self._track: Track | None = None
+
+        if start is not None:
+            self._start = start 
+            self.track_waypoints = [start]
 
     @classmethod
-    async def create(cls, clients, pose: Pose3F64 = None, timeout=3.0):
+    async def create(cls, clients, timeout=3.0):
         """Create a TrackBuilder instance with an initial default pose."""
         self = cls(clients)
+        # Attempt to get the actual pose with a timeout
+        zero_tangent = np.zeros((6, 1), dtype=np.float64)
+        self._start = Pose3F64(
+            a_from_b=Isometry3F64(), frame_a="world", frame_b="robot", tangent_of_b_in_a=zero_tangent
+        )
 
-        # Initialize with a default pose
-
-        if pose is not None:
-            self._start = pose
-
-        else:
-            zero_tangent = np.zeros((6, 1), dtype=np.float64)
-            self._start = Pose3F64(
-                a_from_b=Isometry3F64(), frame_a="world", frame_b="robot", tangent_of_b_in_a=zero_tangent
-            )
-
-            # Attempt to get the actual pose with a timeout
-            try:
-                updated_start = await asyncio.wait_for(self.get_pose(), timeout)
-                self._start = updated_start
-                print(f"Start pose:\n{self._start.a_from_b.translation}")
-            except asyncio.TimeoutError:
-                print("Timeout occurred when trying to get pose from filter, using default pose")
+        # Attempt to get the actual pose with a timeout
+        try:
+            updated_start = await asyncio.wait_for(self.get_pose(), timeout)
+            self._start = updated_start
+            print(f"Start pose:\n{self._start.a_from_b.translation}")
+        except asyncio.TimeoutError:
+            print("Timeout occurred when trying to get pose from filter, using default pose")
 
         # Initialize the track_waypoints with the start pose
         self.track_waypoints = [self._start]
@@ -114,6 +112,8 @@ class TrackBuilder:
         Returns:
             Pose3F64: The current pose of the robot in the world frame.
         """
+        if self.clients is None:
+            raise ValueError("Clients not initialized")
         # We use the FilterState as the best source of the current pose of the robot
         state: FilterState = await self.clients["filter"].request_reply("/get_state", Empty(), decode=True)
         return Pose3F64.from_proto(state.pose)
