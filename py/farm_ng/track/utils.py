@@ -65,6 +65,7 @@ class TrackBuilder:
         self.track_waypoints: list[Pose3F64] = []
         self._segment_indices: list[int] = [0]
         self._loaded: bool = False
+        self._track: Track | None = None
 
     @classmethod
     async def create(cls, clients, pose: Pose3F64 = None, timeout=3.0):
@@ -275,7 +276,8 @@ class TrackBuilder:
         """Remove the last (appended) segment from the track."""
 
         if self._loaded:
-            raise RuntimeError("Cannot pop segment from a loaded track without inserting new segments first.")
+            print("Cannot pop segment from a loaded track without inserting new segments first.")
+            return
 
         if len(self._segment_indices) > 1:  # Ensure there is a segment to pop
             last_segment_start = self._segment_indices[-2]  # Get the start of the last segment
@@ -321,6 +323,6 @@ class TrackBuilder:
         Args:
             path (Path): The path of the file to import.
         """
-        self.track = proto_from_json_file(path, Track())
-        self.track_waypoints = [Pose3F64.from_proto(waypoint) for waypoint in self.track.waypoints]
+        self._track = proto_from_json_file(path, Track())
+        self.track_waypoints = [Pose3F64.from_proto(waypoint) for waypoint in self._track.waypoints]
         self._loaded = True
