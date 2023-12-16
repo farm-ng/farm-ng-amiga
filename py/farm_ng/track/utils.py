@@ -68,7 +68,7 @@ class TrackBuilder:
         self._loaded: bool = False
 
         if start is not None:
-            self._start = start 
+            self._start = start
             self.track_waypoints = [start]
 
     @classmethod
