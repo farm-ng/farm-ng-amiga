@@ -99,7 +99,7 @@ def plot_track(waypoints: list[list[float]]) -> None:
     plt.show()
 
 
-async def build_track(save_track: bool) -> None:
+async def build_track(save_track: bool, reverse: bool) -> None:
     """Build a custom track. Here, we will use all the building functions in the TrackBuilder class for educational
     purposes. This specific track will resemble three 60-foot rows spaced 48 inches. To transition from the end of
     the first row to the second, the robot will turn in place 90 degrees. To transition from the end of the second
@@ -141,8 +141,8 @@ async def build_track(save_track: bool) -> None:
     # Drive forward 60 feet
     track_builder.create_straight_segment("goal7", 20 - 24 * 0.0254)
 
-    # Reverse track (for demonstration purposes)
-    track_builder.reverse_track()
+    if reverse:
+        track_builder.reverse_track()
 
     # Save the track to a file
     script_path = Path(__file__)  # Current script's path
@@ -163,15 +163,17 @@ async def build_track(save_track: bool) -> None:
 async def run(args) -> None:
     # Create flag for saving track
     save_track: bool = args.save_track
+    reverse: bool = args.reverse
 
     # Start the asyncio tasks
-    tasks: list[asyncio.Task] = [asyncio.create_task(build_track(save_track))]
+    tasks: list[asyncio.Task] = [asyncio.create_task(build_track(save_track, reverse))]
     await asyncio.gather(*tasks)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="amiga-track_follower-square")
     parser.add_argument("--save-track", action='store_true', help="Save the track to a file.")
+    parser.add_argument("--reverse", action='store_true', help="Reverse the track.")
     args = parser.parse_args()
 
     # Create the asyncio event loop and run the main function
