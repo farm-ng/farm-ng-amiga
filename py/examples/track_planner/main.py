@@ -103,19 +103,14 @@ def plot_track(waypoints: list[list[float]]) -> None:
     plt.show()
 
 
-async def build_track(clients: dict[str, EventClient], save_track: bool) -> Track:
+async def build_track(save_track: bool) -> None:
     """Build a custom track. Here, we will use all the building functions in the TrackBuilder class for educational
     purposes. This specific track will resemble three 60-foot rows spaced 48 inches. To transition from the end of
     the first row to the second, the robot will turn in place 90 degrees. To transition from the end of the second
     row to the third, the robot will perform a smooth u-turn.
 
     Args:
-        clients (dict[str, EventClient]): A dictionary of EventClients.
-        side_length (float): The side length of the square, in meters.
-        clockwise (bool): True will drive the square clockwise (right hand turns).
-                        False is counter-clockwise (left hand turns).
-    Returns:
-        Track: The track for the track_follower to follow.
+        save_track: Whether or not to save the track to a file
     """
     print("Building track...")
 
@@ -126,7 +121,8 @@ async def build_track(clients: dict[str, EventClient], save_track: bool) -> Trac
     second_pose = create_pose(x=25.0, y=10.0, heading=90)
 
     # Start the track builder
-    track_builder = await TrackBuilder.create(clients=clients, pose=initial_pose)
+    # track_builder = await TrackBuilder.create(clients=clients, pose=initial_pose)
+    track_builder = TrackBuilder(start=initial_pose)
 
     # Drive forward from the initial pose to the second pose (about 60 ft)
     track_builder.create_ab_segment("goal1", second_pose)
@@ -164,35 +160,18 @@ async def build_track(clients: dict[str, EventClient], save_track: bool) -> Trac
     waypoints = track_builder.unpack_track()
     plot_track(waypoints)
 
-    return track_builder.track
-
 
 async def run(args) -> None:
-    # Create a dictionary of EventClients to the services required by this example
-    # In this case, we only need the filter service, but the code below can be used to create multiple clients
-    clients: dict[str, EventClient] = {}
-    expected_config = ["filter"]
-    config_list = proto_from_json_file(args.service_config, EventServiceConfigList())
-    for config in config_list.configs:
-        if config.name in expected_config:
-            clients[config.name] = EventClient(config)
-
-    # Confirm that EventClients were created for all required services (in this case, filter)
-    for config in expected_config:
-        if config not in clients:
-            raise RuntimeError(f"No {config} service config in {args.service_config}")
-
     # Create flag for saving track
     save_track: bool = args.save_track
 
     # Start the asyncio tasks
-    tasks: list[asyncio.Task] = [asyncio.create_task(build_track(clients, save_track))]
+    tasks: list[asyncio.Task] = [asyncio.create_task(build_track(save_track))]
     await asyncio.gather(*tasks)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="amiga-track_follower-square")
-    parser.add_argument("--service-config", type=Path, required=True, help="The service config.")
     parser.add_argument("--save-track", action='store_true', help="Save the track to a file.")
     args = parser.parse_args()
 
