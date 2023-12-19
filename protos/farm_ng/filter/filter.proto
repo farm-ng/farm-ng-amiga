@@ -22,6 +22,17 @@ import "farm_ng/core/pose.proto";
 
 package farm_ng.filter.proto;
 
+enum DivergenceReason {
+  NO_DIVERGENCE = 0; // Indicates normal operation without divergence
+  GPS_ACCURACY_X_HIGH = 1;
+  GPS_ACCURACY_Y_HIGH = 2;
+  STD_DEV_X_HIGH = 3;
+  STD_DEV_Y_HIGH = 4;
+  STD_DEV_W_HIGH = 5;
+  NO_GYRO_MEASUREMENTS = 6;
+  GYRO_MEASUREMENTS_DELAYED = 7;
+  OTHER = 8; // For cases not covered above
+}
 
 message FilterState {
   // UKF state
@@ -34,6 +45,7 @@ message FilterState {
   farm_ng.core.proto.VecXF64 innovation = 5;
 
   double heading = 6; // Rotation about the z-axis contained in pose, in radians
+  DivergenceReason divergence_reason = 7; // Reason for divergence, if any
 }
 
 message FilterTrack {
