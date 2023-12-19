@@ -24,8 +24,8 @@ package farm_ng.filter.proto;
 
 enum DivergenceReason {
   NO_DIVERGENCE = 0; // Indicates normal operation without divergence
-  GPS_ACCURACY_X_HIGH = 1;
-  GPS_ACCURACY_Y_HIGH = 2;
+  GPS_ERROR_X_HIGH = 1;
+  GPS_ERROR_Y_HIGH = 2;
   STD_DEV_X_HIGH = 3;
   STD_DEV_Y_HIGH = 4;
   STD_DEV_W_HIGH = 5;
