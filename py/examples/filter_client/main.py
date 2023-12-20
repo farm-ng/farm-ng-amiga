@@ -24,6 +24,7 @@ from farm_ng.core.events_file_reader import proto_from_json_file
 from farm_ng.core.stamp import get_stamp_by_semantics_and_clock_type
 from farm_ng.core.stamp import StampSemantics
 from farm_ng_core_pybind import Pose3F64
+from farm_ng.filter.filter_pb2 import DivergenceReason
 
 
 async def main(service_config_path: Path) -> None:
@@ -47,7 +48,7 @@ async def main(service_config_path: Path) -> None:
         pose: Pose3F64 = Pose3F64.from_proto(message.pose)
         orientation: float = message.heading
         uncertainties: list[float] = [message.uncertainty_diagonal.data[i] for i in range(3)]
-        divergence_reasons: list[str] = message.divergence_reasons
+        divergence_reasons_str = [DivergenceReason.Name(reason) for reason in message.divergence_reasons]
 
         # Print some key details about the filter state
         print("\n###################")
@@ -58,7 +59,7 @@ async def main(service_config_path: Path) -> None:
         print(f"Filter has converged: {message.has_converged}")
         print("Pose uncertainties:")
         print(f"x: {uncertainties[0]:.3f} m, y: {uncertainties[1]:.3f} m, orientation: {uncertainties[2]:.3f} rad")
-        print(f" And divergence reasons (if any): {divergence_reasons}")
+        print(f"And divergence reasons (if any): {divergence_reasons_str}")
 
 
 if __name__ == "__main__":
