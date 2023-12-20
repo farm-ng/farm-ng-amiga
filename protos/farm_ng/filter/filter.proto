@@ -23,7 +23,8 @@ import "farm_ng/core/pose.proto";
 package farm_ng.filter.proto;
 
 enum DivergenceReason {
-  NO_DIVERGENCE = 0; // Indicates normal operation without divergence
+  // Reasons for filter divergence
+  UNKNOWN_DIVERGENCE_STATE = 0;
   GPS_ERROR_X_HIGH = 1;
   GPS_ERROR_Y_HIGH = 2;
   STD_DEV_X_HIGH = 3;
@@ -31,7 +32,7 @@ enum DivergenceReason {
   STD_DEV_W_HIGH = 5;
   NO_GYRO_MEASUREMENTS = 6;
   GYRO_MEASUREMENTS_DELAYED = 7;
-  OTHER = 8; // For cases not covered above
+  OTHER_DIVERGENCE_REASON = 99;
 }
 
 message FilterState {
