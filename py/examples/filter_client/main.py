@@ -55,8 +55,9 @@ async def main(service_config_path: Path) -> None:
         print(f"x: {pose.translation[0]:.3f} m, y: {pose.translation[1]:.3f} m, orientation: {orientation:.3f} rad")
         print(f"Parent frame: {pose.frame_a} -> Child frame: {pose.frame_b}")
         print(f"Filter has converged: {message.has_converged}")
-        print("And pose uncertainties:")
+        print("Pose uncertainties:")
         print(f"x: {uncertainties[0]:.3f} m, y: {uncertainties[1]:.3f} m, orientation: {uncertainties[2]:.3f} rad")
+        print(f" And divergence reasons (if any): {message.divergence_reasons}")
 
 
 if __name__ == "__main__":
