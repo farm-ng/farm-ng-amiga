@@ -23,8 +23,8 @@ from farm_ng.core.event_service_pb2 import EventServiceConfig
 from farm_ng.core.events_file_reader import proto_from_json_file
 from farm_ng.core.stamp import get_stamp_by_semantics_and_clock_type
 from farm_ng.core.stamp import StampSemantics
-from farm_ng_core_pybind import Pose3F64
 from farm_ng.filter.filter_pb2 import DivergenceReason
+from farm_ng_core_pybind import Pose3F64
 
 
 async def main(service_config_path: Path) -> None:
