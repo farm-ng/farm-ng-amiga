@@ -47,6 +47,7 @@ async def main(service_config_path: Path) -> None:
         pose: Pose3F64 = Pose3F64.from_proto(message.pose)
         orientation: float = message.heading
         uncertainties: list[float] = [message.uncertainty_diagonal.data[i] for i in range(3)]
+        divergence_reasons: list[str] = message.divergence_reasons
 
         # Print some key details about the filter state
         print("\n###################")
@@ -57,7 +58,7 @@ async def main(service_config_path: Path) -> None:
         print(f"Filter has converged: {message.has_converged}")
         print("Pose uncertainties:")
         print(f"x: {uncertainties[0]:.3f} m, y: {uncertainties[1]:.3f} m, orientation: {uncertainties[2]:.3f} rad")
-        print(f" And divergence reasons (if any): {message.divergence_reasons}")
+        print(f" And divergence reasons (if any): {divergence_reasons}")
 
 
 if __name__ == "__main__":
