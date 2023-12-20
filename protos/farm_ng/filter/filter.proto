@@ -22,7 +22,7 @@ import "farm_ng/core/pose.proto";
 
 package farm_ng.filter.proto;
 
-enum DivergenceReason {
+enum DivergenceCriteria {
   // Reasons for filter divergence
   UNKNOWN_DIVERGENCE_STATE = 0;
   GPS_ERROR_X_HIGH = 1;
@@ -46,7 +46,7 @@ message FilterState {
   farm_ng.core.proto.VecXF64 innovation = 5;
 
   double heading = 6; // Rotation about the z-axis contained in pose, in radians
-  repeated DivergenceReason divergence_reasons = 7; // Reason for divergence, if any
+  repeated DivergenceCriteria divergence_criteria = 7; // Criteria that flagged filter divergence, if any
 }
 
 message FilterTrack {
