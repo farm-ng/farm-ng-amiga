@@ -1,0 +1,33 @@
+{
+  "configs": [
+    {
+      "name": "canbus",
+      "port": 6001,
+      "host": "localhost"
+    },
+    {
+      "name": "filter",
+      "port": 20001,
+      "host": "localhost"
+    },
+    {
+      "name": "multi_subscriber",
+      "subscriptions": [
+        {
+          "uri": {
+            "path": "*",
+            "query": "service_name=canbus"
+          },
+          "every_n": 1
+        },
+        {
+          "uri": {
+            "path": "*",
+            "query": "service_name=filter"
+          },
+          "every_n": 1
+        }
+      ]
+    }
+  ]
+}

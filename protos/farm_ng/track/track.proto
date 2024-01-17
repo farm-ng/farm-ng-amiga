@@ -1,0 +1,171 @@
+// Copyright (c) farm-ng, inc.
+//
+// Licensed under the Amiga Development Kit License (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://github.com/farm-ng/amiga-dev-kit/blob/main/LICENSE
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// Copyright (c) farm-ng, inc. All rights reserved.
+
+syntax = "proto3";
+
+
+import "farm_ng/core/lie.proto";
+import "farm_ng/core/pose.proto";
+
+package farm_ng.track.proto;
+
+// A track is a sequence of waypoints that the robot should follow or already drove.
+message Track {
+  // The waypoints along the track
+  repeated farm_ng.core.proto.Pose waypoints = 1;
+}
+
+// This is sent to the track_follower service by a client to request a track be followed.
+message TrackFollowRequest {
+  // The track to follow
+  Track track = 1;
+  // Optionally, request to drive the track with negative velocity
+  // NOTE: This is distinct from WaypointOrder.
+  DrivingDirection driving_direction = 2;
+}
+
+// The complete state of the track_follower.
+message TrackFollowerState {
+  // Status of the track_follower
+  TrackFollowerStatus status = 1;
+  // Progress along the track
+  TrackFollowerProgress progress = 2;
+  // Poses of the robot and relevant points along the track
+  TrackFollowerPoseTree poses = 3;
+  // The commanded velocity in the robot's egocentric frame
+  farm_ng.core.proto.Isometry3F64Tangent commands = 4;
+}
+
+// Status metrics of the track_follower
+message TrackFollowerStatus {
+  // The status of the track
+  TrackStatusEnum track_status = 1;
+  // The status of the robot, as related to track following
+  RobotStatus robot_status = 2;
+  // The direction in which the robot is driving the track
+  DrivingDirection driving_direction = 3;
+  // The order in which the waypoints along the track are traversed
+  WaypointOrder waypoint_order = 4;
+}
+
+// Enum representing the direction in which the robot is driving.
+enum DrivingDirection {
+  // Driving direction is unknown
+  DIRECTION_UNSPECIFIED = 0;
+  // Driving the track with a positive velocity
+  DIRECTION_FORWARD = 1;
+  // Driving the track with a negative velocity
+  DIRECTION_REVERSE = 2;
+}
+
+// Enum representing the order in which the waypoints along the track are traversed.
+enum WaypointOrder {
+  // Waypoint order is unknown
+  ORDER_UNSPECIFIED = 0;
+  // Waypoints are traversed in the order of the Track message
+  ORDER_STANDARD = 1;
+  // Waypoints are traversed in the reverse order
+  ORDER_REVERSED = 2;
+}
+
+// Enum representing the status of the track from the track follower's perspective
+enum TrackStatusEnum {
+  // Track status is unknown
+  TRACK_UNSPECIFIED = 0;
+  // No track is loaded
+  TRACK_EMPTY = 1;
+  // The track is loaded and ready to be followed
+  TRACK_LOADED = 2;
+  // The track is being followed
+  TRACK_FOLLOWING = 3;
+  // Following the track is paused
+  TRACK_PAUSED = 4;
+  // Following the track completed successfully
+  TRACK_COMPLETE = 5;
+  // Following the track failed (e.g., deviated too far from the track)
+  TRACK_FAILED = 6;
+  // Following the track was aborted (e.g., ability to control was lost)
+  // See RobotStatus for more details
+  TRACK_ABORTED = 7;
+}
+
+// Message representing the status of a robot's controlability
+message RobotStatus {
+  enum FailureMode {
+    // Failure mode is unknown
+    FAILURE_UNSPECIFIED = 0;
+    // Timeout connection to the canbus service
+    CANBUS_TIMEOUT = 10;
+    // The robot does not have auto control enabled
+    AUTO_MODE_DISABLED = 11;
+    // Send error on the canbus socket
+    CANBUS_SEND_ERROR = 12;
+    // Timeout connection to the state estimation service
+    FILTER_TIMEOUT = 20;
+    // The state estimation filter is not converged
+    FILTER_DIVERGED = 21;
+  }
+  // Whether the track_follower is able to control the robot or not
+  bool controllable = 1;
+  // The reason(s) why the track_follower is not able to control the robot
+  repeated FailureMode failure_modes = 2;
+}
+
+// Progress metrics of the track_follower relative to the full track.
+// This is useful as a component of the TrackFollowerState message.
+message TrackFollowerProgress {
+  /* Index components */
+  // The number of waypoints along the track
+  int32 track_size = 1;
+  // The index of the waypoint along the track being used as the control target.
+  // The index order is reversed if the robot is driving the track in reverse order.
+  // See: WaypointOrder
+  int32 goal_waypoint_index = 2;
+  // The index of the waypoint along the track the robot is closest to.
+  // The index order is reversed if the robot is driving the track in reverse order.
+  // See: WaypointOrder
+  int32 closest_waypoint_index = 3;
+
+  /* Distance components */
+  // Estimate of the total distance along the track
+  // This reflects a combination of linear [m] and angular [rad] distance
+  double distance_total = 4;
+  // Estimate of the remaining distance along the track
+  // This reflects a combination of linear [m] and angular [rad] distance
+  double distance_remaining = 5;
+
+  /* Time components */
+  // Estimate of the time [sec] it will take to traverse the full track
+  // This is based on the anticipated velocity of the control commands,
+  // as determined by track_follower parameters (e.g., max speed)
+  double duration_total = 6;
+  // Estimate of the time [sec] it will take to traverse the remaining track
+  // This is based on the anticipated velocity of the control commands,
+  // as determined by track_follower parameters (e.g., max speed)
+  double duration_remaining = 7;
+}
+
+// Poses of the robot and relevant points along the track
+message TrackFollowerPoseTree {
+  // The pose of the robot in the world frame
+  farm_ng.core.proto.Pose world_from_robot = 1;
+  // The pose of the current goal (control target), in the robot frame.
+  // This may be interpolated between track waypoints.
+  farm_ng.core.proto.Pose robot_from_goal = 2;
+  // The pose along the track that the robot is closest to, in the robot frame.
+  // This may be interpolated between track waypoints.
+  farm_ng.core.proto.Pose robot_from_closest_waypoint = 3;
+}

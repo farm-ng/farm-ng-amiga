@@ -18,6 +18,7 @@ from enum import IntEnum
 from struct import pack
 from struct import unpack
 
+from farm_ng.canbus import amiga_v6_pb2
 from farm_ng.canbus import canbus_pb2
 from farm_ng.core.stamp import timestamp_from_monotonic
 from farm_ng.core.timestamp_pb2 import Timestamp
@@ -232,6 +233,41 @@ class AmigaTpdo1(Packet):
             self.meas_speed = meas_speed / 1000.0
             self.meas_ang_rate = meas_ang_rate / 1000.0
 
+    def to_proto(self) -> amiga_v6_pb2.AmigaTpdo1:
+        """Packs the class data into an AmigaTpdo1 proto message.
+
+        Returns: An instance of an AmigaTpdo1 proto.
+        """
+        return amiga_v6_pb2.AmigaTpdo1(
+            node_id=DASHBOARD_NODE_ID,
+            stamp=self.stamp.stamp,
+            control_state=self.state,
+            measured_speed=self.meas_speed,
+            measured_angular_rate=self.meas_ang_rate,
+            pto_bits=self.pto_bits,
+            hbridge_bits=self.hbridge_bits,
+        )
+
+    @classmethod
+    def from_proto(cls, proto: amiga_v6_pb2.AmigaTpdo1) -> AmigaTpdo1:
+        """Creates an instance of the class from a proto message.
+
+        Args:
+            proto: The AmigaTpdo1 proto message to parse.
+        """
+        # Check for correct proto
+        if not isinstance(proto, amiga_v6_pb2.AmigaTpdo1):
+            raise TypeError(f"Expected amiga_v6_pb2.AmigaTpdo1 proto, received {type(proto)}")
+
+        obj = cls()  # Does not call __init__
+        obj.stamp_packet(proto.stamp)
+        obj.state = AmigaControlState(proto.control_state)
+        obj.meas_speed = proto.measured_speed
+        obj.meas_ang_rate = proto.measured_angular_rate
+        obj.pto_bits = proto.pto_bits
+        obj.hbridge_bits = proto.hbridge_bits
+        return obj
+
     def __str__(self):
         return "AMIGA TPDO1 Amiga state {} Measured speed {:0.3f} Measured angular rate {:0.3f} @ time {}".format(
             self.state, self.meas_speed, self.meas_ang_rate, self.stamp.stamp
@@ -317,6 +353,9 @@ class MotorState:
         return obj
 
     def __str__(self):
-        return "Motor state - id {:01X} status {} rpm {} voltage {} current {} temperature {} @ time {}".format(
-            self.id, self.status.name, self.rpm, self.voltage, self.current, self.temperature, self.timestamp
+        return (
+            "Motor state - id {:01X} status {} rpm {:4} voltage {:.3f} "
+            "current {:.3f} temperature {:.1f} @ time {:.3f}".format(
+                self.id, self.status.name, self.rpm, self.voltage, self.current, self.temperature, self.timestamp
+            )
         )

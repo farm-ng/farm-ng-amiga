@@ -1,0 +1,38 @@
+// Copyright (c) farm-ng, inc.
+//
+// Licensed under the Amiga Development Kit License (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://github.com/farm-ng/amiga-dev-kit/blob/main/LICENSE
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+import "farm_ng/core/linalg.proto";
+import "farm_ng/core/lie.proto";
+
+package farm_ng.imu.proto;
+
+message ImuBias {
+    // Gyro bias in radians per second
+    farm_ng.core.proto.Vec3F64 gyro_bias = 1;
+    // Accelerometer bias in meters per second squared
+    farm_ng.core.proto.Vec3F64 accelero_bias = 2;
+}
+
+message Imu {
+    // Angular velocity in radians per second
+    farm_ng.core.proto.Vec3F64 angular_velocity = 2;
+    // Linear acceleration in meters per second squared
+    farm_ng.core.proto.Vec3F64 linear_acceleration = 3;
+    // Orientation as a quaternion
+    farm_ng.core.proto.QuaternionF64 orientation = 4;
+    // Gyro and Accelero bias
+    ImuBias bias = 5;
+}

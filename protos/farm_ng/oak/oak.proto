@@ -14,47 +14,9 @@
 
 syntax = "proto3";
 
-import "farm_ng/service/service.proto";
+import "farm_ng/core/linalg.proto";
 
 package farm_ng.oak.proto;
-
-service OakService {
-  rpc cameraControl(CameraControlRequest) returns (CameraControlReply) {}
-  rpc streamFrames(StreamFramesRequest) returns (stream StreamFramesReply) {}
-  rpc getCalibration(GetCalibrationRequest) returns (GetCalibrationReply) {}
-}
-
-message GetCalibrationRequest {
-}
-
-message GetCalibrationReply {
-  OakCalibration calibration = 1;
-}
-
-message CameraControlRequest {
-  CameraSettings stereo_settings = 1;
-  CameraSettings rgb_settings = 2;
-}
-
-message CameraControlReply {
-  bool success = 1;
-  CameraSettings stereo_settings = 2;
-  CameraSettings rgb_settings = 3;
-}
-
-message StreamFramesRequest {
-  int32 every_n = 1; // desired stream frame rate.
-}
-
-message StreamFramesReply {
-  OakSyncFrame frame = 1;
-}
-
-message Vec3F32 {
-  float x = 1;
-  float y = 2;
-  float z = 3;
-}
 
 message CameraSettings {
   bool auto_exposure = 1;
@@ -64,11 +26,12 @@ message CameraSettings {
 }
 
 message OakImageMeta {
-  int64 category = 1; // DepthAI catetory
-  int64 instance_num = 2;  //DepthAI instance number
-  int64 sequence_num = 3;  // for synchronization between left, right and stereo
-  double timestamp = 4; // seconds, synchronized with host monotonic
-  double timestamp_device = 5; // seconds, device monotonic clock
+  int64 category = 1;          // DepthAI catetory
+  int64 instance_num = 2;      // DepthAI instance number
+  int64 sequence_num = 3;      // for synchronization between left, right and stereo
+  double timestamp = 4;        // seconds, capture time (begin of exposure) synchronized with host monotonic
+  double timestamp_device = 5; // seconds, capture time (begin of exposure) in the device monotonic clock
+  double timestamp_recv = 7;   // seconds, host receive time in host monotonic clock
   CameraSettings settings = 6;
 }
 
@@ -78,19 +41,21 @@ message OakFrame {
 }
 
 message OakGyro {
-  Vec3F32 gyro = 1;
+  farm_ng.core.proto.Vec3F32 gyro = 1;
   int32 sequence_num = 2;
   string accuracy = 3;
-  double timestamp = 4;
-  double timestamp_device = 5;
+  double timestamp = 4;        // See OakImageMeta
+  double timestamp_device = 5; // See OakImageMeta
+  double timestamp_recv = 6;   // See OakImageMeta
 }
 
 message OakAccelero {
-  Vec3F32 accelero = 1;
+  farm_ng.core.proto.Vec3F32 accelero = 1;
   int32 sequence_num = 2;
   string accuracy = 3;
-  double timestamp = 4;
-  double timestamp_device = 5;
+  double timestamp = 4;        // See OakImageMeta
+  double timestamp_device = 5; // See OakImageMeta
+  double timestamp_recv = 6;   // See OakImageMeta
 }
 
 message OakImuPacket {
@@ -145,17 +110,11 @@ message RotationMatrix {
   repeated double rotation_matrix = 1;
 }
 
-message Vector3d {
-  double x = 1;
-  double y = 2;
-  double z = 3;
-}
-
 message Extrinsics {
   repeated double rotation_matrix = 1;
-  Vector3d spec_translation = 2;
+  farm_ng.core.proto.Vec3F32 spec_translation = 2;
   int32 to_camera_socket = 3;
-  Vector3d translation = 4;
+  farm_ng.core.proto.Vec3F32 translation = 4;
 }
 
 message CameraData {

@@ -1,3 +1,4 @@
+"""Example of reading events from an events file."""
 # Copyright (c) farm-ng, inc.
 #
 # Licensed under the Amiga Development Kit License (the "License");
@@ -11,70 +12,85 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
+
 import argparse
 from pathlib import Path
-from typing import List
 
 import cv2
 import numpy as np
-from farm_ng.core import event_pb2
+from farm_ng.core.events_file_reader import build_events_dict
 from farm_ng.core.events_file_reader import EventLogPosition
 from farm_ng.core.events_file_reader import EventsFileReader
+from farm_ng.core.stamp import get_stamp_by_semantics_and_clock_type
+from farm_ng.core.stamp import StampSemantics
 from farm_ng.oak import oak_pb2
 
 
-# helper function to filter valid events given a message type
-def event_has_message(event: event_pb2.Event, msg_type) -> bool:
-    return event.uri.query.split("&")[0].split(".")[-1] == msg_type.__name__
+def main(file_name: Path, camera_name: str, view_name: str) -> None:
+    """Reads an events file and displays the images from the specified camera and view.
 
-
-def main(file_name: str, camera_name: str) -> None:
+    Args:
+        file_name (Path): The path to the events file.
+        camera_name (str): The name of the camera to visualize.
+        view_name (str): The name of the camera view to visualize.
+    """
     # create the file reader
-    reader = EventsFileReader(Path(file_name))
-    assert reader.open()
+    reader = EventsFileReader(file_name)
+    success: bool = reader.open()
+    if not success:
+        raise RuntimeError(f"Failed to open events file: {file_name}")
 
-    # filter the events containing `oak_pb2.OakDataSample`
-    events: List[EventLogPosition] = [
-        x for x in reader.get_index() if event_has_message(x.event, oak_pb2.OakDataSample)
-    ]
+    # get the index of the events file
+    events_index: list[EventLogPosition] = reader.get_index()
 
-    # filter the image based events by camera name
-    cam_events: List[EventLogPosition] = [x for x in events if x.event.uri.path == f"{camera_name}/video"]
+    # structure the index as a dictionary of lists of events
+    events_dict: dict[str, list[EventLogPosition]] = build_events_dict(events_index)
 
-    for event_log in cam_events:
+    print(f"All available topics: {sorted(events_dict.keys())}")
+
+    # customize camera and view
+    topic_name = f"/{camera_name}/{view_name}"
+    if topic_name not in events_dict:
+        raise RuntimeError(f"Camera view not found: {topic_name}")
+
+    camera_events: list[EventLogPosition] = events_dict[topic_name]
+
+    cv2.namedWindow(topic_name, cv2.WINDOW_NORMAL)
+
+    event_log: EventLogPosition
+    for event_log in camera_events:
         # parse the message
-        sample: oak_pb2.OakDataSample
-        sample = event_log.read_message()
+        sample: oak_pb2.OakFrame = event_log.read_message()
 
-        frame: oak_pb2.OakSyncFrame = sample.frame
+        # Decode the image
+        img = cv2.imdecode(np.frombuffer(sample.image_data, dtype="uint8"), cv2.IMREAD_UNCHANGED)
+        if view_name == "disparity":
+            img = cv2.applyColorMap(img * 3, cv2.COLORMAP_JET)
 
-        # cast image data bytes to numpy and decode
-        # NOTE: explore frame.[rgb, disparity, left, right]
-        disparity = cv2.imdecode(np.frombuffer(frame.disparity.image_data, dtype="uint8"), cv2.IMREAD_GRAYSCALE)
-        rgb = cv2.imdecode(np.frombuffer(frame.rgb.image_data, dtype="uint8"), cv2.IMREAD_UNCHANGED)
+        # Get the timestamp from the monotonic clock when the driver received the message.
+        stamp = get_stamp_by_semantics_and_clock_type(event_log.event, StampSemantics.DRIVER_RECEIVE, "monotonic")
 
-        # visualize the image
-        disparity_color = cv2.applyColorMap(disparity * 2, cv2.COLORMAP_HOT)
-
-        rgb_window_name = "rgb:" + event_log.event.uri.query
-        disparity_window_name = "disparity:" + event_log.event.uri.query
-
-        # we use opencv for convenience, use kivy, pangolin or you preferred viz tool :)
-        cv2.namedWindow(disparity_window_name, cv2.WINDOW_NORMAL)
-        cv2.namedWindow(rgb_window_name, cv2.WINDOW_NORMAL)
-
-        cv2.imshow(disparity_window_name, disparity_color)
-        cv2.imshow(rgb_window_name, rgb)
-        cv2.waitKey(3)
+        # show image
+        cv2.imshow(topic_name, img)
+        cv2.setWindowTitle(topic_name, f"{topic_name} - {stamp:.2f} s")
+        cv2.waitKey(1)
 
     assert reader.close()
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="Event file reader example.")
-    parser.add_argument("--file-name", type=str, required=True, help="Path to the `events.bin` file.")
+    parser.add_argument("--file-name", type=Path, required=True, help="Path to the `events.bin` file.")
     parser.add_argument(
         "--camera-name", type=str, default="oak0", help="The name of the camera to visualize. Default: oak0."
     )
+    parser.add_argument(
+        "--view-name",
+        type=str,
+        default="rgb",
+        choices=["rgb", "left", "right", "disparity"],
+        help="The name of the camera view to visualize. Default: rbg.",
+    )
     args = parser.parse_args()
-    main(args.file_name, args.camera_name)
+    main(args.file_name, args.camera_name, args.view_name)

@@ -1,0 +1,35 @@
+{
+    "config": {
+        "name": "record_default",
+        "subscriptions": [
+            {
+            "uri": {
+                "path": "*",
+                "query": "service_name=canbus"
+            },
+            "every_n": 1
+            },
+            {
+            "uri": {
+                "path": "*",
+                "query": "service_name=gps"
+            },
+            "every_n": 1
+            },
+            {
+            "uri": {
+                "path": "/imu",
+                "query": "service_name=oak0"
+            },
+            "every_n": 1
+            },
+            {
+            "uri": {
+                "path": "*",
+                "query": "service_name=filter"
+            },
+            "every_n": 1
+            }
+        ]
+    }
+}
