@@ -124,8 +124,8 @@ message PtoCommands{
 
 // Pack all tool commands into one message --> this message contains commands for all four H-bridges and all four PTOs
 message ActuatorCommand{
-  HBridgeCommands hbridges = 1;
-  PtoCommands ptos = 2;
+  repeated HBridgeCommand hbridges = 1;
+  repeated PtoCommand ptos = 2;
 }
 
 // Message to receive tool status
