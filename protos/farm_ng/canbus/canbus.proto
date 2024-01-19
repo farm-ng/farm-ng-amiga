@@ -16,6 +16,30 @@ syntax = "proto3";
 
 package farm_ng.canbus.proto;
 
+// H-bridge command types
+enum HBridgeCommandType {
+  // Commands
+  FORWARD = 0;
+  REVERSE = 1;
+  STOPPED = 2;
+  SETPOINT = 3; // Desired set point along the tool's range of motion
+}
+
+// PTO command types - decided not to use clockwise and counter-clockwise as it depends on the view of the PTO
+enum PtoCommandType {
+  // Commands
+  FORWARD = 0;
+  REVERSE = 1;
+  STOPPED = 2;
+}
+
+enum ToolStatusType {
+  // Commands
+  FORWARD = 0;
+  REVERSE = 1;
+  STOPPED = 2;
+}
+
 // Message to send a twist command to the vehicle
 message Twist2d {
   // The commanded linear velocity of the vehicle in the x direction in meters per second
@@ -66,4 +90,41 @@ message MotorState {
 message MotorStates {
   // List of motorstates
   repeated MotorState motors = 1;
+}
+
+// Proto definition containing messages for tool control
+// H-bridge
+message HBridgeCommand{
+  uint32 id = 1; // CAN node ID of the message
+  HBridgeCommandType command = 2; // either FORWARD, REVERSE, STOPPED, or SETPOINT
+  double setpoint = 3; // optional
+  bool latched = 4; // if H-bridge is latched or not
+}
+
+message HBridgeCommands{
+  repeated HBridgeCommand commands = 1;
+}
+
+// PTO
+message PtoCommand{
+  uint32 id = 1; // CAN node ID of the message
+  PtoCommandType command = 2; // either CLOCKWISE, COUNTER_CLOCKWISE, or STOPPED
+  int rpm = 3; // angular velocity in RPM
+  double gear_ratio = 4; // gear ratio of the PTO
+}
+
+message PtoCommands{
+  repeated PtoCommand commands = 1;
+}
+
+// Message to receive tool status
+message ToolStatus{
+  uint32 id = 1; // CAN node ID of the message
+  ToolStatusType status = 2; // either FORWARD, REVERSE, STOPPED, CLOCKWISE, or COUNTER_CLOCKWISE - basically any type of tool status
+  double state = 3; // either percentage of maximum displacement or RPM
+  bool latched = 4; // if tool is latched or not (only applicable to H-bridge)
+}
+
+message ToolStatuses{
+  repeated ToolStatus statuses = 1;
 }
