@@ -104,10 +104,6 @@ message HBridgeCommand{
   bool latched = 4; // if H-bridge is latched or not
 }
 
-// Pack multiple HBridgeCommands into one message
-message HBridgeCommands{
-  repeated HBridgeCommand commands = 1;
-}
 
 // PTO
 message PtoCommand{
