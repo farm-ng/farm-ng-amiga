@@ -117,10 +117,6 @@ message PtoCommand{
   double gear_ratio = 4; // gear ratio of the PTO
 }
 
-// Pack multiple PtoCommands into one message
-message PtoCommands{
-  repeated PtoCommand commands = 1;
-}
 
 // Pack all tool commands into one message --> this message contains commands for all four H-bridges and all four PTOs
 message ActuatorCommand{
