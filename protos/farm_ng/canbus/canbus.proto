@@ -112,7 +112,7 @@ message HBridgeCommands{
 message PtoCommand{
   uint32 id = 1; // CAN node ID of the message
   PtoCommandType command = 2; // either CLOCKWISE, COUNTER_CLOCKWISE, or STOPPED
-  int rpm = 3; // angular velocity in RPM
+  int32 rpm = 3; // angular velocity in RPM
   double gear_ratio = 4; // gear ratio of the PTO
 }
 
