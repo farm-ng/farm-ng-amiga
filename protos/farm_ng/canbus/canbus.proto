@@ -19,25 +19,28 @@ package farm_ng.canbus.proto;
 // H-bridge command types
 enum HBridgeCommandType {
   // Commands
-  FORWARD = 0;
-  REVERSE = 1;
-  STOPPED = 2;
-  SETPOINT = 3; // Desired set point along the tool's range of motion
+  HBRIDGE_UNKNOWN = 0;
+  HBRIDGE_FORWARD = 1;
+  HBRIDGE_REVERSE = 2;
+  HBRIDGE_STOPPED = 3;
+  HBRIDGE_SETPOINT = 4; // Desired set point along the tool's range of motion
 }
 
 // PTO command types - decided not to use clockwise and counter-clockwise as it depends on the view of the PTO
 enum PtoCommandType {
   // Commands
-  FORWARD = 0;
-  REVERSE = 1;
-  STOPPED = 2;
+  PTO_UNKNOWN = 0;
+  PTO_FORWARD = 1;
+  PTO_REVERSE = 2;
+  PTO_STOPPED = 3;
 }
 
 enum ToolStatusType {
   // Commands
-  FORWARD = 0;
-  REVERSE = 1;
-  STOPPED = 2;
+  TOOL_UNKNOWN = 0;
+  TOOL_FORWARD = 1;
+  TOOL_REVERSE = 2;
+  TOOL_STOPPED = 3;
 }
 
 // Message to send a twist command to the vehicle
