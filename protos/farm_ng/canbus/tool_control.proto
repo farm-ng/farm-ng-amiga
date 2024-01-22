@@ -1,0 +1,113 @@
+// Copyright (c) farm-ng, inc.
+//
+// Licensed under the Amiga Development Kit License (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://github.com/farm-ng/amiga-dev-kit/blob/main/LICENSE
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package farm_ng.canbus.proto;
+
+// H-bridge command types
+enum HBridgeCommandType {
+  // Commands
+  HBRIDGE_UNKNOWN = 0;
+  HBRIDGE_PASSIVE = 1;
+  HBRIDGE_FORWARD = 2;
+  HBRIDGE_STOPPED = 3;
+  HBRIDGE_REVERSE = 4;
+  // HBRIDGE_SETPOINT = 5; // Future: Desired setpoint along the tool's range of motion
+}
+
+// PTO command types
+enum PtoCommandType {
+  PTO_UNKNOWN = 0;
+  PTO_PASSIVE = 1;
+  PTO_FORWARD = 2;
+  PTO_STOPPED = 3;
+  PTO_REVERSE = 4;
+}
+
+// Tool status types
+enum ToolStatusType {
+  TOOL_UNKNOWN = 0;
+  TOOL_PASSIVE = 1;
+  TOOL_FORWARD = 2;
+  TOOL_STOPPED = 3;
+  TOOL_REVERSE = 4;
+}
+
+// For commanding an H-bridge device
+message HBridgeCommand {
+  uint32 id = 1; // ID of the HBridge device
+  HBridgeCommandType command = 2; // command type
+  bool latching = 3; // Whether to hold the command until a new command is received
+  // double setpoint = 4; // Future: Optional and only relevant when command is SETPOINT
+}
+
+// For commanding a PTO device
+message PtoCommand {
+  uint32 id = 1; // CAN node ID of the message
+  PtoCommandType command = 2; // command type
+  int32 rpm = 3; // angular velocity in RPM of the output shaft
+}
+
+// Combine all actuator commands into one message
+message ActuatorCommands {
+  repeated HBridgeCommand hbridges = 1;
+  repeated PtoCommand ptos = 2;
+}
+
+// HbridgeFaultCode defines the possible fault codes for an HBridge.
+enum HbridgeFaultCode {
+    HBRIDGE_UNKNOWN_FAULT = 0; // Default value, indicating unknown fault
+    HBRIDGE_SHORT_CIRCUIT_FORWARD = 1; // Short circuit in forward direction
+    HBRIDGE_SHORT_CIRCUIT_REVERSE = 2; // Short circuit in reverse direction
+    HBRIDGE_OVERCURRENT_FORWARD = 3; // Overcurrent in forward direction
+    HBRIDGE_OVERCURRENT_REVERSE = 4; // Overcurrent in reverse direction
+    HBRIDGE_INRUSH_OVERCURRENT_FORWARD = 5; // Inrush overcurrent in forward direction
+    HBRIDGE_INRUSH_OVERCURRENT_REVERSE = 6; // Inrush overcurrent in reverse direction
+    HBRIDGE_BATTERY_OVERVOLTAGE = 7; // Battery overvoltage
+    HBRIDGE_BATTERY_UNDERVOLTAGE = 8; // Battery undervoltage
+    HBRIDGE_OVER_TEMPERATURE = 9; // Over temperature
+    HBRIDGE_OUTPUT_INCORRECT_STATE = 16; // Output is not correct state (16 == 0x10)
+    HBRIDGE_COMMUNICATION_LOSS = 17; // Communication Loss (17 == 0x11)
+}
+
+enum PtoFaultCode {
+    PTO_UNKNOWN_FAULT = 0; // Default value, indicating unknown fault
+}
+
+// Message to receive tool status
+message HbridgeStatus {
+  double stamp = 1; // stamp of the RawCanbusMessage containing the tool status values
+  uint32 id = 2; // Hbridge device ID
+  ToolStatusType status = 3; // PASSIVE, FORWARD, REVERSE, STOPPED
+  repeated HbridgeFaultCode faults = 4; // list of faults
+  bool latched = 5; // if latest command was a request to latch
+  // double displacement = 6; // Future: if available
+  // double setpoint = 7; // Future: if available and setpoint command was sent
+}
+
+// Message to receive tool status
+message PtoStatus {
+  double stamp = 1; // stamp of the RawCanbusMessage containing the tool status values
+  uint32 id = 2; // PTO device ID
+  ToolStatusType status = 3; // PASSIVE, FORWARD, REVERSE, STOPPED
+  repeated HbridgeFaultCode faults = 4; // list of faults
+  double rpm = 5; // RPM of the output shaft, if known
+  double gear_ratio = 6; // gear ratio of the PTO device, if known
+}
+
+message ToolStatuses {
+  repeated HbridgeStatus hbridges = 1;
+  repeated PtoStatus ptos = 2;
+}
