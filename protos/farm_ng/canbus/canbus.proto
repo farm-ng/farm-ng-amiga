@@ -20,27 +20,29 @@ package farm_ng.canbus.proto;
 enum HBridgeCommandType {
   // Commands
   HBRIDGE_UNKNOWN = 0;
-  HBRIDGE_FORWARD = 1;
-  HBRIDGE_REVERSE = 2;
+  HBRIDGE_PASSIVE = 1;
+  HBRIDGE_FORWARD = 2;
   HBRIDGE_STOPPED = 3;
-  HBRIDGE_SETPOINT = 4; // Desired set point along the tool's range of motion
+  HBRIDGE_REVERSE = 4;
+  // HBRIDGE_SETPOINT = 5; // Future: Desired setpoint along the tool's range of motion
 }
 
-// PTO command types - decided not to use clockwise and counter-clockwise as it depends on the view of the PTO
+// PTO command types
 enum PtoCommandType {
-  // Commands
   PTO_UNKNOWN = 0;
-  PTO_FORWARD = 1;
-  PTO_REVERSE = 2;
+  PTO_PASSIVE = 1;
+  PTO_FORWARD = 2;
   PTO_STOPPED = 3;
+  PTO_REVERSE = 4;
 }
 
+// Tool status types
 enum ToolStatusType {
-  // Commands
   TOOL_UNKNOWN = 0;
-  TOOL_FORWARD = 1;
-  TOOL_REVERSE = 2;
+  TOOL_PASSIVE = 1;
+  TOOL_FORWARD = 2;
   TOOL_STOPPED = 3;
+  TOOL_REVERSE = 4;
 }
 
 // Message to send a twist command to the vehicle
@@ -95,27 +97,23 @@ message MotorStates {
   repeated MotorState motors = 1;
 }
 
-// Proto definition containing messages for tool control
-// H-bridge
-message HBridgeCommand{
-  uint32 id = 1; // CAN node ID of the message
-  HBridgeCommandType command = 2; // either FORWARD, REVERSE, STOPPED, or SETPOINT
-  double setpoint = 3; // optional
-  bool latched = 4; // if H-bridge is latched or not
+// For commanding an H-bridge device
+message HBridgeCommand {
+  uint32 id = 1; // ID of the HBridge device
+  HBridgeCommandType command = 2; // command type
+  bool latching = 3; // Whether to hold the command until a new command is received
+  // double setpoint = 4; // Future: Optional and only relevant when command is SETPOINT
 }
 
-
-// PTO
-message PtoCommand{
+// For commanding a PTO device
+message PtoCommand {
   uint32 id = 1; // CAN node ID of the message
-  PtoCommandType command = 2; // either CLOCKWISE, COUNTER_CLOCKWISE, or STOPPED
-  int32 rpm = 3; // angular velocity in RPM
-  double gear_ratio = 4; // gear ratio of the PTO
+  PtoCommandType command = 2; // command type
+  int32 rpm = 3; // angular velocity in RPM of the output shaft
 }
 
-
-// Pack all tool commands into one message --> this message contains commands for all four H-bridges and all four PTOs
-message ActuatorCommand{
+// Combine all actuator commands into one message
+message ActuatorCommands {
   repeated HBridgeCommand hbridges = 1;
   repeated PtoCommand ptos = 2;
 }
@@ -140,22 +138,28 @@ enum PtoFaultCode {
     PTO_UNKNOWN_FAULT = 0; // Default value, indicating unknown fault
 }
 
-message ToolFaultCode {
-    oneof fault_code {
-        HbridgeFaultCode hbridge_fault = 1;
-        PtoFaultCode pto_fault = 2;
-    }
+// Message to receive tool status
+message HbridgeStatus {
+  double stamp = 1; // stamp of the RawCanbusMessage containing the tool status values
+  uint32 id = 2; // Hbridge device ID
+  ToolStatusType status = 3; // PASSIVE, FORWARD, REVERSE, STOPPED
+  repeated HbridgeFaultCode faults = 4; // list of faults
+  bool latched = 5; // if latest command was a request to latch
+  // double displacement = 6; // Future: if available
+  // double setpoint = 7; // Future: if available and setpoint command was sent
 }
 
 // Message to receive tool status
-message ToolStatus{
-  uint32 id = 1; // CAN node ID of the message
-  ToolStatusType status = 2; // either FORWARD, REVERSE, STOPPED, CLOCKWISE, or COUNTER_CLOCKWISE - basically any type of tool status
-  double state = 3; // either percentage of maximum displacement or RPM
-  bool latched = 4; // if tool is latched or not (only applicable to H-bridge)
-  repeated ToolFaultCode faults = 5; // list of faults
+message PtoStatus {
+  double stamp = 1; // stamp of the RawCanbusMessage containing the tool status values
+  uint32 id = 2; // PTO device ID
+  ToolStatusType status = 3; // PASSIVE, FORWARD, REVERSE, STOPPED
+  repeated HbridgeFaultCode faults = 4; // list of faults
+  double rpm = 5; // RPM of the output shaft, if known
+  double gear_ratio = 6; // gear ratio of the PTO device, if known
 }
 
-message ToolStatuses{
-  repeated ToolStatus statuses = 1;
+message ToolStatuses {
+  repeated HbridgeStatus hbridges = 1;
+  repeated PtoStatus ptos = 2;
 }
