@@ -17,7 +17,7 @@ syntax = "proto3";
 package farm_ng.canbus.proto;
 
 // H-bridge command types
-enum HBridgeCommandType {
+enum HbridgeCommandType {
   // Commands
   HBRIDGE_UNKNOWN = 0;
   HBRIDGE_PASSIVE = 1;
@@ -46,9 +46,9 @@ enum ToolStatusType {
 }
 
 // For commanding an H-bridge device
-message HBridgeCommand {
-  uint32 id = 1; // ID of the HBridge device
-  HBridgeCommandType command = 2; // command type
+message HbridgeCommand {
+  uint32 id = 1; // ID of the Hbridge device
+  HbridgeCommandType command = 2; // command type
   bool latching = 3; // Whether to hold the command until a new command is received
   // double setpoint = 4; // Future: Optional and only relevant when command is SETPOINT
 }
@@ -62,11 +62,11 @@ message PtoCommand {
 
 // Combine all actuator commands into one message
 message ActuatorCommands {
-  repeated HBridgeCommand hbridges = 1;
+  repeated HbridgeCommand hbridges = 1;
   repeated PtoCommand ptos = 2;
 }
 
-// HbridgeFaultCode defines the possible fault codes for an HBridge.
+// HbridgeFaultCode defines the possible fault codes for an Hbridge.
 enum HbridgeFaultCode {
     HBRIDGE_UNKNOWN_FAULT = 0; // Default value, indicating unknown fault
     HBRIDGE_SHORT_CIRCUIT_FORWARD = 1; // Short circuit in forward direction
@@ -102,7 +102,7 @@ message PtoStatus {
   double stamp = 1; // stamp of the RawCanbusMessage containing the tool status values
   uint32 id = 2; // PTO device ID
   ToolStatusType status = 3; // PASSIVE, FORWARD, REVERSE, STOPPED
-  repeated HbridgeFaultCode faults = 4; // list of faults
+  repeated PtoFaultCode faults = 4; // list of faults
   double rpm = 5; // RPM of the output shaft, if known
   double gear_ratio = 6; // gear ratio of the PTO device, if known
 }
