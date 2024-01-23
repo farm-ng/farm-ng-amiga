@@ -17,7 +17,7 @@ syntax = "proto3";
 package farm_ng.canbus.proto;
 
 // H-bridge command types
-enum HbridgeCommandType {
+enum HBridgeCommandType {
   // Commands
   HBRIDGE_UNKNOWN = 0;
   HBRIDGE_PASSIVE = 1;
@@ -46,9 +46,9 @@ enum ToolStatusType {
 }
 
 // For commanding an H-bridge device
-message HbridgeCommand {
-  uint32 id = 1; // ID of the Hbridge device
-  HbridgeCommandType command = 2; // command type
+message HBridgeCommand {
+  uint32 id = 1; // ID of the HBridge device
+  HBridgeCommandType command = 2; // command type
   bool latching = 3; // Whether to hold the command until a new command is received
   // double setpoint = 4; // Future: Optional and only relevant when command is SETPOINT
 }
@@ -62,12 +62,12 @@ message PtoCommand {
 
 // Combine all actuator commands into one message
 message ActuatorCommands {
-  repeated HbridgeCommand hbridges = 1;
+  repeated HBridgeCommand hbridges = 1;
   repeated PtoCommand ptos = 2;
 }
 
-// HbridgeFaultCode defines the possible fault codes for an Hbridge.
-enum HbridgeFaultCode {
+// HBridgeFaultCode defines the possible fault codes for an HBridge.
+enum HBridgeFaultCode {
     HBRIDGE_UNKNOWN_FAULT = 0; // Default value, indicating unknown fault
     HBRIDGE_SHORT_CIRCUIT_FORWARD = 1; // Short circuit in forward direction
     HBRIDGE_SHORT_CIRCUIT_REVERSE = 2; // Short circuit in reverse direction
@@ -87,11 +87,11 @@ enum PtoFaultCode {
 }
 
 // Message to receive tool status
-message HbridgeStatus {
+message HBridgeStatus {
   double stamp = 1; // stamp of the RawCanbusMessage containing the tool status values
-  uint32 id = 2; // Hbridge device ID
+  uint32 id = 2; // HBridge device ID
   ToolStatusType status = 3; // PASSIVE, FORWARD, REVERSE, STOPPED
-  repeated HbridgeFaultCode faults = 4; // list of faults
+  repeated HBridgeFaultCode faults = 4; // list of faults
   bool latched = 5; // if latest command was a request to latch
   // double displacement = 6; // Future: if available
   // double setpoint = 7; // Future: if available and setpoint command was sent
@@ -108,6 +108,6 @@ message PtoStatus {
 }
 
 message ToolStatuses {
-  repeated HbridgeStatus hbridges = 1;
+  repeated HBridgeStatus hbridges = 1;
   repeated PtoStatus ptos = 2;
 }
