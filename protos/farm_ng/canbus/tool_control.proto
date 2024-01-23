@@ -36,8 +36,8 @@ enum PtoCommandType {
   PTO_REVERSE = 4;
 }
 
-// Tool status types
-enum ToolStatusType {
+// Tool command replies (from AmigaRpdo1)
+enum ToolCommandReply {
   TOOL_UNKNOWN = 0;
   TOOL_PASSIVE = 1;
   TOOL_FORWARD = 2;
@@ -49,7 +49,7 @@ enum ToolStatusType {
 message HBridgeCommand {
   uint32 id = 1; // ID of the HBridge device
   HBridgeCommandType command = 2; // command type
-  bool latching = 3; // Whether to hold the command until a new command is received
+  // bool latching = 3; // Future: Whether to hold the command until a new command is received
   // double setpoint = 4; // Future: Optional and only relevant when command is SETPOINT
 }
 
@@ -88,20 +88,27 @@ enum PtoFaultCode {
 
 // Message to receive tool status
 message HBridgeStatus {
+  enum HBridgeDirection {
+    HBRIDGE_DIRECTION_UNKNOWN = 0;
+    HBRIDGE_DIRECTION_FORWARD = 1;
+    HBRIDGE_DIRECTION_REVERSE = 2;
+    HBRIDGE_DIRECTION_STOPPED = 3;
+  }
   double stamp = 1; // stamp of the RawCanbusMessage containing the tool status values
   uint32 id = 2; // HBridge device ID
-  ToolStatusType status = 3; // PASSIVE, FORWARD, REVERSE, STOPPED
+  ToolCommandReply command_reply = 3; // PASSIVE, FORWARD, REVERSE, STOPPED
   repeated HBridgeFaultCode faults = 4; // list of faults
-  bool latched = 5; // if latest command was a request to latch
-  // double displacement = 6; // Future: if available
-  // double setpoint = 7; // Future: if available and setpoint command was sent
+  HBridgeDirection direction = 5; // direction
+  // bool latched = 6; // Future: if latest command was a request to latch
+  // double displacement = 7; // Future: if available
+  // double setpoint = 8; // Future: if available and setpoint command was sent
 }
 
 // Message to receive tool status
 message PtoStatus {
   double stamp = 1; // stamp of the RawCanbusMessage containing the tool status values
   uint32 id = 2; // PTO device ID
-  ToolStatusType status = 3; // PASSIVE, FORWARD, REVERSE, STOPPED
+  ToolCommandReply command_reply = 3; // PASSIVE, FORWARD, REVERSE, STOPPED
   repeated PtoFaultCode faults = 4; // list of faults
   double rpm = 5; // RPM of the output shaft, if known
   double gear_ratio = 6; // gear ratio of the PTO device, if known
