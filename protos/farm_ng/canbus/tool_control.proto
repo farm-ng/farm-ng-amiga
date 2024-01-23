@@ -45,6 +45,15 @@ enum ToolCommandReply {
   TOOL_REVERSE = 4;
 }
 
+// H-bridge direction
+enum HBridgeDirection {
+  HBRIDGE_DIRECTION_UNKNOWN = 0;
+  HBRIDGE_DIRECTION_FORWARD = 1;
+  HBRIDGE_DIRECTION_REVERSE = 2;
+  HBRIDGE_DIRECTION_STOPPED = 3;
+  HBRIDGE_DIRECTION_BRAKING = 4;
+}
+
 // For commanding an H-bridge device
 message HBridgeCommand {
   uint32 id = 1; // ID of the HBridge device
@@ -88,13 +97,6 @@ enum PtoFaultCode {
 
 // Message to receive tool status
 message HBridgeStatus {
-  enum HBridgeDirection {
-    HBRIDGE_DIRECTION_UNKNOWN = 0;
-    HBRIDGE_DIRECTION_FORWARD = 1;
-    HBRIDGE_DIRECTION_REVERSE = 2;
-    HBRIDGE_DIRECTION_STOPPED = 3;
-    HBRIDGE_DIRECTION_BRAKING = 4;
-  }
   double stamp = 1; // stamp of the RawCanbusMessage containing the tool status values
   uint32 id = 2; // HBridge device ID
   ToolCommandReply command_reply = 3; // PASSIVE, FORWARD, REVERSE, STOPPED
