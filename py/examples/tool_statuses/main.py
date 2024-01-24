@@ -37,16 +37,16 @@ async def main(service_config_path: Path) -> None:
 
     print(client.config)
 
-    tools_status: ToolStatuses
+    tool_statuses: ToolStatuses
     while True:
         # Update and send the twist command
         print("Requesting tool status")
-        tools_status = await client.request_reply("/get_tools_status", Empty(), decode=True)
+        tool_statuses = await client.request_reply("/get_tool_statuses", Empty(), decode=True)
 
-        if not isinstance(tools_status, ToolStatuses):
-            raise TypeError(f"Expected ToolStatuses, got {type(tools_status)}")
+        if not isinstance(tool_statuses, ToolStatuses):
+            raise TypeError(f"Expected ToolStatuses, got {type(tool_statuses)}")
 
-        print(tools_status)
+        print(tool_statuses)
 
         # Sleep to limit the query rate
         await asyncio.sleep(0.2)

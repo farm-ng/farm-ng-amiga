@@ -87,10 +87,10 @@ async def main(service_config_path: Path, keyboard_listener: KeyboardListener) -
         await client.request_reply("/control_tools", commands, decode=True)
 
         # Display the tool status
-        tools_status = await client.request_reply("/get_tools_status", Empty(), decode=True)
-        if not isinstance(tools_status, ToolStatuses):
-            raise TypeError(f"Expected ToolStatuses, got {type(tools_status)}")
-        print(tools_status)
+        tool_statuses: ToolStatuses = await client.request_reply("/get_tool_statuses", Empty(), decode=True)
+        if not isinstance(tool_statuses, ToolStatuses):
+            raise TypeError(f"Expected ToolStatuses, got {type(tool_statuses)}")
+        print(tool_statuses)
 
         # Additional application logic here
         await asyncio.sleep(0.1)
