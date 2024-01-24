@@ -20,6 +20,8 @@ from pathlib import Path
 from farm_ng.canbus.tool_control_pb2 import ActuatorCommands
 from farm_ng.canbus.tool_control_pb2 import HBridgeCommand
 from farm_ng.canbus.tool_control_pb2 import HBridgeCommandType
+from farm_ng.canbus.tool_control_pb2 import PtoCommand
+from farm_ng.canbus.tool_control_pb2 import PtoCommandType
 from farm_ng.canbus.tool_control_pb2 import ToolStatuses
 from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfig
@@ -61,6 +63,7 @@ def tool_control_from_key_presses(pressed_keys: set) -> ActuatorCommands:
 
     commands: ActuatorCommands = ActuatorCommands()
 
+    # H-bridges controlled with 0, 1, 2, 3 & up / down arrows
     # up = forward, down = reverse, both = stop, neither / not pressed => omitted => passive
     if 'up' in pressed_keys and 'down' in pressed_keys:
         for hbridge_id in pressed_keys & {'0', '1', '2', '3'}:
@@ -71,6 +74,23 @@ def tool_control_from_key_presses(pressed_keys: set) -> ActuatorCommands:
     elif 'down' in pressed_keys:
         for hbridge_id in pressed_keys & {'0', '1', '2', '3'}:
             commands.hbridges.append(HBridgeCommand(id=int(hbridge_id), command=HBridgeCommandType.HBRIDGE_REVERSE))
+
+    # PTOs controlled with a, b, c, d & left / right arrows
+    # left = forward, right = reverse, both = stop, neither / not pressed => omitted => passive
+    pto_id_mapping = {'a': 0x0, 'b': 0x1, 'c': 0x2, 'd': 0x3}
+    pto_rpm: float = 20.0
+    if 'left' in pressed_keys and 'right' in pressed_keys:
+        for pto_char in pressed_keys & {'a', 'b', 'c', 'd'}:
+            pto_id = pto_id_mapping[pto_char]
+            commands.ptos.append(PtoCommand(id=pto_id, command=PtoCommandType.PTO_STOPPED, rpm=pto_rpm))
+    elif 'left' in pressed_keys:
+        for pto_char in pressed_keys & {'a', 'b', 'c', 'd'}:
+            pto_id = pto_id_mapping[pto_char]
+            commands.ptos.append(PtoCommand(id=pto_id, command=PtoCommandType.PTO_FORWARD, rpm=pto_rpm))
+    elif 'right' in pressed_keys:
+        for pto_char in pressed_keys & {'a', 'b', 'c', 'd'}:
+            pto_id = pto_id_mapping[pto_char]
+            commands.ptos.append(PtoCommand(id=pto_id, command=PtoCommandType.PTO_REVERSE, rpm=pto_rpm))
 
     return commands
 
