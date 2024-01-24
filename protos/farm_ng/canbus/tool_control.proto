@@ -66,7 +66,7 @@ message HBridgeCommand {
 message PtoCommand {
   uint32 id = 1; // CAN node ID of the message
   PtoCommandType command = 2; // command type
-  int32 rpm = 3; // angular velocity in RPM of the output shaft
+  double rpm = 3; // angular velocity in RPM of the output shaft
 }
 
 // Combine all actuator commands into one message
