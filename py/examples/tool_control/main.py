@@ -95,6 +95,12 @@ def tool_control_from_key_presses(pressed_keys: set) -> ActuatorCommands:
 
 
 async def control_tools(service_config_path: Path, keyboard_listener: KeyboardListener) -> None:
+    """Control the tools / actuators on your Amiga.
+
+    Args:
+        service_config_path (Path): The path to the canbus service config.
+        keyboard_listener (KeyboardListener): The keyboard listener.
+    """
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
     client: EventClient = EventClient(config)
 
