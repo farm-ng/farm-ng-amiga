@@ -26,7 +26,6 @@ from farm_ng.canbus.tool_control_pb2 import ToolStatuses
 from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfig
 from farm_ng.core.events_file_reader import proto_from_json_file
-from google.protobuf.empty_pb2 import Empty
 from pynput import keyboard
 
 
@@ -95,25 +94,41 @@ def tool_control_from_key_presses(pressed_keys: set) -> ActuatorCommands:
     return commands
 
 
-async def main(service_config_path: Path, keyboard_listener: KeyboardListener) -> None:
+async def control_tools(service_config_path: Path, keyboard_listener: KeyboardListener) -> None:
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
     client: EventClient = EventClient(config)
-
-    print(client.config)
 
     while True:
         # Send the tool control command
         commands: ActuatorCommands = tool_control_from_key_presses(keyboard_listener.pressed_keys)
         await client.request_reply("/control_tools", commands, decode=True)
 
-        # Display the tool status
-        tool_statuses: ToolStatuses = await client.request_reply("/get_tool_statuses", Empty(), decode=True)
-        if not isinstance(tool_statuses, ToolStatuses):
-            raise TypeError(f"Expected ToolStatuses, got {type(tool_statuses)}")
-        print(tool_statuses)
-
         # Additional application logic here
         await asyncio.sleep(0.1)
+
+
+async def stream_tool_statuses(service_config_path: Path) -> None:
+    """Stream the tool statuses.
+
+    Args:
+        service_config_path (Path): The path to the canbus service config.
+    """
+
+    config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
+
+    message: ToolStatuses
+    async for event, message in EventClient(config).subscribe(config.subscriptions[0], decode=True):
+        print("###################")
+        print(message)
+
+
+async def run(service_config_path: Path, keyboard_listener: KeyboardListener):
+    # Create tasks for both functions
+    tasks: list[asyncio.Task] = [
+        asyncio.create_task(control_tools(service_config_path, keyboard_listener)),
+        asyncio.create_task(stream_tool_statuses(service_config_path)),
+    ]
+    await asyncio.gather(*tasks)
 
 
 if __name__ == "__main__":
@@ -125,7 +140,7 @@ if __name__ == "__main__":
     keyboard_listener.start()
 
     try:
-        asyncio.run(main(args.service_config, keyboard_listener))
+        asyncio.run(run(args.service_config, keyboard_listener))
     except KeyboardInterrupt:
         pass
     finally:
