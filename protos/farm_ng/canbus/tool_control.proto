@@ -36,7 +36,7 @@ enum PtoCommandType {
   PTO_REVERSE = 4;
 }
 
-// Tool command replies (from AmigaRpdo1)
+// Tool command replies (from AmigaTpdo1)
 enum ToolCommandReply {
   TOOL_UNKNOWN = 0;
   TOOL_PASSIVE = 1;
@@ -45,7 +45,7 @@ enum ToolCommandReply {
   TOOL_REVERSE = 4;
 }
 
-// H-bridge direction
+// H-bridge direction, directly from the H-bridge device
 enum HBridgeDirection {
   HBRIDGE_DIRECTION_UNKNOWN = 0;
   HBRIDGE_DIRECTION_FORWARD = 1;

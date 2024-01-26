@@ -109,7 +109,7 @@ async def control_tools(service_config_path: Path, keyboard_listener: KeyboardLi
         commands: ActuatorCommands = tool_control_from_key_presses(keyboard_listener.pressed_keys)
         await client.request_reply("/control_tools", commands, decode=True)
 
-        # Additional application logic here
+        # Sleep for a bit
         await asyncio.sleep(0.1)
 
 
