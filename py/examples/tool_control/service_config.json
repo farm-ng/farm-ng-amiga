@@ -1,0 +1,15 @@
+{
+    "name": "canbus",
+    "port": 6001,
+    "host": "localhost",
+    "subscriptions": [
+        {
+            "uri": {
+            "path": "/tool_statuses",
+            "query": "service_name=canbus"
+            },
+            "every_n": 1
+        }
+    ],
+    "log_level": "INFO"
+}

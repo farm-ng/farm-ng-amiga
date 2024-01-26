@@ -1,0 +1,127 @@
+// Copyright (c) farm-ng, inc.
+//
+// Licensed under the Amiga Development Kit License (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://github.com/farm-ng/amiga-dev-kit/blob/main/LICENSE
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package farm_ng.canbus.proto;
+
+// Enum for commanding H-bridge devices, sent in AmigaRpdo1 CAN messages
+enum HBridgeCommandType {
+  HBRIDGE_UNKNOWN = 0; // Default value, indicating unknown command
+  HBRIDGE_PASSIVE = 1; // Release auto control of the H-bridge
+  HBRIDGE_FORWARD = 2; // Drive the H-bridge forward
+  HBRIDGE_STOPPED = 3; // Stop the H-bridge
+  HBRIDGE_REVERSE = 4; // Drive the H-bridge in reverse
+  // HBRIDGE_SETPOINT = 5; // Future: Desired setpoint along the tool's range of motion
+}
+
+// Enum for commanding PTO devices, sent in AmigaRpdo1 CAN messages
+enum PtoCommandType {
+  PTO_UNKNOWN = 0; // Default value, indicating unknown command
+  PTO_PASSIVE = 1; // Release auto control of the PTO
+  PTO_FORWARD = 2; // Drive the PTO forward
+  PTO_STOPPED = 3; // Stop the PTO
+  PTO_REVERSE = 4; // Drive the PTO in reverse
+}
+
+// Tool command replies, decoded from AmigaTpdo1 CAN messages
+// These do not necessarily reflect the current state of the tool,
+// if the tool is not being commanded by AmigaTpdo1 messages.
+enum ToolCommandReply {
+  TOOL_UNKNOWN = 0; // Default value, indicating unknown command
+  TOOL_PASSIVE = 1; // Released auto control of the tool
+  TOOL_FORWARD = 2; // Tool is driving forward, from an auto command
+  TOOL_STOPPED = 3; // Tool is stopped, from an auto command
+  TOOL_REVERSE = 4; // Tool is driving in reverse, from an auto command
+}
+
+// H-bridge direction, directly from the H-bridge device
+// This does reflect the current state of the tool,
+// even if the tool is not being commanded by AmigaTpdo1 messages.
+enum HBridgeDirection {
+  HBRIDGE_DIRECTION_UNKNOWN = 0;
+  HBRIDGE_DIRECTION_FORWARD = 1;
+  HBRIDGE_DIRECTION_REVERSE = 2;
+  HBRIDGE_DIRECTION_STOPPED = 3;
+  HBRIDGE_DIRECTION_BRAKING = 4;
+}
+
+// For commanding an H-bridge device
+message HBridgeCommand {
+  uint32 id = 1; // ID of the H-bridge device (e.g., 0x0 - 0x3)
+  HBridgeCommandType command = 2; // command type
+  // bool latching = 3; // Future: Whether to hold the command until a new command is received
+  // double setpoint = 4; // Future: Optional and only relevant when command is SETPOINT
+}
+
+// For commanding a PTO device
+message PtoCommand {
+  uint32 id = 1; // ID of the PTO device (e.g., 0x0 - 0x3)
+  PtoCommandType command = 2; // command type
+  double rpm = 3; // angular velocity in RPM of the output shaft
+}
+
+// Combine all actuator commands into one message
+message ActuatorCommands {
+  repeated HBridgeCommand hbridges = 1;
+  repeated PtoCommand ptos = 2;
+}
+
+// HBridgeFaultCode defines the possible fault codes for an HBridge.
+enum HBridgeFaultCode {
+    HBRIDGE_UNKNOWN_FAULT = 0; // Default value, indicating unknown fault
+    HBRIDGE_SHORT_CIRCUIT_FORWARD = 1; // Short circuit in forward direction
+    HBRIDGE_SHORT_CIRCUIT_REVERSE = 2; // Short circuit in reverse direction
+    HBRIDGE_OVERCURRENT_FORWARD = 3; // Overcurrent in forward direction
+    HBRIDGE_OVERCURRENT_REVERSE = 4; // Overcurrent in reverse direction
+    HBRIDGE_INRUSH_OVERCURRENT_FORWARD = 5; // Inrush overcurrent in forward direction
+    HBRIDGE_INRUSH_OVERCURRENT_REVERSE = 6; // Inrush overcurrent in reverse direction
+    HBRIDGE_BATTERY_OVERVOLTAGE = 7; // Battery overvoltage
+    HBRIDGE_BATTERY_UNDERVOLTAGE = 8; // Battery undervoltage
+    HBRIDGE_OVER_TEMPERATURE = 9; // Over temperature
+    HBRIDGE_OUTPUT_INCORRECT_STATE = 16; // Output is not correct state (16 == 0x10)
+    HBRIDGE_COMMUNICATION_LOSS = 17; // Communication Loss (17 == 0x11)
+}
+
+enum PtoFaultCode {
+    PTO_UNKNOWN_FAULT = 0; // Default value, indicating unknown fault
+}
+
+// Message to receive tool status
+message HBridgeStatus {
+  double stamp = 1; // stamp of the RawCanbusMessage containing the tool status values
+  uint32 id = 2; // HBridge device ID (e.g., 0x0 - 0x3)
+  ToolCommandReply command_reply = 3; // PASSIVE, FORWARD, REVERSE, STOPPED
+  repeated HBridgeFaultCode faults = 4; // list of faults
+  HBridgeDirection direction = 5; // direction
+  // bool latched = 6; // Future: if latest command was a request to latch
+  // double displacement = 7; // Future: if available
+  // double setpoint = 8; // Future: if available and setpoint command was sent
+}
+
+// Message to receive tool status
+message PtoStatus {
+  double stamp = 1; // stamp of the RawCanbusMessage containing the tool status values
+  uint32 id = 2; // PTO device ID (e.g., 0x0 - 0x3)
+  ToolCommandReply command_reply = 3; // PASSIVE, FORWARD, REVERSE, STOPPED
+  repeated PtoFaultCode faults = 4; // list of faults
+  double rpm = 5; // RPM of the output shaft, if known
+  double gear_ratio = 6; // gear ratio of the PTO device, if known
+}
+
+// Combine all actuator statuses into one message
+message ToolStatuses {
+  repeated HBridgeStatus hbridges = 1;
+  repeated PtoStatus ptos = 2;
+}

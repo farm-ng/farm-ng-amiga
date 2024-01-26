@@ -89,7 +89,11 @@ class Packet:
 
 
 def make_amiga_rpdo1_proto(
-    state_req: AmigaControlState, cmd_speed: float, cmd_ang_rate: float, pto_bits: int = 0x0, hbridge_bits: int = 0x0
+    state_req: AmigaControlState = AmigaControlState.STATE_ESTOPPED,
+    cmd_speed: float = 0.0,
+    cmd_ang_rate: float = 0.0,
+    pto_bits: int = 0x0,
+    hbridge_bits: int = 0x0,
 ) -> canbus_pb2.RawCanbusMessage:
     """Creates a canbus_pb2.RawCanbusMessage.
 
@@ -100,6 +104,8 @@ def make_amiga_rpdo1_proto(
         state_req: State of the Amiga vehicle control unit (VCU).
         cmd_speed: Command speed in meters per second.
         cmd_ang_rate: Command angular rate in radians per second.
+        pto_bits: byte with encoded bits for PTO auto control
+        hbridge_bits: byte with encoded bits for h-bridge auto control
 
     Returns:
         An instance of a canbus_pb2.RawCanbusMessage.
