@@ -16,36 +16,39 @@ syntax = "proto3";
 
 package farm_ng.canbus.proto;
 
-// H-bridge command types
+// Enum for commanding H-bridge devices, sent in AmigaRpdo1 CAN messages
 enum HBridgeCommandType {
-  // Commands
-  HBRIDGE_UNKNOWN = 0;
-  HBRIDGE_PASSIVE = 1;
-  HBRIDGE_FORWARD = 2;
-  HBRIDGE_STOPPED = 3;
-  HBRIDGE_REVERSE = 4;
+  HBRIDGE_UNKNOWN = 0; // Default value, indicating unknown command
+  HBRIDGE_PASSIVE = 1; // Release auto control of the H-bridge
+  HBRIDGE_FORWARD = 2; // Drive the H-bridge forward
+  HBRIDGE_STOPPED = 3; // Stop the H-bridge
+  HBRIDGE_REVERSE = 4; // Drive the H-bridge in reverse
   // HBRIDGE_SETPOINT = 5; // Future: Desired setpoint along the tool's range of motion
 }
 
-// PTO command types
+// Enum for commanding PTO devices, sent in AmigaRpdo1 CAN messages
 enum PtoCommandType {
-  PTO_UNKNOWN = 0;
-  PTO_PASSIVE = 1;
-  PTO_FORWARD = 2;
-  PTO_STOPPED = 3;
-  PTO_REVERSE = 4;
+  PTO_UNKNOWN = 0; // Default value, indicating unknown command
+  PTO_PASSIVE = 1; // Release auto control of the PTO
+  PTO_FORWARD = 2; // Drive the PTO forward
+  PTO_STOPPED = 3; // Stop the PTO
+  PTO_REVERSE = 4; // Drive the PTO in reverse
 }
 
-// Tool command replies (from AmigaTpdo1)
+// Tool command replies, decoded from AmigaTpdo1 CAN messages
+// These do not necessarily reflect the current state of the tool,
+// if the tool is not being commanded by AmigaTpdo1 messages.
 enum ToolCommandReply {
-  TOOL_UNKNOWN = 0;
-  TOOL_PASSIVE = 1;
-  TOOL_FORWARD = 2;
-  TOOL_STOPPED = 3;
-  TOOL_REVERSE = 4;
+  TOOL_UNKNOWN = 0; // Default value, indicating unknown command
+  TOOL_PASSIVE = 1; // Released auto control of the tool
+  TOOL_FORWARD = 2; // Tool is driving forward, from an auto command
+  TOOL_STOPPED = 3; // Tool is stopped, from an auto command
+  TOOL_REVERSE = 4; // Tool is driving in reverse, from an auto command
 }
 
 // H-bridge direction, directly from the H-bridge device
+// This does reflect the current state of the tool,
+// even if the tool is not being commanded by AmigaTpdo1 messages.
 enum HBridgeDirection {
   HBRIDGE_DIRECTION_UNKNOWN = 0;
   HBRIDGE_DIRECTION_FORWARD = 1;
@@ -56,7 +59,7 @@ enum HBridgeDirection {
 
 // For commanding an H-bridge device
 message HBridgeCommand {
-  uint32 id = 1; // ID of the HBridge device
+  uint32 id = 1; // ID of the H-bridge device (e.g., 0x0 - 0x3)
   HBridgeCommandType command = 2; // command type
   // bool latching = 3; // Future: Whether to hold the command until a new command is received
   // double setpoint = 4; // Future: Optional and only relevant when command is SETPOINT
@@ -64,7 +67,7 @@ message HBridgeCommand {
 
 // For commanding a PTO device
 message PtoCommand {
-  uint32 id = 1; // CAN node ID of the message
+  uint32 id = 1; // ID of the PTO device (e.g., 0x0 - 0x3)
   PtoCommandType command = 2; // command type
   double rpm = 3; // angular velocity in RPM of the output shaft
 }
@@ -98,7 +101,7 @@ enum PtoFaultCode {
 // Message to receive tool status
 message HBridgeStatus {
   double stamp = 1; // stamp of the RawCanbusMessage containing the tool status values
-  uint32 id = 2; // HBridge device ID
+  uint32 id = 2; // HBridge device ID (e.g., 0x0 - 0x3)
   ToolCommandReply command_reply = 3; // PASSIVE, FORWARD, REVERSE, STOPPED
   repeated HBridgeFaultCode faults = 4; // list of faults
   HBridgeDirection direction = 5; // direction
@@ -110,13 +113,14 @@ message HBridgeStatus {
 // Message to receive tool status
 message PtoStatus {
   double stamp = 1; // stamp of the RawCanbusMessage containing the tool status values
-  uint32 id = 2; // PTO device ID
+  uint32 id = 2; // PTO device ID (e.g., 0x0 - 0x3)
   ToolCommandReply command_reply = 3; // PASSIVE, FORWARD, REVERSE, STOPPED
   repeated PtoFaultCode faults = 4; // list of faults
   double rpm = 5; // RPM of the output shaft, if known
   double gear_ratio = 6; // gear ratio of the PTO device, if known
 }
 
+// Combine all actuator statuses into one message
 message ToolStatuses {
   repeated HBridgeStatus hbridges = 1;
   repeated PtoStatus ptos = 2;
