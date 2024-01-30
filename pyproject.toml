@@ -12,7 +12,6 @@ exclude = '''
   | buck-out
   | build
   | dist
-  | \._pb2
   )/
 '''
 skip-string-normalization = true
