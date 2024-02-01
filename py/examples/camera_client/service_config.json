@@ -1,12 +1,12 @@
 {
     "name": "oak0",
-    "port": 50010,
+    "port": 50051,
     "host": "localhost",
     "log_level": "INFO",
     "subscriptions": [
         {
             "uri": {
-                "path": "/rgb",
+                "path": "/imu",
                 "query": "service_name=oak0"
             },
             "every_n": 1

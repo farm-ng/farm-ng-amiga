@@ -25,6 +25,7 @@ from farm_ng.core.event_service_pb2 import EventServiceConfig
 from farm_ng.core.events_file_reader import proto_from_json_file
 from farm_ng.core.stamp import get_stamp_by_semantics_and_clock_type
 from farm_ng.core.stamp import StampSemantics
+from farm_ng.core.events_file_reader import payload_to_protobuf
 
 
 async def main(service_config_path: Path) -> None:
@@ -36,27 +37,35 @@ async def main(service_config_path: Path) -> None:
     # create a client to the camera service
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
 
-    async for event, message in EventClient(config).subscribe(config.subscriptions[0], decode=True):
-        # Find the monotonic driver receive timestamp, or the first timestamp if not available.
-        stamp = (
-            get_stamp_by_semantics_and_clock_type(event, StampSemantics.DRIVER_RECEIVE, "monotonic")
-            or event.timestamps[0].stamp
-        )
+    print("starting")
+    async for event, payload in EventClient(config).subscribe(config.subscriptions[0], decode=False):
+        # print(event)
+        msg = payload_to_protobuf(event, payload)
+        print(msg.packets)
 
-        # print the timestamp and metadata
-        print(f"Timestamp: {stamp}\n")
-        print(f"Meta: {message.meta}")
-        print("###################\n")
+        # print(event)
 
-        # cast image data bytes to numpy and decode
-        image = cv2.imdecode(np.frombuffer(message.image_data, dtype="uint8"), cv2.IMREAD_UNCHANGED)
-        if event.uri.path == "/disparity":
-            image = cv2.applyColorMap(image * 3, cv2.COLORMAP_JET)
 
-        # visualize the image
-        cv2.namedWindow("image", cv2.WINDOW_NORMAL)
-        cv2.imshow("image", image)
-        cv2.waitKey(1)
+        # # Find the monotonic driver receive timestamp, or the first timestamp if not available.
+        # stamp = (
+        #     get_stamp_by_semantics_and_clock_type(event, StampSemantics.DRIVER_RECEIVE, "monotonic")
+        #     or event.timestamps[0].stamp
+        # )
+
+        # # print the timestamp and metadata
+        # print(f"Timestamp: {stamp}\n")
+        # print(f"Meta: {message.meta}")
+        # print("###################\n")
+
+        # # cast image data bytes to numpy and decode
+        # image = cv2.imdecode(np.frombuffer(message.image_data, dtype="uint8"), cv2.IMREAD_UNCHANGED)
+        # if event.uri.path == "/disparity":
+        #     image = cv2.applyColorMap(image * 3, cv2.COLORMAP_JET)
+
+        # # visualize the image
+        # cv2.namedWindow("image", cv2.WINDOW_NORMAL)
+        # cv2.imshow("image", image)
+        # cv2.waitKey(1)
 
 
 if __name__ == "__main__":
