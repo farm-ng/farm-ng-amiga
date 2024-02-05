@@ -1,3 +1,3 @@
 # Amiga Tool Control example
 
-URL: <NOT YET DOCUMENTED>
+URL: https://amiga.farm-ng.com/docs/examples/tool_control/

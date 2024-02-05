@@ -12,7 +12,7 @@ exclude = '''
   | buck-out
   | build
   | dist
-)/
+  )/
 '''
 skip-string-normalization = true
 skip-magic-trailing-comma = true
