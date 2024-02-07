@@ -21,6 +21,7 @@ from pathlib import Path
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+from farm_ng.track.track_pb2 import Track
 from farm_ng.track.utils import TrackBuilder
 from farm_ng_core_pybind import Isometry3F64
 from farm_ng_core_pybind import Pose3F64
@@ -67,7 +68,7 @@ def create_pose(x: float, y: float, heading: float) -> Pose3F64:
     return pose
 
 
-def plot_track(waypoints: list[list[float]]) -> None:
+def plot_track(waypoints: list[list[float]], tool_state: dict = {}) -> None:
     x = waypoints[0]
     y = waypoints[1]
     headings = waypoints[2]
@@ -81,7 +82,11 @@ def plot_track(waypoints: list[list[float]]) -> None:
     turn_threshold = np.radians(10)  # Threshold in radians for when to skip plotting
 
     plt.figure(figsize=(8, 8))
-    plt.plot(x, y, color='orange', linewidth=1.0)
+    # plt.plot(x, y, color='orange', linewidth=1.0)
+
+    for i in range(len(x) - 1):
+        dot_color = "green" if tool_state.get(i, True) else "red"
+        plt.plot(x[i], y[i], marker="o", markersize=1, color=dot_color)
 
     for i in range(0, len(x), arrow_interval):
         # Calculate the heading change
@@ -92,14 +97,21 @@ def plot_track(waypoints: list[list[float]]) -> None:
 
         # Plot the arrow if the heading change is below the threshold
         if heading_change < turn_threshold:
-            plt.quiver(x[i], y[i], U[i], V[i], angles='xy', scale_units='xy', scale=2.25, color='blue')
+            plt.quiver(x[i], y[i], U[i], V[i], angles='xy', scale_units='xy', scale=1.5, color='blue')
 
     plt.axis("equal")
     plt.legend(["Track", "Heading"])
     plt.show()
 
 
-async def build_track(save_track: bool, reverse: bool) -> None:
+def pack_tool_state(tool_state: dict, track_builder: TrackBuilder(), state: bool) -> dict:
+    last_waypoint_index = len(track_builder.track_waypoints)
+    for i in range(len(tool_state), last_waypoint_index):
+        tool_state[i] = state
+    return tool_state
+
+
+async def build_track(save_track: bool, reverse: bool) -> (Track, dict):
     """Build a custom track. Here, we will use all the building functions in the TrackBuilder class for educational
     purposes. This specific track will resemble three 60-foot rows spaced 48 inches. To transition from the end of
     the first row to the second, the robot will turn in place 90 degrees. To transition from the end of the second
@@ -110,6 +122,9 @@ async def build_track(save_track: bool, reverse: bool) -> None:
     """
     print("Building track...")
 
+    last_waypoint_index: int
+    tool_state: dict = {}
+
     # Set the initial pose of the robot
     initial_pose = create_pose(x=5.0, y=10.0, heading=90)
 
@@ -119,27 +134,39 @@ async def build_track(save_track: bool, reverse: bool) -> None:
     # Start the track builder
     # track_builder = await TrackBuilder.create(clients=clients, pose=initial_pose)
     track_builder = TrackBuilder(start=initial_pose)
+    last_waypoint_index = len(track_builder.track_waypoints) - 1
+    tool_state[last_waypoint_index] = True
 
     # Drive forward from the initial pose to the second pose (about 60 ft)
     track_builder.create_ab_segment("goal1", second_pose)
+    # print(f"Length: {len(track_builder.track_waypoints)}")
+    tool_state = pack_tool_state(tool_state, track_builder, True)
 
     # Turn in place 90 degrees
     track_builder.create_turn_segment("goal2", radians(-90))
+    # print(f"Length: {len(track_builder.track_waypoints)}")
+    tool_state = pack_tool_state(tool_state, track_builder, False)
 
     # Drive forward 48 inches
     track_builder.create_straight_segment("goal3", 48 * 0.0254)
+    tool_state = pack_tool_state(tool_state, track_builder, False)
 
     # Turn in place 90 degrees
     track_builder.create_turn_segment("goal4", radians(-90))
+    tool_state = pack_tool_state(tool_state, track_builder, False)
 
     # Drive forward 60 feet
     track_builder.create_straight_segment("goal5", 20 - 24 * 0.0254)
+    tool_state = pack_tool_state(tool_state, track_builder, True)
 
     # Smooth turn at the end of the row
     track_builder.create_arc_segment("goal6", 24 * 0.0254, radians(180))
+    tool_state = pack_tool_state(tool_state, track_builder, False)
 
     # Drive forward 60 feet
     track_builder.create_straight_segment("goal7", 20 - 24 * 0.0254)
+    last_waypoint_index = len(track_builder.track_waypoints)
+    tool_state = pack_tool_state(tool_state, track_builder, True)
 
     if reverse:
         track_builder.reverse_track()
@@ -157,7 +184,8 @@ async def build_track(save_track: bool, reverse: bool) -> None:
 
     # Plot the track
     waypoints = track_builder.unpack_track()
-    plot_track(waypoints)
+    plot_track(waypoints, tool_state)
+    return track_builder.track, tool_state
 
 
 async def run(args) -> None:
