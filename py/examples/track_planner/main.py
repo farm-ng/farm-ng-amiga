@@ -21,11 +21,14 @@ from pathlib import Path
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-from farm_ng.track.track_pb2 import Track
+from farm_ng.track.track_pb2 import Track, TrackFollowerState
 from farm_ng.track.utils import TrackBuilder
 from farm_ng_core_pybind import Isometry3F64
 from farm_ng_core_pybind import Pose3F64
 from farm_ng_core_pybind import Rotation3F64
+from farm_ng.core.event_client import EventClient
+from farm_ng.core.event_service_pb2 import EventServiceConfigList
+from farm_ng.core.events_file_reader import proto_from_json_file
 
 matplotlib.use("TkAgg")  # Set the backend to Agg for non-GUI environments
 
@@ -110,6 +113,20 @@ def pack_tool_state(tool_state: dict, track_builder: TrackBuilder(), state: bool
         tool_state[i] = state
     return tool_state
 
+
+async def track_follower_subscriber(client: EventClient) -> TrackFollowerState)
+
+async def drive_and_control(config_path, track, tool_state):
+    clients: dict[str, EventClient]
+    config_list = proto_from_json_file(config_path, EventServiceConfigList())
+    expected_configs = ["track_follower", "filter"]
+    for config in config_list.configs:
+        if config.name in expected_configs:
+            clients[config.name] = EventClient(config)
+    # Create a track follower client
+    
+    
+    
 
 async def build_track(save_track: bool, reverse: bool) -> (Track, dict):
     """Build a custom track. Here, we will use all the building functions in the TrackBuilder class for educational
@@ -202,6 +219,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="amiga-track_follower-square")
     parser.add_argument("--save-track", action='store_true', help="Save the track to a file.")
     parser.add_argument("--reverse", action='store_true', help="Reverse the track.")
+    parser.add_argument("--service-config", type Path, help="Path to the service config file.")
     args = parser.parse_args()
 
     # Create the asyncio event loop and run the main function
