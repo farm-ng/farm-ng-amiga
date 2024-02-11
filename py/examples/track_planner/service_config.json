@@ -1,0 +1,9 @@
+{
+  "configs": [
+    {
+      "name": "filter",
+      "port": 20001,
+      "host": "localhost"
+    }
+  ]
+}
