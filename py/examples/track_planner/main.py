@@ -64,7 +64,7 @@ def plot_track(waypoints: list[list[float]]) -> None:
     plt.show()
 
 
-async def build_track(save_track: bool, reverse: bool, clients: dict | None = None) -> (Track, dict):
+async def build_track(reverse: bool, clients: dict | None = None, save_track: Path | None = None) -> (Track, dict):
     """Build a custom track. Here, we will use all the building functions in the TrackBuilder class for educational
     purposes. This specific track will resemble three 60-foot rows spaced 48 inches. To transition from the end of
     the first row to the second, the robot will turn in place 90 degrees. To transition from the end of the second
@@ -122,12 +122,8 @@ async def build_track(save_track: bool, reverse: bool, clients: dict | None = No
         track_builder.reverse_track()
 
     # Save the track to a file
-    script_path = Path(__file__)  # Current script's path
-    parent_directory = script_path.parent
-    file_path = parent_directory / "WAE_strawberry.json"
-
-    if save_track:
-        track_builder.save_track(file_path)
+    if save_track is not None:
+        track_builder.save_track(save_track)
 
     # Print the number of waypoints in the track
     print(f" Track created with {len(track_builder.track_waypoints)} waypoints")
@@ -159,13 +155,13 @@ async def run(args) -> None:
         clients = None
 
     # Start the asyncio tasks
-    tasks: list[asyncio.Task] = [asyncio.create_task(build_track(save_track, reverse, clients))]
+    tasks: list[asyncio.Task] = [asyncio.create_task(build_track(reverse, clients, save_track))]
     await asyncio.gather(*tasks)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="amiga-track_follower")
-    parser.add_argument("--save-track", action='store_true', help="Save the track to a file.")
+    parser.add_argument("--save-track", type=Path, help="Save the track to a file.")
     parser.add_argument("--reverse", action='store_true', help="Reverse the track.")
     parser.add_argument("--service-config", type=Path, help="Path to the service config file.")
     args = parser.parse_args()
