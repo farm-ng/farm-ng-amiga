@@ -64,13 +64,6 @@ def plot_track(waypoints: list[list[float]]) -> None:
     plt.show()
 
 
-def pack_tool_state(tool_state: dict, track_builder: TrackBuilder(), state: bool) -> dict:
-    last_waypoint_index = len(track_builder.track_waypoints)
-    for i in range(len(tool_state), last_waypoint_index):
-        tool_state[i] = state
-    return tool_state
-
-
 async def build_track(save_track: bool, reverse: bool, clients: dict | None = None) -> (Track, dict):
     """Build a custom track. Here, we will use all the building functions in the TrackBuilder class for educational
     purposes. This specific track will resemble three 60-foot rows spaced 48 inches. To transition from the end of
