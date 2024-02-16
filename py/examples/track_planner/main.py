@@ -78,7 +78,7 @@ async def build_track(reverse: bool, clients: dict | None = None, save_track: Pa
         clients: A dictionary of EventClients for the required services (filter)
         save_track: The path to save the track to
     Returns:
-        The track and the clients dictionary
+        The track
     """
     print("Building track...")
 
