@@ -72,7 +72,7 @@ class TrackBuilder:
             self.track_waypoints = [start]
 
     @classmethod
-    async def create(cls, clients, timeout=3.0):
+    async def create(cls, clients, timeout=0.2):
         """Create a TrackBuilder instance with an initial default pose."""
         self = cls(clients)
         # Attempt to get the actual pose with a timeout

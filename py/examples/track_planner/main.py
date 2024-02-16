@@ -42,7 +42,7 @@ def plot_track(waypoints: list[list[float]]) -> None:
     V = np.sin(headings)
 
     # Parameters for arrow plotting
-    arrow_interval = 25  # Adjust this to change the frequency of arrows
+    arrow_interval = 20  # Adjust this to change the frequency of arrows
     turn_threshold = np.radians(10)  # Threshold in radians for when to skip plotting
 
     plt.figure(figsize=(8, 8))
@@ -57,10 +57,16 @@ def plot_track(waypoints: list[list[float]]) -> None:
 
         # Plot the arrow if the heading change is below the threshold
         if heading_change < turn_threshold:
-            plt.quiver(x[i], y[i], U[i], V[i], angles='xy', scale_units='xy', scale=1.5, color='blue')
+            plt.quiver(x[i], y[i], U[i], V[i], angles='xy', scale_units='xy', scale=3.5, color='blue')
 
+    plt.plot(x[0], y[0], marker="o", markersize=5, color='red')
     plt.axis("equal")
-    plt.legend(["Track", "Heading"])
+    legend_elements = [
+        plt.Line2D([0], [0], color='orange', lw=2, label='Track'),
+        plt.Line2D([0], [0], color='blue', lw=2, label='Heading'),
+        plt.scatter([], [], color='red', marker='o', s=30, label='Start'),
+    ]
+    plt.legend(handles=legend_elements)
     plt.show()
 
 
@@ -76,47 +82,50 @@ async def build_track(reverse: bool, clients: dict | None = None, save_track: Pa
     print("Building track...")
 
     row_spacing = 48 * 0.0254  # 48 inches in meters
-    row_length = 35 * 6 * 0.0254  # 60 feet in meters
+    row_length = 32 * 12 * 0.0254  # 32 feet in meters
 
-    # Path: Start at 2, up 2, down 4, up 1, down 3, up 1, down 4, line up to 2
+    # Path: Start at the beginning row 2, go up on 2, down on row 4, up on row 1, down on row 3, up on row 1,
+    # down on row 4, and finish lining up on row 2
+    # Assumption: At run time, the robot is positioned at the beginning of row 2, facing the end of row 2.
 
-    # Start the track builder
-    track_builder = await TrackBuilder.create(clients=clients)
-    # Drive forward 20 ft (up 2)
+    # Start the track builder - this start methods initializes the track with the current position of the robot
+    track_builder = await TrackBuilder.create(clients=clients, timeout=10.0)
+
+    # Drive forward 32 ft (up row 2)
     track_builder.create_straight_segment(next_frame_b="goal1", distance=row_length, spacing=0.1)
 
-    # Maneuver at the end of row: skip one row (96 inches) - (go to 4)
+    # Maneuver at the end of row: skip one row (96 inches) - (go from 2 to 4)
     track_builder.create_arc_segment(next_frame_b="goal2", radius=row_spacing, angle=radians(180), spacing=0.1)
 
-    # Drive forward 20 ft (down 4)
+    # Drive forward 32 ft (down 4)
     track_builder.create_straight_segment(next_frame_b="goal3", distance=row_length, spacing=0.1)
 
-    # # Maneuver at the end of row: skip one row (96 inches) - (go to 1)
+    # Maneuver at the end of row: skip two rows (144 inches) - (go from 4 to 1)
     track_builder.create_arc_segment(next_frame_b="goal4", radius=1.5 * row_spacing, angle=radians(180), spacing=0.1)
 
-    # Drive forward 20 ft (up 1)
+    # Drive forward 32 ft (up 1)
     track_builder.create_straight_segment(next_frame_b="goal5", distance=row_length, spacing=0.1)
 
-    # Maneuver at the end of row: skip one row (96 inches) - (go to 3)
+    # Maneuver at the end of row: skip one row (96 inches) - (go from 1 to 3)
     track_builder.create_arc_segment(next_frame_b="goal6", radius=row_spacing, angle=radians(180), spacing=0.1)
 
-    # Drive forward 20 ft (down 3)
+    # Drive forward 32 ft (down 3)
     track_builder.create_straight_segment(next_frame_b="goal7", distance=row_length, spacing=0.1)
 
-    # Maneuver at the end of row: skip one row (96 inches) - (go to 1)
+    # Maneuver at the end of row: skip one row (96 inches) - (go from 3 to 1)
     track_builder.create_arc_segment(next_frame_b="goal8", radius=row_spacing, angle=radians(180), spacing=0.1)
 
-    # Drive forward 20 ft (up 1)
+    # Drive forward 32 ft (up 1)
     track_builder.create_straight_segment(next_frame_b="goal9", distance=row_length, spacing=0.1)
 
-    # Maneuver at the end of row: skip one row (96 inches) - (go to 4)
+    # Maneuver at the end of row: skip two rows (144 inches) - (go from 1 to 4)
     track_builder.create_arc_segment(next_frame_b="goal10", radius=1.5 * row_spacing, angle=radians(180), spacing=0.1)
 
-    # Drive forward 20 ft (down 4)
+    # Drive forward 32 ft (down 4)
     track_builder.create_straight_segment(next_frame_b="goal11", distance=row_length, spacing=0.1)
 
-    # Maneuver at the end of row: skip one row (96 inches) - (go to 2)
-    track_builder.create_arc_segment(next_frame_b="goal12", radius=row_spacing, angle=radians(170), spacing=0.1)
+    # Maneuver at the end of row: skip one row (96 inches) - (go from 4 to 2 - slightly before the start)
+    track_builder.create_arc_segment(next_frame_b="goal12", radius=row_spacing, angle=radians(175), spacing=0.1)
 
     if reverse:
         track_builder.reverse_track()
