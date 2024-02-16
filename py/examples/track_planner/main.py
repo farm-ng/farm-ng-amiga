@@ -70,14 +70,15 @@ def plot_track(waypoints: list[list[float]]) -> None:
     plt.show()
 
 
-async def build_track(reverse: bool, clients: dict | None = None, save_track: Path | None = None) -> (Track, dict):
-    """Build a custom track. Here, we will use all the building functions in the TrackBuilder class for educational
-    purposes. This specific track will resemble three 60-foot rows spaced 48 inches. To transition from the end of
-    the first row to the second, the robot will turn in place 90 degrees. To transition from the end of the second
-    row to the third, the robot will perform a smooth u-turn.
+async def build_track(reverse: bool, clients: dict | None = None, save_track: Path | None = None) -> Track:
+    """Builds a custom track for the Amiga to follow.
 
     Args:
-        save_track: Whether or not to save the track to a file
+        reverse: Whether or not to reverse the track
+        clients: A dictionary of EventClients for the required services (filter)
+        save_track: The path to save the track to
+    Returns:
+        The track and the clients dictionary
     """
     print("Building track...")
 
