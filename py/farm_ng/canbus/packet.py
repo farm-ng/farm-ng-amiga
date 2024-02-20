@@ -113,6 +113,9 @@ def make_amiga_rpdo1_proto(
     Uses the AmigaRpdo1 structure and formatting, that can be sent
     directly to the canbus service to be formatted and send on the CAN bus.
 
+    WARNING: Deprecated starting with farm-ng-amiga v2.3 and will be removed in v2.5.
+    Please use AmigaRpdo1.to_raw_canbus_message() instead.
+
     Args:
         state_req: State of the Amiga vehicle control unit (VCU).
         cmd_speed: Command speed in meters per second.
@@ -123,6 +126,9 @@ def make_amiga_rpdo1_proto(
     Returns:
         An instance of a canbus_pb2.RawCanbusMessage.
     """
+    print("WARNING: make_amiga_rpdo1_proto is deprecated as of v2.3 and will be removed in farm-ng-amiga v2.5")
+    print("Use AmigaRpdo1.to_raw_canbus_message() instead.")
+
     # TODO: add some checkers, or make python CHECK_API
     return canbus_pb2.RawCanbusMessage(
         id=AmigaRpdo1.cob_id + DASHBOARD_NODE_ID,
@@ -195,6 +201,13 @@ class AmigaRpdo1(Packet):
         return "AMIGA RPDO1 Request state {} Command speed {:0.3f} Command angular rate {:0.3f}".format(
             self.state_req, self.cmd_speed, self.cmd_ang_rate
         ) + " Command PTO bits 0x{:x} Command h-bridge bits 0x{:x}".format(self.pto_bits, self.hbridge_bits)
+
+    def to_raw_canbus_message(self) -> canbus_pb2.RawCanbusMessage:
+        """Packs the class data into a canbus_pb2.RawCanbusMessage.
+
+        Returns: An instance of a canbus_pb2.RawCanbusMessage.
+        """
+        return canbus_pb2.RawCanbusMessage(id=self.cob_id + DASHBOARD_NODE_ID, data=self.encode())
 
 
 class AmigaTpdo1(Packet):
@@ -287,6 +300,24 @@ class AmigaTpdo1(Packet):
         obj.hbridge_bits = proto.hbridge_bits
         return obj
 
+    @classmethod
+    def from_raw_canbus_message(cls, message: canbus_pb2.RawCanbusMessage) -> AmigaTpdo1:
+        """Parses a canbus_pb2.RawCanbusMessage.
+
+        IFF the message came from the dashboard and contains AmigaTpdo1 structure,
+        formatting, and cobid.
+
+        Args:
+            message: The raw canbus message to parse.
+
+        Returns:
+            The parsed AmigaTpdo1 message.
+        """
+        if message.id != cls.cob_id + DASHBOARD_NODE_ID:
+            raise ValueError(f"Expected message from dashboard, received message from node {message.id}")
+
+        return cls.from_can_data(message.data, stamp=message.stamp)
+
     def __str__(self):
         return "AMIGA TPDO1 Amiga state {} Measured speed {:0.3f} Measured angular rate {:0.3f} @ time {}".format(
             self.state, self.meas_speed, self.meas_ang_rate, self.stamp.stamp
@@ -299,12 +330,18 @@ def parse_amiga_tpdo1_proto(message: canbus_pb2.RawCanbusMessage) -> AmigaTpdo1 
     IFF the message came from the dashboard and contains AmigaTpdo1 structure,
     formatting, and cobid.
 
+    WARNING: Deprecated starting with farm-ng-amiga v2.3 and will be removed in v2.5.
+    Please use AmigaTpdo1.from_raw_canbus_message() instead.
+
     Args:
         message: The raw canbus message to parse.
 
     Returns:
         The parsed AmigaTpdo1 message, or None if the message is not a valid AmigaTpdo1 message.
     """
+    print("WARNING: parse_amiga_tpdo1_proto is deprecated as of v2.3 and will be removed in farm-ng-amiga v2.5")
+    print("Use AmigaTpdo1.from_raw_canbus_message() instead.")
+
     # TODO: add some checkers, or make python CHECK_API
     if message.id != AmigaTpdo1.cob_id + DASHBOARD_NODE_ID:
         return None
