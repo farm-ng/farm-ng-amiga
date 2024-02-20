@@ -57,10 +57,10 @@ def update_twist_with_key_press(twist: Twist2d, key: int):
 
 
 async def main(service_config_path: Path) -> None:
-    """Run the camera service client.
+    """Run the canbus service client.
 
     Args:
-        service_config_path (Path): The path to the camera service config.
+        service_config_path (Path): The path to the canbus service config.
     """
     # Initialize the command to send
     twist = Twist2d()
@@ -68,7 +68,7 @@ async def main(service_config_path: Path) -> None:
     # open a window to capture key presses
     cv2.namedWindow('Virtual Keyboard')
 
-    # create a client to the camera service
+    # create a client to the canbus service
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
     client: EventClient = EventClient(config)
 

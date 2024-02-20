@@ -428,8 +428,8 @@ class PendantState(Packet):
     cob_id = 0x180
 
     def __init__(self, x=0, y=0, buttons=0):
-        self.x = x
-        self.y = y
+        self.x = x  # [-1.0, 1.0] => [left, right]
+        self.y = y  # [-1.0, 1.0] => [reverse, forward]
         self.buttons = buttons
         self.stamp_packet(time.monotonic())
 
