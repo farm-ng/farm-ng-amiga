@@ -13,8 +13,8 @@
 # limitations under the License.
 from __future__ import annotations
 
+import logging
 import time
-import warnings
 from enum import IntEnum
 from struct import pack
 from struct import unpack
@@ -114,7 +114,7 @@ def make_amiga_rpdo1_proto(
     Uses the AmigaRpdo1 structure and formatting, that can be sent
     directly to the canbus service to be formatted and send on the CAN bus.
 
-    WARNING: Deprecated starting with farm-ng-amiga v2.3 and will be removed in v2.5.
+    WARNING: Deprecated starting with farm-ng-amiga v2.3.0
     Please use AmigaRpdo1.to_raw_canbus_message() instead.
 
     Args:
@@ -127,10 +127,8 @@ def make_amiga_rpdo1_proto(
     Returns:
         An instance of a canbus_pb2.RawCanbusMessage.
     """
-    warnings.warn(
-        "make_amiga_rpdo1_proto is deprecated as of v2.3 and will be removed in farm-ng-amiga v2.5", stacklevel=2
-    )
-    warnings.warn("Use AmigaRpdo1.to_raw_canbus_message() instead.", stacklevel=2)
+    logging.warning("make_amiga_rpdo1_proto is deprecated as of v2.3.0")
+    logging.warning("Use AmigaRpdo1.to_raw_canbus_message() instead.")
 
     # TODO: add some checkers, or make python CHECK_API
     return canbus_pb2.RawCanbusMessage(
@@ -186,11 +184,8 @@ class AmigaRpdo1(Packet):
     def decode(self, data):
         """Decodes CAN message data and populates the values of the class."""
         if len(data) == 5:
-            warnings.warn(
-                "Please update dashboard firmware to >= v0.1.9."
-                " New AmigaTpdo1 packets include more data. Support will be removed in farm_ng_amiga v0.0.9",
-                stacklevel=2,
-            )
+            logging.warning("Please update dashboard firmware to >= v0.1.9 to use updated AmigaRpdo1 packet format.")
+
             (self.state_req, cmd_speed, cmd_ang_rate) = unpack(self.legacy_format, data)
             self.cmd_speed = cmd_speed / 1000.0
             self.cmd_ang_rate = cmd_ang_rate / 1000.0
@@ -253,11 +248,8 @@ class AmigaTpdo1(Packet):
     def decode(self, data):
         """Decodes CAN message data and populates the values of the class."""
         if len(data) == 5:
-            warnings.warn(
-                "Please update dashboard firmware to >= v0.1.9."
-                " New AmigaTpdo1 packets include more data. Support will be removed in farm_ng_amiga v0.0.9",
-                stacklevel=2,
-            )
+            logging.warning("Please update dashboard firmware to >= v0.1.9 to use updated AmigaTpdo1 packet format.")
+
             (self.state, meas_speed, meas_ang_rate) = unpack(self.legacy_format, data)
             self.meas_speed = meas_speed / 1000.0
             self.meas_ang_rate = meas_ang_rate / 1000.0
@@ -331,7 +323,7 @@ def parse_amiga_tpdo1_proto(message: canbus_pb2.RawCanbusMessage) -> AmigaTpdo1 
     IFF the message came from the dashboard and contains AmigaTpdo1 structure,
     formatting, and cobid.
 
-    WARNING: Deprecated starting with farm-ng-amiga v2.3 and will be removed in v2.5.
+    WARNING: Deprecated starting with farm-ng-amiga v2.3.0
     Please use AmigaTpdo1.from_raw_canbus_message() instead.
 
     Args:
@@ -340,10 +332,8 @@ def parse_amiga_tpdo1_proto(message: canbus_pb2.RawCanbusMessage) -> AmigaTpdo1 
     Returns:
         The parsed AmigaTpdo1 message, or None if the message is not a valid AmigaTpdo1 message.
     """
-    warnings.warn(
-        "parse_amiga_tpdo1_proto is deprecated as of v2.3 and will be removed in farm-ng-amiga v2.5", stacklevel=2
-    )
-    warnings.warn("Use AmigaTpdo1.from_raw_canbus_message() instead.", stacklevel=2)
+    logging.warning("parse_amiga_tpdo1_proto is deprecated as of v2.3.0")
+    logging.warning("Use AmigaTpdo1.from_raw_canbus_message() instead.")
 
     # TODO: add some checkers, or make python CHECK_API
     if message.id != AmigaTpdo1.cob_id + DASHBOARD_NODE_ID:
