@@ -385,6 +385,7 @@ class PendantState(Packet):
 
     scale = 32767
     format = "<hhI"
+    cob_id = 0x180
 
     def __init__(self, x=0, y=0, buttons=0):
         self.x = x
@@ -402,9 +403,6 @@ class PendantState(Packet):
         (xi, yi, self.buttons) = unpack(self.format, data)
         self.x = xi / self.scale
         self.y = yi / self.scale
-
-    def __str__(self):
-        return "x {:0.3f} y {:0.3f} buttons {}".format(self.x, self.y, self.buttons)
 
     def to_proto(self) -> amiga_v6_pb2.PendantState:
         """Packs the class data into a PendantState proto message.
@@ -433,8 +431,29 @@ class PendantState(Packet):
         obj.buttons = proto.buttons
         return obj
 
+    @classmethod
+    def from_raw_canbus_message(cls, message: canbus_pb2.RawCanbusMessage) -> PendantState:
+        """Parses a canbus_pb2.RawCanbusMessage.
+
+        IFF the message came from the pendant and contains PendantState structure,
+        formatting, and cobid.
+
+        Args:
+            message: The raw canbus message to parse.
+
+        Returns:
+            The parsed PendantState message.
+        """
+        if message.id != cls.cob_id + PENDANT_NODE_ID:
+            raise ValueError(f"Expected message from pendant, received message from node {message.id}")
+
+        return cls.from_can_data(message.data, stamp=message.stamp)
+
     def is_button_pressed(self, button: PendantButtons) -> bool:
         """Returns True if the button is pressed."""
         if not isinstance(button, PendantButtons):
             raise TypeError(f"Expected PendantButtons, received {type(button)}")
         return bool(self.buttons & button)
+
+    def __str__(self):
+        return "x {:0.3f} y {:0.3f} buttons {}".format(self.x, self.y, self.buttons)
