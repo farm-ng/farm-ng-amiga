@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import time
+import warnings
 from enum import IntEnum
 from struct import pack
 from struct import unpack
@@ -126,8 +127,10 @@ def make_amiga_rpdo1_proto(
     Returns:
         An instance of a canbus_pb2.RawCanbusMessage.
     """
-    print("WARNING: make_amiga_rpdo1_proto is deprecated as of v2.3 and will be removed in farm-ng-amiga v2.5")
-    print("Use AmigaRpdo1.to_raw_canbus_message() instead.")
+    warnings.warn(
+        "make_amiga_rpdo1_proto is deprecated as of v2.3 and will be removed in farm-ng-amiga v2.5", stacklevel=2
+    )
+    warnings.warn("Use AmigaRpdo1.to_raw_canbus_message() instead.", stacklevel=2)
 
     # TODO: add some checkers, or make python CHECK_API
     return canbus_pb2.RawCanbusMessage(
@@ -183,12 +186,11 @@ class AmigaRpdo1(Packet):
     def decode(self, data):
         """Decodes CAN message data and populates the values of the class."""
         if len(data) == 5:
-            # TODO: Instate warning when dashboard fw v0.1.9 is released
-            # warnings.warn(
-            #     "Please update dashboard firmware to >= v0.1.9."
-            #     " New AmigaTpdo1 packets include more data. Support will be removed in farm_ng_amiga v0.0.9",
-            #     stacklevel=2,
-            # )
+            warnings.warn(
+                "Please update dashboard firmware to >= v0.1.9."
+                " New AmigaTpdo1 packets include more data. Support will be removed in farm_ng_amiga v0.0.9",
+                stacklevel=2,
+            )
             (self.state_req, cmd_speed, cmd_ang_rate) = unpack(self.legacy_format, data)
             self.cmd_speed = cmd_speed / 1000.0
             self.cmd_ang_rate = cmd_ang_rate / 1000.0
@@ -251,12 +253,11 @@ class AmigaTpdo1(Packet):
     def decode(self, data):
         """Decodes CAN message data and populates the values of the class."""
         if len(data) == 5:
-            # TODO: Instate warning when dashboard fw v0.1.9 is released
-            # warnings.warn(
-            #     "Please update dashboard firmware to >= v0.1.9."
-            #     " New AmigaTpdo1 packets include more data. Support will be removed in farm_ng_amiga v0.0.9",
-            #     stacklevel=2,
-            # )
+            warnings.warn(
+                "Please update dashboard firmware to >= v0.1.9."
+                " New AmigaTpdo1 packets include more data. Support will be removed in farm_ng_amiga v0.0.9",
+                stacklevel=2,
+            )
             (self.state, meas_speed, meas_ang_rate) = unpack(self.legacy_format, data)
             self.meas_speed = meas_speed / 1000.0
             self.meas_ang_rate = meas_ang_rate / 1000.0
@@ -339,8 +340,10 @@ def parse_amiga_tpdo1_proto(message: canbus_pb2.RawCanbusMessage) -> AmigaTpdo1 
     Returns:
         The parsed AmigaTpdo1 message, or None if the message is not a valid AmigaTpdo1 message.
     """
-    print("WARNING: parse_amiga_tpdo1_proto is deprecated as of v2.3 and will be removed in farm-ng-amiga v2.5")
-    print("Use AmigaTpdo1.from_raw_canbus_message() instead.")
+    warnings.warn(
+        "parse_amiga_tpdo1_proto is deprecated as of v2.3 and will be removed in farm-ng-amiga v2.5", stacklevel=2
+    )
+    warnings.warn("Use AmigaTpdo1.from_raw_canbus_message() instead.", stacklevel=2)
 
     # TODO: add some checkers, or make python CHECK_API
     if message.id != AmigaTpdo1.cob_id + DASHBOARD_NODE_ID:
