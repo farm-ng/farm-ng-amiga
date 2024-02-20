@@ -76,3 +76,15 @@ message AmigaV6CanbusState {
   double battery_charge_level = 3;
   bool last_send_error = 4;  // True if the last send on the canbus failed
 }
+
+message PendantState {
+  /*
+  State of the wired Pendant connected to the Amiga.
+  */
+  uint32 node_id = 1;  // Node ID of sender
+  double stamp = 2;    // Received time, in host monotonic clock (seconds)
+
+  double x = 3;        // Joystick X axis
+  double y = 4;        // Joystick Y axis
+  uint32 buttons = 5;  // Buttons pressed, bit masked. See PendantButtons in packet.py
+}

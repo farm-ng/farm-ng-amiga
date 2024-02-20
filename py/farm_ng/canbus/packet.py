@@ -30,6 +30,19 @@ BRAIN_NODE_ID = 0x1F
 SDK_NODE_ID = 0x2A
 
 
+class PendantButtons(IntEnum):
+    """Bit field for pendant buttons."""
+
+    PAUSE = 0x01  # Square
+    BRAKE = 0x02  # Circle
+    PTO = 0x04  # Triangle
+    CRUISE = 0x08  # Cross (X)
+    LEFT = 0x10  # D-pad left
+    UP = 0x20  # D-pad up
+    RIGHT = 0x40  # D-pad right
+    DOWN = 0x80  # D-pad down
+
+
 class AmigaControlState(IntEnum):
     """State of the Amiga vehicle control unit (VCU)"""
 
@@ -365,3 +378,63 @@ class MotorState:
                 self.id, self.status.name, self.rpm, self.voltage, self.current, self.temperature, self.timestamp
             )
         )
+
+
+class PendantState(Packet):
+    """State of the Pendant (joystick position & pressed buttons)"""
+
+    scale = 32767
+    format = "<hhI"
+
+    def __init__(self, x=0, y=0, buttons=0):
+        self.x = x
+        self.y = y
+        self.buttons = buttons
+        self.stamp_packet(time.monotonic())
+
+    def encode(self):
+        """Returns the data contained by the class encoded as CAN message data."""
+        return pack(self.format, int(self.x * self.scale), int(self.y * self.scale), self.buttons)
+
+    def decode(self, data):
+        """Decodes CAN message data and populates the values of the class."""
+
+        (xi, yi, self.buttons) = unpack(self.format, data)
+        self.x = xi / self.scale
+        self.y = yi / self.scale
+
+    def __str__(self):
+        return "x {:0.3f} y {:0.3f} buttons {}".format(self.x, self.y, self.buttons)
+
+    def to_proto(self) -> amiga_v6_pb2.PendantState:
+        """Packs the class data into a PendantState proto message.
+
+        Returns: An instance of a PendantState proto.
+        """
+        return amiga_v6_pb2.PendantState(
+            node_id=PENDANT_NODE_ID, stamp=self.stamp.stamp, x=self.x, y=self.y, buttons=self.buttons
+        )
+
+    @classmethod
+    def from_proto(cls, proto: amiga_v6_pb2.PendantState) -> PendantState:
+        """Creates an instance of the class from a proto message.
+
+        Args:
+            proto: The PendantState proto message to parse.
+        """
+        # Check for correct proto
+        if not isinstance(proto, amiga_v6_pb2.PendantState):
+            raise TypeError(f"Expected amiga_v6_pb2.PendantState proto, received {type(proto)}")
+
+        obj = cls()
+        obj.stamp_packet(proto.stamp)
+        obj.x = proto.x
+        obj.y = proto.y
+        obj.buttons = proto.buttons
+        return obj
+
+    def is_button_pressed(self, button: PendantButtons) -> bool:
+        """Returns True if the button is pressed."""
+        if not isinstance(button, PendantButtons):
+            raise TypeError(f"Expected PendantButtons, received {type(button)}")
+        return bool(self.buttons & button)
