@@ -13,6 +13,7 @@
 # limitations under the License.
 from __future__ import annotations
 
+import logging
 import time
 from enum import IntEnum
 from struct import pack
@@ -28,6 +29,19 @@ DASHBOARD_NODE_ID = 0xE
 PENDANT_NODE_ID = 0xF
 BRAIN_NODE_ID = 0x1F
 SDK_NODE_ID = 0x2A
+
+
+class PendantButtons(IntEnum):
+    """Bit field for pendant buttons."""
+
+    PAUSE = 0x01  # Square
+    BRAKE = 0x02  # Circle
+    PTO = 0x04  # Triangle
+    CRUISE = 0x08  # Cross (X)
+    LEFT = 0x10  # D-pad left
+    UP = 0x20  # D-pad up
+    RIGHT = 0x40  # D-pad right
+    DOWN = 0x80  # D-pad down
 
 
 class AmigaControlState(IntEnum):
@@ -100,6 +114,9 @@ def make_amiga_rpdo1_proto(
     Uses the AmigaRpdo1 structure and formatting, that can be sent
     directly to the canbus service to be formatted and send on the CAN bus.
 
+    WARNING: Deprecated starting with farm-ng-amiga v2.3.0
+    Please use AmigaRpdo1.to_raw_canbus_message() instead.
+
     Args:
         state_req: State of the Amiga vehicle control unit (VCU).
         cmd_speed: Command speed in meters per second.
@@ -110,6 +127,9 @@ def make_amiga_rpdo1_proto(
     Returns:
         An instance of a canbus_pb2.RawCanbusMessage.
     """
+    logging.warning("make_amiga_rpdo1_proto is deprecated as of v2.3.0")
+    logging.warning("Use AmigaRpdo1.to_raw_canbus_message() instead.")
+
     # TODO: add some checkers, or make python CHECK_API
     return canbus_pb2.RawCanbusMessage(
         id=AmigaRpdo1.cob_id + DASHBOARD_NODE_ID,
@@ -164,12 +184,8 @@ class AmigaRpdo1(Packet):
     def decode(self, data):
         """Decodes CAN message data and populates the values of the class."""
         if len(data) == 5:
-            # TODO: Instate warning when dashboard fw v0.1.9 is released
-            # warnings.warn(
-            #     "Please update dashboard firmware to >= v0.1.9."
-            #     " New AmigaTpdo1 packets include more data. Support will be removed in farm_ng_amiga v0.0.9",
-            #     stacklevel=2,
-            # )
+            logging.warning("Please update dashboard firmware to >= v0.1.9 to use updated AmigaRpdo1 packet format.")
+
             (self.state_req, cmd_speed, cmd_ang_rate) = unpack(self.legacy_format, data)
             self.cmd_speed = cmd_speed / 1000.0
             self.cmd_ang_rate = cmd_ang_rate / 1000.0
@@ -182,6 +198,13 @@ class AmigaRpdo1(Packet):
         return "AMIGA RPDO1 Request state {} Command speed {:0.3f} Command angular rate {:0.3f}".format(
             self.state_req, self.cmd_speed, self.cmd_ang_rate
         ) + " Command PTO bits 0x{:x} Command h-bridge bits 0x{:x}".format(self.pto_bits, self.hbridge_bits)
+
+    def to_raw_canbus_message(self) -> canbus_pb2.RawCanbusMessage:
+        """Packs the class data into a canbus_pb2.RawCanbusMessage.
+
+        Returns: An instance of a canbus_pb2.RawCanbusMessage.
+        """
+        return canbus_pb2.RawCanbusMessage(id=self.cob_id + DASHBOARD_NODE_ID, data=self.encode())
 
 
 class AmigaTpdo1(Packet):
@@ -225,12 +248,8 @@ class AmigaTpdo1(Packet):
     def decode(self, data):
         """Decodes CAN message data and populates the values of the class."""
         if len(data) == 5:
-            # TODO: Instate warning when dashboard fw v0.1.9 is released
-            # warnings.warn(
-            #     "Please update dashboard firmware to >= v0.1.9."
-            #     " New AmigaTpdo1 packets include more data. Support will be removed in farm_ng_amiga v0.0.9",
-            #     stacklevel=2,
-            # )
+            logging.warning("Please update dashboard firmware to >= v0.1.9 to use updated AmigaTpdo1 packet format.")
+
             (self.state, meas_speed, meas_ang_rate) = unpack(self.legacy_format, data)
             self.meas_speed = meas_speed / 1000.0
             self.meas_ang_rate = meas_ang_rate / 1000.0
@@ -274,6 +293,24 @@ class AmigaTpdo1(Packet):
         obj.hbridge_bits = proto.hbridge_bits
         return obj
 
+    @classmethod
+    def from_raw_canbus_message(cls, message: canbus_pb2.RawCanbusMessage) -> AmigaTpdo1:
+        """Parses a canbus_pb2.RawCanbusMessage.
+
+        IFF the message came from the dashboard and contains AmigaTpdo1 structure,
+        formatting, and cobid.
+
+        Args:
+            message: The raw canbus message to parse.
+
+        Returns:
+            The parsed AmigaTpdo1 message.
+        """
+        if message.id != cls.cob_id + DASHBOARD_NODE_ID:
+            raise ValueError(f"Expected message from dashboard, received message from node {message.id}")
+
+        return cls.from_can_data(message.data, stamp=message.stamp)
+
     def __str__(self):
         return "AMIGA TPDO1 Amiga state {} Measured speed {:0.3f} Measured angular rate {:0.3f} @ time {}".format(
             self.state, self.meas_speed, self.meas_ang_rate, self.stamp.stamp
@@ -286,12 +323,18 @@ def parse_amiga_tpdo1_proto(message: canbus_pb2.RawCanbusMessage) -> AmigaTpdo1 
     IFF the message came from the dashboard and contains AmigaTpdo1 structure,
     formatting, and cobid.
 
+    WARNING: Deprecated starting with farm-ng-amiga v2.3.0
+    Please use AmigaTpdo1.from_raw_canbus_message() instead.
+
     Args:
         message: The raw canbus message to parse.
 
     Returns:
         The parsed AmigaTpdo1 message, or None if the message is not a valid AmigaTpdo1 message.
     """
+    logging.warning("parse_amiga_tpdo1_proto is deprecated as of v2.3.0")
+    logging.warning("Use AmigaTpdo1.from_raw_canbus_message() instead.")
+
     # TODO: add some checkers, or make python CHECK_API
     if message.id != AmigaTpdo1.cob_id + DASHBOARD_NODE_ID:
         return None
@@ -365,3 +408,82 @@ class MotorState:
                 self.id, self.status.name, self.rpm, self.voltage, self.current, self.temperature, self.timestamp
             )
         )
+
+
+class PendantState(Packet):
+    """State of the Pendant (joystick position & pressed buttons)"""
+
+    scale = 32767
+    format = "<hhI"
+    cob_id = 0x180
+
+    def __init__(self, x=0, y=0, buttons=0):
+        self.x = x  # [-1.0, 1.0] => [left, right]
+        self.y = y  # [-1.0, 1.0] => [reverse, forward]
+        self.buttons = buttons
+        self.stamp_packet(time.monotonic())
+
+    def encode(self):
+        """Returns the data contained by the class encoded as CAN message data."""
+        return pack(self.format, int(self.x * self.scale), int(self.y * self.scale), self.buttons)
+
+    def decode(self, data):
+        """Decodes CAN message data and populates the values of the class."""
+
+        (xi, yi, self.buttons) = unpack(self.format, data)
+        self.x = xi / self.scale
+        self.y = yi / self.scale
+
+    def to_proto(self) -> amiga_v6_pb2.PendantState:
+        """Packs the class data into a PendantState proto message.
+
+        Returns: An instance of a PendantState proto.
+        """
+        return amiga_v6_pb2.PendantState(
+            node_id=PENDANT_NODE_ID, stamp=self.stamp.stamp, x=self.x, y=self.y, buttons=self.buttons
+        )
+
+    @classmethod
+    def from_proto(cls, proto: amiga_v6_pb2.PendantState) -> PendantState:
+        """Creates an instance of the class from a proto message.
+
+        Args:
+            proto: The PendantState proto message to parse.
+        """
+        # Check for correct proto
+        if not isinstance(proto, amiga_v6_pb2.PendantState):
+            raise TypeError(f"Expected amiga_v6_pb2.PendantState proto, received {type(proto)}")
+
+        obj = cls()
+        obj.stamp_packet(proto.stamp)
+        obj.x = proto.x
+        obj.y = proto.y
+        obj.buttons = proto.buttons
+        return obj
+
+    @classmethod
+    def from_raw_canbus_message(cls, message: canbus_pb2.RawCanbusMessage) -> PendantState:
+        """Parses a canbus_pb2.RawCanbusMessage.
+
+        IFF the message came from the pendant and contains PendantState structure,
+        formatting, and cobid.
+
+        Args:
+            message: The raw canbus message to parse.
+
+        Returns:
+            The parsed PendantState message.
+        """
+        if message.id != cls.cob_id + PENDANT_NODE_ID:
+            raise ValueError(f"Expected message from pendant, received message from node {message.id}")
+
+        return cls.from_can_data(message.data, stamp=message.stamp)
+
+    def is_button_pressed(self, button: PendantButtons) -> bool:
+        """Returns True if the button is pressed."""
+        if not isinstance(button, PendantButtons):
+            raise TypeError(f"Expected PendantButtons, received {type(button)}")
+        return bool(self.buttons & button)
+
+    def __str__(self):
+        return "x {:0.3f} y {:0.3f} buttons {}".format(self.x, self.y, self.buttons)

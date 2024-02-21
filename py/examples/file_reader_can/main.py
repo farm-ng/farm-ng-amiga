@@ -14,11 +14,10 @@
 from __future__ import annotations
 
 import argparse
-from typing import Optional
 
 from farm_ng.canbus import canbus_pb2
 from farm_ng.canbus.packet import AmigaTpdo1
-from farm_ng.canbus.packet import parse_amiga_tpdo1_proto
+from farm_ng.canbus.packet import DASHBOARD_NODE_ID
 from farm_ng.core.events_file_reader import build_events_dict
 from farm_ng.core.events_file_reader import EventLogPosition
 from farm_ng.core.events_file_reader import EventsFileReader
@@ -47,8 +46,8 @@ def main(file_name: str) -> None:
 
         msg: canbus_pb2.RawCanbusMessage
         for msg in sample.messages:
-            tpdo1: Optional[AmigaTpdo1] = parse_amiga_tpdo1_proto(msg)
-            if tpdo1 is not None:
+            if msg.id == AmigaTpdo1.cob_id + DASHBOARD_NODE_ID:
+                tpdo1: AmigaTpdo1 = AmigaTpdo1.from_raw_canbus_message(msg)
                 print(tpdo1)
 
     assert reader.close()
