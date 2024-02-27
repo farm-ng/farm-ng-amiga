@@ -22,7 +22,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from farm_ng.core.event_client import EventClient
-from farm_ng.core.event_service_pb2 import EventServiceConfigList
+from farm_ng.core.event_service_pb2 import EventServiceConfig
 from farm_ng.core.events_file_reader import proto_from_json_file
 from farm_ng.filter.filter_pb2 import FilterState
 from farm_ng.track.track_pb2 import Track
@@ -74,35 +74,39 @@ def plot_track(waypoints: list[list[float]]) -> None:
     plt.show()
 
 
-async def create_start_pose(clients: dict | None = None) -> Pose3F64:
+async def create_start_pose(client: EventClient | None = None, timeout: float = 0.5) -> Pose3F64:
     """Create a start pose for the track.
 
     Args:
-        clients: A dictionary of EventClients for the required services (filter)
+        client: A EventClient for the required service (filter)
     Returns:
-        The start pose
+        The start pose (Pose3F64)
     """
     print("Creating start pose...")
 
-    # Get the current state of the filter
+    zero_tangent = np.zeros((6, 1), dtype=np.float64)
+    start = Pose3F64(a_from_b=Isometry3F64(), frame_a="world", frame_b="robot", tangent_of_b_in_a=zero_tangent)
+    if client is not None:
+        try:
+            # Get the current state of the filter
+            state: FilterState = await asyncio.wait_for(
+                client.request_reply("/get_state", Empty(), decode=True), timeout=timeout
+            )
+            start = Pose3F64.from_proto(state.pose)
+        except asyncio.TimeoutError:
+            print("Timeout while getting filter state. Using default start pose.")
+        except Exception as e:
+            print(f"Error getting filter state: {e}. Using default start pose.")
 
-    try:
-        state: FilterState = await asyncio.wait_for(
-            clients["filter"].request_reply("/get_state", Empty(), decode=True), timeout=1.0
-        )
-        start = Pose3F64.from_proto(state.pose)
-    except asyncio.TimeoutError:
-        zero_tangent = np.zeros((6, 1), dtype=np.float64)
-        start = Pose3F64(a_from_b=Isometry3F64(), frame_a="world", frame_b="robot", tangent_of_b_in_a=zero_tangent)
     return start
 
 
-async def build_track(reverse: bool, clients: dict | None = None, save_track: Path | None = None) -> Track:
+async def build_track(reverse: bool, client: EventClient | None = None, save_track: Path | None = None) -> Track:
     """Builds a custom track for the Amiga to follow.
 
     Args:
         reverse: Whether or not to reverse the track
-        clients: A dictionary of EventClients for the required services (filter)
+        client: A EventClient for the required service (filter)
         save_track: The path to save the track to
     Returns:
         The track
@@ -116,7 +120,7 @@ async def build_track(reverse: bool, clients: dict | None = None, save_track: Pa
     # down on row 4, and finish lining up on row 2
     # Assumption: At run time, the robot is positioned at the beginning of row 2, facing the end of row 2.
 
-    start = await create_start_pose(clients)
+    start = await create_start_pose(client)
 
     track_builder = TrackBuilder(start=start)
 
@@ -177,23 +181,17 @@ async def run(args) -> None:
     save_track: bool = args.save_track
     reverse: bool = args.reverse
 
-    if args.service_config is not None:
-        clients: dict[str, EventClient] = {}
-        expected_configs = ["filter"]
-        config_list = proto_from_json_file(args.service_config, EventServiceConfigList())
-        for config in config_list.configs:
-            if config.name in expected_configs:
-                clients[config.name] = EventClient(config)
+    client: EventClient | None = None
 
-        # Confirm that EventClients were created for all required services
-        for config in expected_configs:
-            if config not in clients:
-                raise RuntimeError(f"No {config} service config in {args.service_config}")
-    else:
-        clients = None
+    if args.service_config is not None:
+        client = EventClient(proto_from_json_file(args.service_config, EventServiceConfig()))
+        if client is None:
+            raise RuntimeError(f"No filter service config in {args.service_config}")
+        if client.config.name != "filter":
+            raise RuntimeError(f"Expected filter service in {args.service_config}, got {client.config.name}")
 
     # Start the asyncio tasks
-    tasks: list[asyncio.Task] = [asyncio.create_task(build_track(reverse, clients, save_track))]
+    tasks: list[asyncio.Task] = [asyncio.create_task(build_track(reverse, client, save_track))]
     await asyncio.gather(*tasks)
 
 
