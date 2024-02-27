@@ -25,7 +25,7 @@ from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfigList
 from farm_ng.core.events_file_reader import proto_from_json_file
 from farm_ng.track.track_pb2 import Track
-from farm_ng.track.utils import TrackBuilder
+from track_planner import TrackBuilder
 
 matplotlib.use("TkAgg")  # Set the backend to Agg for non-GUI environments
 
@@ -90,7 +90,7 @@ async def build_track(reverse: bool, clients: dict | None = None, save_track: Pa
     # Assumption: At run time, the robot is positioned at the beginning of row 2, facing the end of row 2.
 
     # Start the track builder - this start methods initializes the track with the current position of the robot
-    track_builder = await TrackBuilder.create(clients=clients, timeout=10.0)
+    track_builder = await TrackBuilder.create(clients=clients, timeout=1.0)
 
     # Drive forward 32 ft (up row 2)
     track_builder.create_straight_segment(next_frame_b="goal1", distance=row_length, spacing=0.1)
