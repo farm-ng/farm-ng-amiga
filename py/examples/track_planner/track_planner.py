@@ -54,26 +54,18 @@ class TrackBuilder:
 
         if angle != 0:
             num_segments = max(int(abs(angle) / spacing), 1)
-            delta_angle = angle / num_segments
-            delta_distance = distance / num_segments
-            rotation_fn = Rotation3F64.Rz if isinstance(angle, float) else Isometry3F64.Rz
-            for i in range(1, num_segments + 1):
-                segment_pose = Pose3F64(
-                    a_from_b=Isometry3F64([delta_distance, 0, 0], rotation_fn(delta_angle)),
-                    frame_a=segment_poses[-1].frame_b,
-                    frame_b=f"{next_frame_b}_{i - 1}",
-                )
-                segment_poses.append(segment_poses[-1] * segment_pose)
         else:
             num_segments = max(int(distance / spacing), 1)
-            delta_distance = distance / num_segments
-            for i in range(1, num_segments + 1):
-                segment_pose = Pose3F64(
-                    a_from_b=Isometry3F64([delta_distance, 0, 0], Rotation3F64.Rz(0)),
-                    frame_a=segment_poses[-1].frame_b,
-                    frame_b=f"{next_frame_b}_{i - 1}",
-                )
-                segment_poses.append(segment_poses[-1] * segment_pose)
+
+        delta_angle = angle / num_segments
+        delta_distance = distance / num_segments
+        for i in range(1, num_segments + 1):
+            segment_pose = Pose3F64(
+                a_from_b=Isometry3F64([delta_distance, 0, 0], Rotation3F64.Rz(delta_angle)),
+                frame_a=segment_poses[-1].frame_b,
+                frame_b=f"{next_frame_b}_{i - 1}",
+            )
+            segment_poses.append(segment_poses[-1] * segment_pose)
 
         segment_poses[-1].frame_b = next_frame_b
         self.track_waypoints.extend(segment_poses)
@@ -82,22 +74,22 @@ class TrackBuilder:
 
     def create_straight_segment(self, next_frame_b: str, distance: float, spacing: float = 0.1) -> None:
         """Compute a straight segment."""
-        self._create_segment(next_frame_b, distance, spacing)
+        self._create_segment(next_frame_b=next_frame_b, distance=distance, spacing=spacing)
 
     def create_ab_segment(self, next_frame_b: str, final_pose: Pose3F64, spacing: float = 0.1) -> None:
         """Compute an AB line segment."""
         initial_pose: Pose3F64 = self.track_waypoints[-1]
         distance: float = np.linalg.norm(initial_pose.a_from_b.translation - final_pose.a_from_b.translation)
-        self._create_segment(next_frame_b, distance, spacing)
+        self._create_segment(next_frame_b=next_frame_b, distance=distance, spacing=spacing)
 
     def create_turn_segment(self, next_frame_b: str, angle: float, spacing: float = 0.1) -> None:
         """Compute a turn (in place) segment."""
-        self._create_segment(next_frame_b, 0, spacing, angle)
+        self._create_segment(next_frame_b=next_frame_b, distance=0, spacing=spacing, angle=angle)
 
     def create_arc_segment(self, next_frame_b: str, radius: float, angle: float, spacing: float = 0.1) -> None:
         """Compute an arc segment."""
         arc_length = abs(angle * radius)
-        self._create_segment(next_frame_b, arc_length, spacing, angle)
+        self._create_segment(next_frame_b=next_frame_b, distance=arc_length, spacing=spacing, angle=angle)
 
     def pop_last_segment(self) -> None:
         """Remove the last (appended) segment from the track."""
