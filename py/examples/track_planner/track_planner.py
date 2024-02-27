@@ -13,57 +13,27 @@
 # limitations under the License.
 from __future__ import annotations
 
-import asyncio
 from pathlib import Path
 
 import numpy as np
-from farm_ng.core.event_client import EventClient
 from farm_ng.core.events_file_reader import proto_from_json_file
 from farm_ng.core.events_file_writer import proto_to_json_file
-from farm_ng.filter.filter_pb2 import FilterState
 from farm_ng.track.track_pb2 import Track
 from farm_ng_core_pybind import Isometry3F64
 from farm_ng_core_pybind import Pose3F64
 from farm_ng_core_pybind import Rotation3F64
-from google.protobuf.empty_pb2 import Empty
 
 
 class TrackBuilder:
     """A class for building tracks."""
 
-    def __init__(self, clients: dict[str, EventClient] | None = None, start: Pose3F64 | None = None) -> None:
+    def __init__(self, start: Pose3F64 | None = None) -> None:
         """Initialize the TrackBuilder."""
-        self.clients = clients if clients is not None else {}
-        self._start: Pose3F64()
+        self._start: Pose3F64 = start if start is not None else Pose3F64()
         self.track_waypoints: list[Pose3F64] = []
         self._segment_indices: list[int] = [0]
         self._loaded: bool = False
-
-        if start is not None:
-            self._start = start
-            self.track_waypoints = [start]
-
-    @classmethod
-    async def create(cls, clients, timeout=0.2):
-        """Create a TrackBuilder instance with an initial default pose."""
-        self = cls(clients)
-        # Attempt to get the actual pose with a timeout
-        zero_tangent = np.zeros((6, 1), dtype=np.float64)
-        self._start = Pose3F64(
-            a_from_b=Isometry3F64(), frame_a="world", frame_b="robot", tangent_of_b_in_a=zero_tangent
-        )
-
-        # Attempt to get the actual pose with a timeout
-        try:
-            updated_start = await asyncio.wait_for(self.get_pose(), timeout)
-            self._start = updated_start
-            print(f"Start pose:\n{self._start.a_from_b.translation}")
-        except asyncio.TimeoutError:
-            print("Timeout occurred when trying to get pose from filter, using default pose")
-
-        # Initialize the track_waypoints with the start pose
-        self.track_waypoints = [self._start]
-        return self
+        self.track_waypoints = [start]
 
     @property
     def track(self) -> Track:
@@ -76,19 +46,6 @@ class TrackBuilder:
         self._track = loaded_track
         self.track_waypoints = [Pose3F64.from_proto(pose) for pose in self.track.waypoints]
         self._loaded = True
-
-    async def get_pose(self) -> Pose3F64:
-        """Get the current pose of the robot in the world frame, from the filter service.
-
-        Args: None
-        Returns:
-            Pose3F64: The current pose of the robot in the world frame.
-        """
-        if self.clients is None:
-            raise ValueError("Clients not initialized")
-        # We use the FilterState as the best source of the current pose of the robot
-        state: FilterState = await self.clients["filter"].request_reply("/get_state", Empty(), decode=True)
-        return Pose3F64.from_proto(state.pose)
 
     def _create_segment(self, next_frame_b: str, distance: float, spacing: float, angle: float = 0) -> None:
         """Create a segment with given distance and spacing."""
@@ -202,7 +159,6 @@ class TrackBuilder:
         Args:
             track (Track): The track to merge.
         """
-        # TODO: Check if we can invert the track_to_merge and append it to the current track
         # Calculate the distance from the current track to the beginning and end of the track to merge
         dist_to_current_track = np.linalg.norm(
             self.track_waypoints[-1].a_from_b.translation - track_to_merge.waypoints[0].translation

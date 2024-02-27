@@ -24,7 +24,11 @@ import numpy as np
 from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfigList
 from farm_ng.core.events_file_reader import proto_from_json_file
+from farm_ng.filter.filter_pb2 import FilterState
 from farm_ng.track.track_pb2 import Track
+from farm_ng_core_pybind import Isometry3F64
+from farm_ng_core_pybind import Pose3F64
+from google.protobuf.empty_pb2 import Empty
 from track_planner import TrackBuilder
 
 matplotlib.use("TkAgg")  # Set the backend to Agg for non-GUI environments
@@ -70,6 +74,29 @@ def plot_track(waypoints: list[list[float]]) -> None:
     plt.show()
 
 
+async def create_start_pose(clients: dict | None = None) -> Pose3F64:
+    """Create a start pose for the track.
+
+    Args:
+        clients: A dictionary of EventClients for the required services (filter)
+    Returns:
+        The start pose
+    """
+    print("Creating start pose...")
+
+    # Get the current state of the filter
+
+    try:
+        state: FilterState = await asyncio.wait_for(
+            clients["filter"].request_reply("/get_state", Empty(), decode=True), timeout=1.0
+        )
+        start = Pose3F64.from_proto(state.pose)
+    except asyncio.TimeoutError:
+        zero_tangent = np.zeros((6, 1), dtype=np.float64)
+        start = Pose3F64(a_from_b=Isometry3F64(), frame_a="world", frame_b="robot", tangent_of_b_in_a=zero_tangent)
+    return start
+
+
 async def build_track(reverse: bool, clients: dict | None = None, save_track: Path | None = None) -> Track:
     """Builds a custom track for the Amiga to follow.
 
@@ -89,8 +116,9 @@ async def build_track(reverse: bool, clients: dict | None = None, save_track: Pa
     # down on row 4, and finish lining up on row 2
     # Assumption: At run time, the robot is positioned at the beginning of row 2, facing the end of row 2.
 
-    # Start the track builder - this start methods initializes the track with the current position of the robot
-    track_builder = await TrackBuilder.create(clients=clients, timeout=1.0)
+    start = await create_start_pose(clients)
+
+    track_builder = TrackBuilder(start=start)
 
     # Drive forward 32 ft (up row 2)
     track_builder.create_straight_segment(next_frame_b="goal1", distance=row_length, spacing=0.1)
