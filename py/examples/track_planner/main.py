@@ -85,7 +85,9 @@ async def create_start_pose(client: EventClient | None = None, timeout: float = 
     print("Creating start pose...")
 
     zero_tangent = np.zeros((6, 1), dtype=np.float64)
-    start = Pose3F64(a_from_b=Isometry3F64(), frame_a="world", frame_b="robot", tangent_of_b_in_a=zero_tangent)
+    start: Pose3F64 = Pose3F64(
+        a_from_b=Isometry3F64(), frame_a="world", frame_b="robot", tangent_of_b_in_a=zero_tangent
+    )
     if client is not None:
         try:
             # Get the current state of the filter
@@ -113,14 +115,14 @@ async def build_track(reverse: bool, client: EventClient | None = None, save_tra
     """
     print("Building track...")
 
-    row_spacing = 48 * 0.0254  # 48 inches in meters
-    row_length = 32 * 12 * 0.0254  # 32 feet in meters
+    row_spacing: float = 48 * 0.0254  # 48 inches in meters
+    row_length: float = 32 * 12 * 0.0254  # 32 feet in meters
 
     # Path: Start at the beginning row 2, go up on 2, down on row 4, up on row 1, down on row 3, up on row 1,
     # down on row 4, and finish lining up on row 2
     # Assumption: At run time, the robot is positioned at the beginning of row 2, facing the end of row 2.
 
-    start = await create_start_pose(client)
+    start: Pose3F64 = await create_start_pose(client)
 
     track_builder = TrackBuilder(start=start)
 
