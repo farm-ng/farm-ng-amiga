@@ -163,12 +163,12 @@ async def build_track(reverse: bool, client: EventClient | None = None, save_tra
     if reverse:
         track_builder.reverse_track()
 
+    # Print the number of waypoints in the track
+    print(f" Track created with {len(track_builder.track_waypoints)} waypoints")
+
     # Save the track to a file
     if save_track is not None:
         track_builder.save_track(save_track)
-
-    # Print the number of waypoints in the track
-    print(f" Track created with {len(track_builder.track_waypoints)} waypoints")
 
     # Plot the track
     waypoints = track_builder.unpack_track()
