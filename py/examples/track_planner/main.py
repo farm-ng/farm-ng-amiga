@@ -114,7 +114,7 @@ def pack_tool_state(tool_state: dict, track_builder: TrackBuilder(), state: bool
     return tool_state
 
 
-async def track_follower_subscriber(client: EventClient) -> TrackFollowerState)
+# async def track_follower_subscriber(client: EventClient) -> TrackFollowerState:
 
 async def drive_and_control(config_path, track, tool_state):
     clients: dict[str, EventClient]
@@ -219,7 +219,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="amiga-track_follower-square")
     parser.add_argument("--save-track", action='store_true', help="Save the track to a file.")
     parser.add_argument("--reverse", action='store_true', help="Reverse the track.")
-    parser.add_argument("--service-config", type Path, help="Path to the service config file.")
+    parser.add_argument("--service-config", type=Path, help="Path to the service config file.")
     args = parser.parse_args()
 
     # Create the asyncio event loop and run the main function
