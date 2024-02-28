@@ -196,6 +196,8 @@ async def build_track(save_track: bool, reverse: bool) -> (Track, dict):
     if save_track:
         track_builder.save_track(file_path)
 
+    print(f"Tool dict: {tool_state}")
+
     # Print the number of waypoints in the track
     print(f" Track created with {len(track_builder.track_waypoints)} waypoints")
 
