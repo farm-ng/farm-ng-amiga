@@ -51,16 +51,17 @@ class TrackBuilder:
         """Create a segment with given distance and spacing."""
         # Create a container to store the track segment waypoints
         segment_poses: list[Pose3F64] = [self.track_waypoints[-1]]
+        num_segments: int
 
         if angle != 0:
             num_segments = max(int(abs(angle) / spacing), 1)
         else:
             num_segments = max(int(distance / spacing), 1)
 
-        delta_angle = angle / num_segments
-        delta_distance = distance / num_segments
+        delta_angle: float = angle / num_segments
+        delta_distance: float = distance / num_segments
         for i in range(1, num_segments + 1):
-            segment_pose = Pose3F64(
+            segment_pose: Pose3F64 = Pose3F64(
                 a_from_b=Isometry3F64([delta_distance, 0, 0], Rotation3F64.Rz(delta_angle)),
                 frame_a=segment_poses[-1].frame_b,
                 frame_b=f"{next_frame_b}_{i - 1}",
@@ -77,9 +78,21 @@ class TrackBuilder:
         self._create_segment(next_frame_b=next_frame_b, distance=distance, spacing=spacing)
 
     def create_ab_segment(self, next_frame_b: str, final_pose: Pose3F64, spacing: float = 0.1) -> None:
-        """Compute an AB line segment."""
+        """Compute an AB line segment.
+
+        Assumption: We might not be perfectly aligned with thefinal pose, so we need
+        to turn in place first.
+        """
         initial_pose: Pose3F64 = self.track_waypoints[-1]
         distance: float = np.linalg.norm(initial_pose.a_from_b.translation - final_pose.a_from_b.translation)
+        heading_to_next_pose: float = np.arctan2(
+            final_pose.a_from_b.translation[0] - initial_pose.a_from_b.translation[0],
+            final_pose.a_from_b.translation[1] - initial_pose.a_from_b.translation[1],
+        )
+        turn_angle: float = np.pi / 2 - heading_to_next_pose - initial_pose.a_from_b.rotation.log()[-1]
+        # Turn in place to align with the final pose
+        self.create_turn_segment(next_frame_b=next_frame_b, angle=turn_angle, spacing=spacing)
+        # Drive straight to the final pose
         self._create_segment(next_frame_b=next_frame_b, distance=distance, spacing=spacing)
 
     def create_turn_segment(self, next_frame_b: str, angle: float, spacing: float = 0.1) -> None:
@@ -88,7 +101,7 @@ class TrackBuilder:
 
     def create_arc_segment(self, next_frame_b: str, radius: float, angle: float, spacing: float = 0.1) -> None:
         """Compute an arc segment."""
-        arc_length = abs(angle * radius)
+        arc_length: float = abs(angle * radius)
         self._create_segment(next_frame_b=next_frame_b, distance=arc_length, spacing=spacing, angle=angle)
 
     def pop_last_segment(self) -> None:
@@ -99,7 +112,7 @@ class TrackBuilder:
             return
 
         if len(self._segment_indices) > 1:  # Ensure there is a segment to pop
-            last_segment_start = self._segment_indices[-2]  # Get the start of the last segment
+            last_segment_start: int = self._segment_indices[-2]  # Get the start of the last segment
             # Remove the waypoints from the last segment
             self.track_waypoints = self.track_waypoints[:last_segment_start]
             # Remove the last segment index
