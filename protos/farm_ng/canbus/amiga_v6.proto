@@ -95,14 +95,14 @@ enum ConfigOperationIds {
   NO_OPERATION = 0; // No operation, indicating no specific operation.
   READ = 1;         // Read operation, to query the current value of a property.
   WRITE = 2;        // Write operation, to set the value of a property.
-  STORE = 3;        // Store operation, to save the current value of a property to non-volatile memory.
+  STORE = 3;        // Store operation, to persistently set the current value of a property.
 }
 
 // Value IDs for configuration request and reply operations with associated properties.
 // These IDs are used for querying and setting values on a dashboard.
 //
-// Note that not all values are persistent, denoted by "Non-persistent value".
-// Non-persistent values are not saved to non-volatile memory and are lost on power cycle.
+// Note that not all values can be set persistently, denoted by "Non-persistent value".
+// Using the STORE operation on a non-persistent value will act as a WRITE operation.
 enum ConfigValueIds {
   NO_VALUE = 0;           // No operation, indicating no specific value.
   V_MAX = 10;             // Max linear velocity of the robot. Non-persistent value.
@@ -130,7 +130,7 @@ enum ConfigValueIds {
   STEERING_GAMMA = 90;    // Adjusts the steering response curve.
 }
 
-// Units for configuration request and reply values (RequestReplyValIds)
+// Units for configuration request and reply values (ConfigValueIds)
 // to specify the unit of measurement for each value.
 // These units are used for querying and setting values on a dashboard.
 enum ConfigValueUnits {
@@ -145,11 +145,20 @@ enum ConfigValueUnits {
   V = 25;       // Volts, for electrical potentials.
 }
 
-// RequestReply encapsulates an operation ID, value ID, and unit,
-// representing a complete request or reply message.
+// ConfigRequestReply encapsulates an operation ID, value ID, unit of measurement,
+// value, and success status for a configuration request or reply operation.
+//
+// NOTE: The success field is only used for replies.
+// NOTE: The value field may be outside of the valid range for the value ID.
 message ConfigRequestReply {
   ConfigOperationIds op_id = 1; // The operation ID of the request/reply.
   ConfigValueIds val_id = 2;    // The value ID of the request/reply.
   ConfigValueUnits unit = 3;    // The unit of measurement for the value.
-  bool success = 4;             // True if the operation was successful. Not used in requests.
+  bool success = 4;             // For replies, true if the request was successful, false otherwise.
+
+  oneof value {                 // Set one of the following fields based on the value ID. Can be left unset for READ operations.
+    int32 int_value = 5;        // Used for integer values, e.g. PTO_CUR_DEV
+    double double_value = 6;    // Used for floating-point values, e.g. V_MAX
+    bool bool_value = 7;        // Used for boolean values, e.g. M10_ON
+  }
 }
