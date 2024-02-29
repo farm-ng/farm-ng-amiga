@@ -88,3 +88,68 @@ message PendantState {
   double y = 4;        // Joystick Y axis
   uint32 buttons = 5;  // Buttons pressed, bit masked. See PendantButtons in packet.py
 }
+
+// Operation IDs for configuration request and reply operations.
+// These IDs are used for querying and setting values on a dashboard.
+enum ConfigOperationIds {
+  NO_OPERATION = 0; // No operation, indicating no specific operation.
+  READ = 1;         // Read operation, to query the current value of a property.
+  WRITE = 2;        // Write operation, to set the value of a property.
+  STORE = 3;        // Store operation, to save the current value of a property to non-volatile memory.
+}
+
+// Value IDs for configuration request and reply operations with associated properties.
+// These IDs are used for querying and setting values on a dashboard.
+//
+// Note that not all values are persistent, denoted by "Non-persistent value".
+// Non-persistent values are not saved to non-volatile memory and are lost on power cycle.
+enum ConfigValueIds {
+  NO_VALUE = 0;           // No operation, indicating no specific value.
+  V_MAX = 10;             // Max linear velocity of the robot. Non-persistent value.
+  FLIP_JOYSTICK = 11;     // Invert the forward / reverse joystick input.
+  MAX_TURN_RATE = 20;     // Maximum turning rate, used at low speeds.
+  MIN_TURN_RATE = 21;     // Minimum turning rate, used at high speeds.
+  MAX_ANG_ACC = 23;       // Maximum angular acceleration.
+  M10_ON = 30;            // Enables / disables motor control signals for motor 10 (A).
+  M11_ON = 31;            // Enables / disables motor control signals for motor 11 (B).
+  M12_ON = 32;            // Enables / disables motor control signals for motor 12 (C).
+  M13_ON = 33;            // Enables / disables motor control signals for motor 13 (D).
+  BATT_LO = 40;           // Battery voltage low indicator.
+  BATT_HI = 41;           // Battery voltage high indicator.
+  TURTLE_V = 45;          // Turtle mode linear velocity.
+  TURTLE_W = 46;          // Turtle mode angular velocity.
+  WHEEL_TRACK = 50;       // Wheel track width. Distance between the centers of two wheels on the same axle.
+  WHEEL_GEAR_RATIO = 52;  // Gear ratio of the wheels. Non-persistent value.
+  WHEEL_RADIUS = 53;      // Radius of the wheels. Non-persistent value.
+  PTO_CUR_DEV = 80;       // Current PTO device to change settings of. Non-persistent value.
+  PTO_CUR_RPM = 81;       // Current RPM setting for the PTO device output shaft. Non-persistent value.
+  PTO_MIN_RPM = 82;       // Minimum RPM setting for the PTO device output shaft.
+  PTO_MAX_RPM = 83;       // Maximum RPM setting for the PTO device output shaft.
+  PTO_DEF_RPM = 84;       // Default RPM setting for the PTO device output shaft.
+  PTO_GEAR_RATIO = 85;    // Gear ratio for the PTO device, used to calculate the output shaft RPM.
+  STEERING_GAMMA = 90;    // Adjusts the steering response curve.
+}
+
+// Units for configuration request and reply values (RequestReplyValIds)
+// to specify the unit of measurement for each value.
+// These units are used for querying and setting values on a dashboard.
+enum ConfigValueUnits {
+  NO_UNITS = 0; // No operation, indicating no specific unit.
+  UNITLESS = 1; // Unitless, applicable to values that do not require units.
+  M = 4;        // Meters, for distances.
+  MPS = 10;     // Meters per second, for velocities.
+  RADPS = 15;   // Radians per second, for angular velocities.
+  RPM = 16;     // Revolutions per minute, for rotational speeds.
+  MS2 = 20;     // Meters per second squared, for linear accelerations.
+  RADS2 = 21;   // Radians per second squared, for angular accelerations.
+  V = 25;       // Volts, for electrical potentials.
+}
+
+// RequestReply encapsulates an operation ID, value ID, and unit,
+// representing a complete request or reply message.
+message ConfigRequestReply {
+  ConfigOperationIds op_id = 1; // The operation ID of the request/reply.
+  ConfigValueIds val_id = 2;    // The value ID of the request/reply.
+  ConfigValueUnits unit = 3;    // The unit of measurement for the value.
+  bool success = 4;             // True if the operation was successful. Not used in requests.
+}
