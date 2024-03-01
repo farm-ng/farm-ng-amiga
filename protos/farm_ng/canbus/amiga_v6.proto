@@ -151,14 +151,17 @@ enum ConfigValueUnits {
 // NOTE: The success field is only used for replies.
 // NOTE: The value field may be outside of the valid range for the value ID.
 message ConfigRequestReply {
-  ConfigOperationIds op_id = 1; // The operation ID of the request/reply.
-  ConfigValueIds val_id = 2;    // The value ID of the request/reply.
-  ConfigValueUnits unit = 3;    // The unit of measurement for the value.
-  bool success = 4;             // For replies, true if the request was successful, false otherwise.
+  uint32 node_id = 1;           // Node ID of the receiver (request) == sender (reply)
+  double stamp = 2;             // Received time, in host monotonic clock (seconds)
+
+  ConfigOperationIds op_id = 3; // The operation ID of the request/reply.
+  ConfigValueIds val_id = 4;    // The value ID of the request/reply.
+  ConfigValueUnits unit = 5;    // The unit of measurement for the value.
+  bool success = 6;             // For replies, true if the request was successful, false otherwise.
 
   oneof value {                 // Set one of the following fields based on the value ID. Can be left unset for READ operations.
-    int32 int_value = 5;        // Used for integer values, e.g. PTO_CUR_DEV
-    double double_value = 6;    // Used for floating-point values, e.g. V_MAX
-    bool bool_value = 7;        // Used for boolean values, e.g. M10_ON
+    int32 int_value = 7;        // Used for integer values, e.g. PTO_CUR_DEV
+    double double_value = 8;    // Used for floating-point values, e.g. V_MAX
+    bool bool_value = 9;        // Used for boolean values, e.g. M10_ON
   }
 }
