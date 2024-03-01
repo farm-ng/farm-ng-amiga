@@ -313,7 +313,7 @@ class AmigaTpdo1(Packet):
             The parsed AmigaTpdo1 message.
         """
         if message.id != cls.cob_id + DASHBOARD_NODE_ID:
-            raise ValueError(f"Expected message from dashboard, received message from node {message.id-cls.cob_id}")
+            raise ValueError(f"Expected message from dashboard, received message from node {message.id - cls.cob_id}")
 
         return cls.from_can_data(message.data, stamp=message.stamp)
 
