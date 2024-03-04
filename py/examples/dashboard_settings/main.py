@@ -38,13 +38,13 @@ async def main(service_config_path: Path) -> None:
         unit=amiga_v6_pb2.ConfigValueUnits.MPS,
     )
 
-    # vmax_write_req = amiga_v6_pb2.ConfigRequestReply(
-    #     node_id=DASHBOARD_NODE_ID,
-    #     op_id=amiga_v6_pb2.ConfigOperationIds.WRITE,
-    #     val_id=amiga_v6_pb2.ConfigValueIds.V_MAX,
-    #     unit=amiga_v6_pb2.ConfigValueUnits.MPS,
-    #     double_value=0.254,
-    # )
+    vmax_write_req = amiga_v6_pb2.ConfigRequestReply(
+        node_id=DASHBOARD_NODE_ID,
+        op_id=amiga_v6_pb2.ConfigOperationIds.WRITE,
+        val_id=amiga_v6_pb2.ConfigValueIds.V_MAX,
+        unit=amiga_v6_pb2.ConfigValueUnits.MPS,
+        double_value=0.254,
+    )
 
     track_read_req = amiga_v6_pb2.ConfigRequestReply(
         node_id=DASHBOARD_NODE_ID,
@@ -52,8 +52,25 @@ async def main(service_config_path: Path) -> None:
         val_id=amiga_v6_pb2.ConfigValueIds.WHEEL_TRACK,
     )
 
+    track_store_req = amiga_v6_pb2.ConfigRequestReply(
+        node_id=DASHBOARD_NODE_ID,
+        op_id=amiga_v6_pb2.ConfigOperationIds.STORE,
+        val_id=amiga_v6_pb2.ConfigValueIds.WHEEL_TRACK,
+        unit=amiga_v6_pb2.ConfigValueUnits.M,
+        double_value=0.8,
+    )
+
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
-    for req in [vmax_read_req, track_read_req]:
+
+    # Read and write the V_MAX parameter.
+    for req in [vmax_read_req, vmax_write_req, vmax_read_req]:
+        print("###################")
+        print(f"Request:\n{req}\n")
+        res = await EventClient(config).request_reply("/config_request", req, decode=True)
+        print(f"Response:\n{res}\n")
+
+    # Read and store the WHEEL_TRACK parameter.
+    for req in [track_read_req, track_store_req, track_read_req]:
         print("###################")
         print(f"Request:\n{req}\n")
         res = await EventClient(config).request_reply("/config_request", req, decode=True)
