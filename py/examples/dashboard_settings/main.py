@@ -50,6 +50,7 @@ async def main(service_config_path: Path) -> None:
         node_id=DASHBOARD_NODE_ID,
         op_id=amiga_v6_pb2.ConfigOperationIds.READ,
         val_id=amiga_v6_pb2.ConfigValueIds.WHEEL_TRACK,
+        unit=amiga_v6_pb2.ConfigValueUnits.M,
     )
 
     track_store_req = amiga_v6_pb2.ConfigRequestReply(
