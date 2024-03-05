@@ -34,14 +34,14 @@ async def main(service_config_path: Path) -> None:
     vmax_read_req = amiga_v6_pb2.ConfigRequestReply(
         node_id=DASHBOARD_NODE_ID,
         op_id=amiga_v6_pb2.ConfigOperationIds.READ,
-        val_id=amiga_v6_pb2.ConfigValueIds.V_MAX,
+        val_id=amiga_v6_pb2.ConfigValueIds.VEL_MAX,
         unit=amiga_v6_pb2.ConfigValueUnits.MPS,
     )
 
     vmax_write_req = amiga_v6_pb2.ConfigRequestReply(
         node_id=DASHBOARD_NODE_ID,
         op_id=amiga_v6_pb2.ConfigOperationIds.WRITE,
-        val_id=amiga_v6_pb2.ConfigValueIds.V_MAX,
+        val_id=amiga_v6_pb2.ConfigValueIds.VEL_MAX,
         unit=amiga_v6_pb2.ConfigValueUnits.MPS,
         double_value=0.254,
     )
@@ -63,7 +63,7 @@ async def main(service_config_path: Path) -> None:
 
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
 
-    # Read and write the V_MAX parameter.
+    # Read and write the VEL_MAX parameter.
     for req in [vmax_read_req, vmax_write_req, vmax_read_req]:
         print("###################")
         print(f"Request:\n{req}\n")

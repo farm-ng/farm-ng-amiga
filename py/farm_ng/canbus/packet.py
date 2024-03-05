@@ -27,8 +27,6 @@ from farm_ng.core.timestamp_pb2 import Timestamp
 # Important CAN node IDs
 DASHBOARD_NODE_ID = 0xE
 PENDANT_NODE_ID = 0xF
-# BRAIN_NODE_ID = 0x1F # unused
-# SDK_NODE_ID = 0x2A # unused
 
 
 class PendantButtons(IntEnum):
