@@ -24,11 +24,9 @@ from farm_ng.canbus import canbus_pb2
 from farm_ng.core.stamp import timestamp_from_monotonic
 from farm_ng.core.timestamp_pb2 import Timestamp
 
-# TODO: add some comments about the CAN bus protocol
+# Important CAN node IDs
 DASHBOARD_NODE_ID = 0xE
 PENDANT_NODE_ID = 0xF
-BRAIN_NODE_ID = 0x1F
-SDK_NODE_ID = 0x2A
 
 
 class PendantButtons(IntEnum):
@@ -58,6 +56,8 @@ class AmigaControlState(IntEnum):
 
 
 class ActuatorCommands(IntEnum):
+    """Commands for the linear and rotary actuators."""
+
     passive = 0x0
     forward = 0x1
     stopped = 0x2
@@ -67,10 +67,12 @@ class ActuatorCommands(IntEnum):
 def actuator_bits_cmd(
     a0=ActuatorCommands.passive, a1=ActuatorCommands.passive, a2=ActuatorCommands.passive, a3=ActuatorCommands.passive
 ):
+    """Returns the command bits for up to four linear or rotary actuators."""
     return a0.value + (a1.value << 2) + (a2.value << 4) + (a3.value << 6)
 
 
 def actuator_bits_read(bits):
+    """Parses the command bits for up to four linear or rotary actuators."""
     a0 = ActuatorCommands(bits & 0x3)
     a1 = ActuatorCommands((bits >> 2) & 0x3)
     a2 = ActuatorCommands((bits >> 4) & 0x3)
@@ -204,7 +206,9 @@ class AmigaRpdo1(Packet):
 
         Returns: An instance of a canbus_pb2.RawCanbusMessage.
         """
-        return canbus_pb2.RawCanbusMessage(id=self.cob_id + DASHBOARD_NODE_ID, data=self.encode())
+        return canbus_pb2.RawCanbusMessage(
+            stamp=self.stamp.stamp, id=self.cob_id + DASHBOARD_NODE_ID, data=self.encode()
+        )
 
 
 class AmigaTpdo1(Packet):
@@ -307,7 +311,7 @@ class AmigaTpdo1(Packet):
             The parsed AmigaTpdo1 message.
         """
         if message.id != cls.cob_id + DASHBOARD_NODE_ID:
-            raise ValueError(f"Expected message from dashboard, received message from node {message.id}")
+            raise ValueError(f"Expected message from dashboard, received message from node {message.id - cls.cob_id}")
 
         return cls.from_can_data(message.data, stamp=message.stamp)
 
