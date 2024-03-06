@@ -25,6 +25,43 @@ message CameraSettings {
   uint32 lens_pos = 4;
 }
 
+// The encoding format for the video stream
+// https://docs.luxonis.com/projects/api/en/latest/references/python/#depthai.VideoEncoderProperties.Profile
+enum EncoderProfile {
+  H264_BASELINE = 0;
+  H264_HIGH = 1;
+  H264_MAIN = 2;
+  H265_MAIN = 3;
+  MJPEG = 4;
+}
+
+// The rate control mode for the video stream
+// https://docs.luxonis.com/projects/api/en/latest/references/python/#depthai.VideoEncoderProperties.RateControlMode
+enum RateControlMode {
+  CBR = 0;  // Constant Bit Rate
+  VBR = 1;  // Variable Bit Rate
+}
+
+// The options for the video encoder
+message EncoderOptions {
+  // The profile to use for encoding.
+  EncoderProfile profile = 1;
+
+  // The rate control mode to use.
+  RateControlMode rate_control_mode = 2;
+
+  // The preferred bitrate for constant bitrate (CBR) mode, in kilobits per second (kbps).
+  uint32 cbr_preferred_bitrate_kbps = 3;
+
+  // The quality setting for variable bitrate (VBR) mode or MJPEG encoding.
+  // For VBR mode, this represents the desired quality level.
+  // For MJPEG encoding, this represents the JPEG quality level.
+  uint32 vbr_or_mjpeg_quality = 4;
+
+  // The number of frames between keyframes.
+  uint32 frames_per_keyframe = 5;
+}
+
 message OakImageMeta {
   int64 category = 1;          // DepthAI catetory
   int64 instance_num = 2;      // DepthAI instance number
@@ -33,6 +70,7 @@ message OakImageMeta {
   double timestamp_device = 5; // seconds, capture time (begin of exposure) in the device monotonic clock
   double timestamp_recv = 7;   // seconds, host receive time in host monotonic clock
   CameraSettings settings = 6;
+  EncoderOptions encoder_options = 8;
 }
 
 message OakFrame {
