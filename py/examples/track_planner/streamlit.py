@@ -73,7 +73,7 @@ def plot_track(waypoints: list[list[float]]) -> None:
     plt.clf()
 
 
-async def create_start_pose(client: EventClient | None = None, timeout: float = 3.25) -> Pose3F64:
+async def create_start_pose(client: EventClient | None = None, timeout: float = 1.0) -> Pose3F64:
     """Create a start pose for the track.
 
     Args:
@@ -82,10 +82,11 @@ async def create_start_pose(client: EventClient | None = None, timeout: float = 
         The start pose (Pose3F64)
     """
 
-    client_path = Path("/home/gdemoura/farm-ng/farm-ng-amiga/py/examples/track_planner/service_config.json")
+    client_path = Path("./service_config.json")
 
     if client_path is not None:
         client = EventClient(proto_from_json_file(client_path, EventServiceConfig()))
+        print(client.config.host)
         if client is None:
             raise RuntimeError(f"No filter service config in {client_path}")
         if client.config.name != "filter":
@@ -111,20 +112,14 @@ async def create_start_pose(client: EventClient | None = None, timeout: float = 
 
 
 def main():
-    st.sidebar.title("Custom Track Generator")
-
-    # Input parameters
-    angle = st.sidebar.number_input("Angle (degrees)", value=90.0, step=1.0)
-    radius = st.sidebar.number_input("Radius (meters)", value=1.0, step=0.1)
-    distance = st.sidebar.number_input("Distance (meters)", value=10.0, step=1.0)
-
+    st.markdown("<h1 style='text-align: center;'>Amiga Track Planner</h1>", unsafe_allow_html=True)
     # Initialize or retrieve the track builder from session state
     if 'track_builder' not in st.session_state:
         start = asyncio.run(create_start_pose())
         st.session_state['track_builder'] = TrackBuilder(start=start)
 
     # Handling the addition of straight and turn segments
-    handle_segment_addition(angle, radius, distance)
+    handle_segment_addition()
 
     # Dynamic track name input and save functionality
     track_name_input_and_save()
@@ -133,40 +128,60 @@ def main():
     plot_existing_track()
 
 
-def handle_segment_addition(angle, radius, distance):
+def handle_segment_addition():
+    st.sidebar.title("Add Track Segments")
+    # Distance input remains in the sidebar, outside of the columns
+    distance = st.sidebar.number_input("Distance (meters)", value=10.0, step=1.0)
+
+    # For the Add straight segment button and the logic associated with it
     if st.sidebar.button("Add straight segment"):
         st.session_state.track_builder.create_straight_segment(next_frame_b="goal1", distance=distance, spacing=0.1)
         st.sidebar.write("Straight segment added.")
+
+    # Use st.sidebar.columns to create a two-column layout for Angle and Radius
+    col1, col2 = st.sidebar.columns(2)
+
+    with col1:
+        # Place the Angle input in the first column
+        angle = st.number_input("Angle (degrees)", value=90.0, step=1.0)
+
+    with col2:
+        # Place the Radius input in the second column
+        radius = st.number_input("Radius (meters)", value=1.0, step=0.1)
+
+    # For the Add turn segment button and the logic associated with it
     if st.sidebar.button("Add turn segment"):
         st.session_state.track_builder.create_arc_segment(
             next_frame_b="goal2", radius=radius, angle=np.radians(angle), spacing=0.1
         )
         st.sidebar.write("Turn segment added.")
-    if st.sidebar.button("Undo last segment", key="undo_last_segment"):
+
+    st.sidebar.markdown("<hr>", unsafe_allow_html=True)
+    st.sidebar.title("Undo")
+
+    # Undo last segment button with a unique key to avoid any widget ID conflicts
+    if st.sidebar.button("Pop last segment", key="undo_last_segment"):
         st.session_state.track_builder.pop_last_segment()
         st.sidebar.write("Last segment removed.")
 
+    st.sidebar.markdown("<hr>", unsafe_allow_html=True)
+
 
 def track_name_input_and_save():
+    st.sidebar.title("Save Track")
     home_directory = Path.home()
     save_track = home_directory / st.sidebar.text_input("Filename", value="custom_track")
     save_track = save_track.with_suffix(".json")
 
-    robot_name = st.sidebar.text_input("Robot Name", value="")
-
-    if st.sidebar.button("Save track", key="save_track_button"):
+    if st.sidebar.button("Save", key="save_track_button"):
         st.session_state.track_builder.save_track(save_track)
         st.write(f"Track saved as {save_track}!")
 
-        # Only proceed with SCP if a robot name is provided
-        if robot_name:
-            success, message = scp_file_to_robot(save_track, robot_name)
-            if success:
-                st.success(message)
-            else:
-                st.error(message)
+        success, message = scp_file_to_robot(save_track)
+        if success:
+            st.success(message)
         else:
-            st.warning("Robot name is empty, skipping file transfer.")
+            st.error(message)
 
 
 def plot_existing_track():
@@ -176,12 +191,21 @@ def plot_existing_track():
             plot_track(waypoints)
 
 
-def scp_file_to_robot(file_path, robot_name):
-    destination = f"adminfarmng@{robot_name}:/mnt/data/tracks/{file_path.name}"
+def scp_file_to_robot(file_path):
+    client_path = Path("./service_config.json")
+
+    if client_path is not None:
+        client = EventClient(proto_from_json_file(client_path, EventServiceConfig()))
+        print(client.config.host)
+        if client is None:
+            raise RuntimeError(f"No filter service config in {client_path}")
+        if client.config.name != "filter":
+            raise RuntimeError(f"Expected filter service in {client_path}, got {client.config.name}")
+    destination = f"adminfarmng@{client.config.host}:/mnt/data/tracks/{file_path.name}"
     command = ["scp", str(file_path), destination]
     try:
         subprocess.run(command, check=True)
-        return True, f"File successfully transferred to {robot_name}"
+        return True, f"File successfully transferred to {client.config.host}"
     except subprocess.CalledProcessError as e:
         return False, f"Error transferring file: {e}"
 
