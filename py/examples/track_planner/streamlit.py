@@ -157,10 +157,10 @@ def handle_segment_addition():
         st.sidebar.write("Turn segment added.")
 
     st.sidebar.markdown("<hr>", unsafe_allow_html=True)
-    st.sidebar.title("Undo")
+    st.sidebar.title("Remove Last Segment")
 
     # Undo last segment button with a unique key to avoid any widget ID conflicts
-    if st.sidebar.button("Pop last segment", key="undo_last_segment"):
+    if st.sidebar.button("Undo", key="undo_last_segment"):
         st.session_state.track_builder.pop_last_segment()
         st.sidebar.write("Last segment removed.")
 
@@ -168,12 +168,12 @@ def handle_segment_addition():
 
 
 def track_name_input_and_save():
-    st.sidebar.title("Save Track")
+    st.sidebar.title("Send Track to Amiga")
     home_directory = Path.home()
     save_track = home_directory / st.sidebar.text_input("Filename", value="custom_track")
     save_track = save_track.with_suffix(".json")
 
-    if st.sidebar.button("Save", key="save_track_button"):
+    if st.sidebar.button("Send", key="save_track_button"):
         st.session_state.track_builder.save_track(save_track)
         st.write(f"Track saved as {save_track}!")
 
