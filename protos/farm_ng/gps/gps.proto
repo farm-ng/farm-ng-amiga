@@ -68,6 +68,7 @@ message GpsFrame { // NAV-PVT
     double height = 19;             // Height above ellipsoid
     GpsFrameStatus status = 13;
     UtcStamp utc_stamp = 20;
+    uint32 num_satellites = 21;      // Number of satellites used in Nav Solution
 }
 
 message RelativePositionFrame { // NAV-RELPOSNED
