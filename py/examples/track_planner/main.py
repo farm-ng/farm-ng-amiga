@@ -135,32 +135,32 @@ async def build_track(reverse: bool, client: EventClient | None = None, save_tra
     # Drive forward 32 ft (down 4)
     track_builder.create_straight_segment(next_frame_b="goal3", distance=row_length, spacing=0.1)
 
-    # Maneuver at the end of row: skip two rows (144 inches) - (go from 4 to 1)
-    track_builder.create_arc_segment(next_frame_b="goal4", radius=1.5 * row_spacing, angle=radians(180), spacing=0.1)
+    # # Maneuver at the end of row: skip two rows (144 inches) - (go from 4 to 1)
+    # track_builder.create_arc_segment(next_frame_b="goal4", radius=1.5 * row_spacing, angle=radians(180), spacing=0.1)
 
-    # Drive forward 32 ft (up 1)
-    track_builder.create_straight_segment(next_frame_b="goal5", distance=row_length, spacing=0.1)
+    # # Drive forward 32 ft (up 1)
+    # track_builder.create_straight_segment(next_frame_b="goal5", distance=row_length, spacing=0.1)
 
-    # Maneuver at the end of row: skip one row (96 inches) - (go from 1 to 3)
-    track_builder.create_arc_segment(next_frame_b="goal6", radius=row_spacing, angle=radians(180), spacing=0.1)
+    # # Maneuver at the end of row: skip one row (96 inches) - (go from 1 to 3)
+    # track_builder.create_arc_segment(next_frame_b="goal6", radius=row_spacing, angle=radians(180), spacing=0.1)
 
-    # Drive forward 32 ft (down 3)
-    track_builder.create_straight_segment(next_frame_b="goal7", distance=row_length, spacing=0.1)
+    # # Drive forward 32 ft (down 3)
+    # track_builder.create_straight_segment(next_frame_b="goal7", distance=row_length, spacing=0.1)
 
-    # Maneuver at the end of row: skip one row (96 inches) - (go from 3 to 1)
-    track_builder.create_arc_segment(next_frame_b="goal8", radius=row_spacing, angle=radians(180), spacing=0.1)
+    # # Maneuver at the end of row: skip one row (96 inches) - (go from 3 to 1)
+    # track_builder.create_arc_segment(next_frame_b="goal8", radius=row_spacing, angle=radians(180), spacing=0.1)
 
-    # Drive forward 32 ft (up 1)
-    track_builder.create_straight_segment(next_frame_b="goal9", distance=row_length, spacing=0.1)
+    # # Drive forward 32 ft (up 1)
+    # track_builder.create_straight_segment(next_frame_b="goal9", distance=row_length, spacing=0.1)
 
-    # Maneuver at the end of row: skip two rows (144 inches) - (go from 1 to 4)
-    track_builder.create_arc_segment(next_frame_b="goal10", radius=1.5 * row_spacing, angle=radians(180), spacing=0.1)
+    # # Maneuver at the end of row: skip two rows (144 inches) - (go from 1 to 4)
+    # track_builder.create_arc_segment(next_frame_b="goal10", radius=1.5 * row_spacing, angle=radians(180), spacing=0.1)
 
-    # Drive forward 32 ft (down 4)
-    track_builder.create_straight_segment(next_frame_b="goal11", distance=row_length, spacing=0.1)
+    # # Drive forward 32 ft (down 4)
+    # track_builder.create_straight_segment(next_frame_b="goal11", distance=row_length, spacing=0.1)
 
-    # Maneuver at the end of row: skip one row (96 inches) - (go from 4 to 2 - slightly before the start)
-    track_builder.create_arc_segment(next_frame_b="goal12", radius=row_spacing, angle=radians(175), spacing=0.1)
+    # # Maneuver at the end of row: skip one row (96 inches) - (go from 4 to 2 - slightly before the start)
+    # track_builder.create_arc_segment(next_frame_b="goal12", radius=row_spacing, angle=radians(175), spacing=0.1)
 
     if reverse:
         track_builder.reverse_track()

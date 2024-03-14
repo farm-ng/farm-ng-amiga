@@ -1,37 +1,38 @@
+# Copyright (c) farm-ng, inc.
+#
+# Licensed under the Amiga Development Kit License (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://github.com/farm-ng/amiga-dev-kit/blob/main/LICENSE
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 # Import necessary functions and classes directly from the original script
 from __future__ import annotations
 
-import streamlit as st
 import asyncio
-from math import radians
-from pathlib import Path
-import numpy as np
-
-import asyncio
-import numpy as np
-from farm_ng.filter.filter_pb2 import FilterState
-from farm_ng_core_pybind import Isometry3F64
-from farm_ng_core_pybind import Pose3F64
-from google.protobuf.empty_pb2 import Empty
-import argparse
-import asyncio
-from math import radians
+import subprocess
 from pathlib import Path
 
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+import streamlit as st
 from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfig
 from farm_ng.core.events_file_reader import proto_from_json_file
 from farm_ng.filter.filter_pb2 import FilterState
-from farm_ng.track.track_pb2 import Track
 from farm_ng_core_pybind import Isometry3F64
 from farm_ng_core_pybind import Pose3F64
 from google.protobuf.empty_pb2 import Empty
 from track_planner import TrackBuilder
 
 matplotlib.use("Agg")  # Set the backend to Agg for non-GUI environments
+
 
 def plot_track(waypoints: list[list[float]]) -> None:
     x = waypoints[0]
@@ -71,6 +72,7 @@ def plot_track(waypoints: list[list[float]]) -> None:
     st.pyplot(plt)
     plt.clf()
 
+
 async def create_start_pose(client: EventClient | None = None, timeout: float = 3.25) -> Pose3F64:
     """Create a start pose for the track.
 
@@ -107,6 +109,7 @@ async def create_start_pose(client: EventClient | None = None, timeout: float = 
 
     return start
 
+
 def main():
     st.sidebar.title("Custom Track Generator")
 
@@ -119,7 +122,7 @@ def main():
     if 'track_builder' not in st.session_state:
         start = asyncio.run(create_start_pose())
         st.session_state['track_builder'] = TrackBuilder(start=start)
-    
+
     # Handling the addition of straight and turn segments
     handle_segment_addition(angle, radius, distance)
 
@@ -129,12 +132,15 @@ def main():
     # Plot the track if there are waypoints
     plot_existing_track()
 
+
 def handle_segment_addition(angle, radius, distance):
     if st.sidebar.button("Add straight segment"):
         st.session_state.track_builder.create_straight_segment(next_frame_b="goal1", distance=distance, spacing=0.1)
         st.sidebar.write("Straight segment added.")
     if st.sidebar.button("Add turn segment"):
-        st.session_state.track_builder.create_arc_segment(next_frame_b="goal2", radius=radius, angle=np.radians(angle), spacing=0.1)
+        st.session_state.track_builder.create_arc_segment(
+            next_frame_b="goal2", radius=radius, angle=np.radians(angle), spacing=0.1
+        )
         st.sidebar.write("Turn segment added.")
     if st.sidebar.button("Undo last segment", key="undo_last_segment"):
         st.session_state.track_builder.pop_last_segment()
@@ -169,7 +175,6 @@ def plot_existing_track():
         if waypoints and len(waypoints[0]) > 0:  # Check if there are waypoints to plot
             plot_track(waypoints)
 
-import subprocess
 
 def scp_file_to_robot(file_path, robot_name):
     destination = f"adminfarmng@{robot_name}:/mnt/data/tracks/{file_path.name}"
