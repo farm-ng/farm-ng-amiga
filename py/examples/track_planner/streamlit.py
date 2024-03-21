@@ -31,6 +31,7 @@ from farm_ng.core.uri_pb2 import Uri
 from farm_ng.filter.filter_pb2 import FilterState
 from farm_ng_core_pybind import Isometry3F64
 from farm_ng_core_pybind import Pose3F64
+from farm_ng_core_pybind import Rotation3F64
 from geopy.distance import distance
 from google.protobuf.empty_pb2 import Empty
 from streamlit_folium import folium_static
@@ -125,6 +126,11 @@ class StreamlitApp:
 
         return target_lat, target_lon
 
+    def create_pose(self, x, y, heading) -> Pose3F64:
+        return Pose3F64(
+            a_from_b=Isometry3F64([x, y, 0], Rotation3F64.Rz(math.radians(heading))), frame_a="robot", frame_b="world"
+        )
+
     def plot_track(self) -> None:
         waypoints = self.track_builder.unpack_track()
         x = waypoints[0]
@@ -141,11 +147,12 @@ class StreamlitApp:
             lons.append(lon)
 
         # Assuming the first waypoint is the starting point, create a map centered around it
-        folium_map = folium.Map(location=[lats[0], lons[0]], zoom_start=35)
+        zoom_start = 20
+        folium_map = folium.Map(location=[lats[0], lons[0]], zoom_start=zoom_start)
 
         if len(headings) > 0:
             current_heading = headings[0]  # Assuming the first heading is what you want
-            scale_factor = 3.0  # Adjust this value for arrow length
+            scale_factor = 150 / zoom_start
 
             # Calculate the end point of the arrow based on the heading and scale factor
             end_lat, end_lon = self.relposned_to_latlon(
@@ -218,6 +225,27 @@ class StreamlitApp:
             self.track_builder.create_arc_segment(
                 next_frame_b="goal2", radius=radius, angle=np.radians(angle), spacing=0.1
             )
+
+        # Use st.sidebar.columns to create a two-column layout for Angle and Radius
+        col1, col2, col3 = st.sidebar.columns(3)
+
+        with col1:
+            # Place the Radius input in the second column
+            x = st.number_input("X (meters)", value=0.0, step=1.0)
+
+        with col2:
+            # Place the Radius input in the second column
+            y = st.number_input("Y (meters)", value=0.0, step=1.0)
+
+        with col3:
+            # Place the Angle input in the first column
+            heading = st.number_input("Heading (degrees)", value=0.0, step=10.0)
+
+        final_pose = self.create_pose(x, y, heading)
+
+        # For the Add turn segment button and the logic associated with it
+        if st.sidebar.button("Go to goal"):
+            self.track_builder.create_ab_segment(next_frame_b="goal2", final_pose=final_pose, spacing=0.1)
 
         st.sidebar.markdown("<hr>", unsafe_allow_html=True)
         st.sidebar.title("Remove Last Segment")
