@@ -18,197 +18,232 @@ import asyncio
 import subprocess
 from pathlib import Path
 
-import matplotlib
-import matplotlib.pyplot as plt
+import folium
+import nest_asyncio
 import numpy as np
 import streamlit as st
 from farm_ng.core.event_client import EventClient
-from farm_ng.core.event_service_pb2 import EventServiceConfig
+from farm_ng.core.event_service_pb2 import EventServiceConfigList
+from farm_ng.core.event_service_pb2 import SubscribeRequest
 from farm_ng.core.events_file_reader import proto_from_json_file
+from farm_ng.core.uri_pb2 import Uri
 from farm_ng.filter.filter_pb2 import FilterState
 from farm_ng_core_pybind import Isometry3F64
 from farm_ng_core_pybind import Pose3F64
+from geopy.distance import distance
 from google.protobuf.empty_pb2 import Empty
+from streamlit_folium import folium_static
 from track_planner import TrackBuilder
 
-matplotlib.use("Agg")  # Set the backend to Agg for non-GUI environments
+nest_asyncio.apply()
 
 
-def plot_track(waypoints: list[list[float]]) -> None:
-    x = waypoints[0]
-    y = waypoints[1]
-    headings = waypoints[2]
+class StreamlitApp:
+    def __init__(self):
+        self.config_path = Path("./service_config.json")
+        self.start_relposned: Pose3F64 | None = None
+        self.track_builder: TrackBuilder | None = None
+        self.clients: dict[str, EventClient] = self.create_clients()
+        self._current_pvt: list[float] = [0.0, 0.0]
 
-    # Calculate the arrow directions
-    U = np.cos(headings)
-    V = np.sin(headings)
+    def create_clients(self) -> None:
+        config_list = proto_from_json_file(self.config_path, EventServiceConfigList())
+        clients = {}
+        for config in config_list.configs:
+            clients[config.name] = EventClient(config)
+        return clients
 
-    # Parameters for arrow plotting
-    arrow_interval = 20  # Adjust this to change the frequency of arrows
-    turn_threshold = np.radians(10)  # Threshold in radians for when to skip plotting
-
-    plt.figure(figsize=(8, 8))
-    plt.plot(x, y, color='orange', linewidth=1.0)
-
-    for i in range(0, len(x), arrow_interval):
-        # Calculate the heading change
-        if i > 0:
-            heading_change = np.abs(headings[i] - headings[i - 1])
-        else:
-            heading_change = 0
-
-        # Plot the arrow if the heading change is below the threshold
-        if heading_change < turn_threshold:
-            plt.quiver(x[i], y[i], U[i], V[i], angles='xy', scale_units='xy', scale=3.5, color='blue')
-
-    plt.plot(x[0], y[0], marker="o", markersize=5, color='red')
-    plt.axis("equal")
-    legend_elements = [
-        plt.Line2D([0], [0], color='orange', lw=2, label='Track'),
-        plt.Line2D([0], [0], color='blue', lw=2, label='Heading'),
-        plt.scatter([], [], color='red', marker='o', s=30, label='Start'),
-    ]
-    plt.legend(handles=legend_elements)
-    st.pyplot(plt)
-    plt.clf()
+    async def start_track_planner(self):
+        asyncio.create_task(self.subscribe(self.clients["gps"], "pvt"))
+        await asyncio.sleep(1.5)
+        self.start_pvt = self.current_pvt
+        self.start_relposned = await self.create_start_pose()
+        self.track_builder = TrackBuilder(start=self.start_relposned)
 
 
-async def create_start_pose(client: EventClient | None = None, timeout: float = 1.0) -> Pose3F64:
-    """Create a start pose for the track.
+    async def subscribe(self, client: EventClient, path: str) -> list:
+        """Subscribe to the GPS position and velocity topic.
 
-    Args:
-        client: A EventClient for the required service (filter)
-    Returns:
-        The start pose (Pose3F64)
-    """
+        Args:
+            client: A EventClient for the required service (gps)
+            timeout: The timeout for the subscription
+        Returns:
+            The GPS position and velocity (list)
+        """
+        msg: None = None
+        while True:
+            async for _, msg in client.subscribe(SubscribeRequest(uri=Uri(path=f"/{path}"), every_n=1), decode=True):
+                self._current_pvt = [msg.latitude, msg.longitude]
+    @property
+    def current_pvt(self):
+        return self._current_pvt
 
-    client_path = Path("./service_config.json")
+    async def create_start_pose(self) -> Pose3F64:
+        """Create a start pose for the track.
 
-    if client_path is not None:
-        client = EventClient(proto_from_json_file(client_path, EventServiceConfig()))
-        print(client.config.host)
-        if client is None:
-            raise RuntimeError(f"No filter service config in {client_path}")
-        if client.config.name != "filter":
-            raise RuntimeError(f"Expected filter service in {client_path}, got {client.config.name}")
+        Args:
+            client: A EventClient for the required service (filter)
+        Returns:
+            The start pose (Pose3F64)
+        """
 
-    zero_tangent = np.zeros((6, 1), dtype=np.float64)
-    start: Pose3F64 = Pose3F64(
-        a_from_b=Isometry3F64(), frame_a="world", frame_b="robot", tangent_of_b_in_a=zero_tangent
-    )
-    if client is not None:
-        try:
-            # Get the current state of the filter
-            state: FilterState = await asyncio.wait_for(
-                client.request_reply("/get_state", Empty(), decode=True), timeout=timeout
+        zero_tangent = np.zeros((6, 1), dtype=np.float64)
+        start_filter: Pose3F64 = Pose3F64(
+            a_from_b=Isometry3F64(), frame_a="world", frame_b="robot", tangent_of_b_in_a=zero_tangent
+        )
+        if self.clients["filter"] is not None:
+            try:
+                # Get the current state of the filter
+                state: FilterState = await asyncio.wait_for(
+                    self.clients["filter"].request_reply("/get_state", Empty(), decode=True), timeout=1.0
+                )
+                start_filter = Pose3F64.from_proto(state.pose)
+            except asyncio.TimeoutError:
+                print("Timeout while getting filter state. Using default start pose.")
+            except Exception as e:
+                print(f"Error getting filter state: {e}. Using default start pose.")
+
+        return start_filter
+
+    def relposned_to_latlon(self, base_lat, base_lon, north, east):
+        """Convert North, East relative positions to latitude and longitude.
+
+        Parameters:
+        - base_lat, base_lon: The latitude and longitude of the reference point (e.g., current robot position).
+        - north, east: The North and East displacement from the reference point in meters.
+
+        Returns:
+        - (lat, lon): The latitude and longitude of the target point.
+        """
+        # Calculate the new latitude by moving north from the base point
+        target_lat = distance(meters=north).destination((base_lat, base_lon), bearing=0).latitude
+
+        # Calculate the new longitude by moving east from the base point
+        # Note: East is 90 degrees in the bearing
+        target_lon = distance(meters=east).destination((base_lat, base_lon), bearing=90).longitude
+
+        return target_lat, target_lon
+
+    def plot_track(self) -> None:
+        waypoints = self.track_builder.unpack_track()
+        x = waypoints[0]
+        y = waypoints[1]
+
+        lats = []
+        lons = []
+
+        # Convert all waypoints to lat/lon format
+        for i in range(len(x)):
+            lat, lon = self.relposned_to_latlon(self.start_pvt[0], self.start_pvt[1], x[i], y[i])
+            lats.append(lat)
+            lons.append(lon)
+
+        # Assuming the first waypoint is the starting point, create a map centered around it
+        folium_map = folium.Map(location=[self.current_pvt[0], self.current_pvt[1]], zoom_start=35)
+
+        # Add markers for start and end points, and current robot position
+        folium.Marker([lats[0], lons[0]], popup='Start Location', icon=folium.Icon(color='green')).add_to(folium_map)
+        folium.Marker([lats[-1], lons[-1]], popup='End Location', icon=folium.Icon(color='red')).add_to(folium_map)
+        # folium.Marker([self.current_pvt[0], self.current_pvt[1]], popup='Current Location', icon=folium.Icon(color='blue')).add_to(folium_map)
+
+        # Use PolyLine to draw the track on the map using the converted coordinates
+        track_coords = list(zip(lats, lons))
+        folium.PolyLine(track_coords, color="blue", weight=2.5, opacity=1).add_to(folium_map)
+
+        # Display the Folium map in Streamlit
+        folium_static(folium_map)
+
+
+    # App logic
+    def handle_segment_addition(self):
+        st.sidebar.title("Add Track Segments")
+        # Distance input remains in the sidebar, outside of the columns
+        distance = st.sidebar.number_input("Distance (meters)", value=10.0, step=1.0)
+
+        # For the Add straight segment button and the logic associated with it
+        if st.sidebar.button("Add straight segment"):
+            self.track_builder.create_straight_segment(next_frame_b="goal1", distance=distance, spacing=0.1)
+
+        # Use st.sidebar.columns to create a two-column layout for Angle and Radius
+        col1, col2 = st.sidebar.columns(2)
+
+        with col1:
+            # Place the Angle input in the first column
+            angle = st.number_input("Angle (degrees)", value=180.0, step=30.0)
+
+        with col2:
+            # Place the Radius input in the second column
+            radius = st.number_input("Radius (meters)", value=1.0, step=0.1)
+
+        # For the Add turn segment button and the logic associated with it
+        if st.sidebar.button("Add turn segment"):
+            self.track_builder.create_arc_segment(
+                next_frame_b="goal2", radius=radius, angle=np.radians(angle), spacing=0.1
             )
-            start = Pose3F64.from_proto(state.pose)
-        except asyncio.TimeoutError:
-            print("Timeout while getting filter state. Using default start pose.")
-        except Exception as e:
-            print(f"Error getting filter state: {e}. Using default start pose.")
 
-    return start
+        st.sidebar.markdown("<hr>", unsafe_allow_html=True)
+        st.sidebar.title("Remove Last Segment")
+
+        # Undo last segment button with a unique key to avoid any widget ID conflicts
+        if st.sidebar.button("Undo", key="undo_last_segment"):
+            self.track_builder.pop_last_segment()
+            st.sidebar.write("Last segment removed.")
+
+        st.sidebar.markdown("<hr>", unsafe_allow_html=True)
+
+    def plot_existing_track(self):
+        if self.track_builder is not None:
+            self.plot_track()
+
+    def track_name_input_and_save(self):
+        st.sidebar.title("Send Track to Amiga")
+        home_directory = Path.home()
+        save_track = home_directory / st.sidebar.text_input("Filename", value="custom_track")
+        save_track = save_track.with_suffix(".json")
+
+        if st.sidebar.button("Send", key="save_track_button"):
+            self.track_builder.save_track(save_track)
+            st.write(f"Track saved as {save_track}!")
+
+            success, message = self.scp_file_to_robot(save_track)
+            if success:
+                st.success(message)
+            else:
+                st.error(message)
+
+    def scp_file_to_robot(self, file_path):
+        if self.clients is None:
+            raise RuntimeError(f"No filter service config found in {self.config_path}")
+
+        ip = self.clients["gps"].config.host
+        destination = f"adminfarmng@{ip}:/mnt/data/tracks/{file_path.name}"
+        command = ["scp", str(file_path), destination]
+        try:
+            subprocess.run(command, check=True)
+            return True, f"File successfully transferred to {ip}"
+        except subprocess.CalledProcessError as e:
+            return False, f"Error transferring file: {e}"
+
+
+async def main_async():
+    st.markdown("<h1 style='text-align: center;'>Amiga Track Planner</h1>", unsafe_allow_html=True)
+
+    if 'app' not in st.session_state:
+        st.session_state['app'] = StreamlitApp()
+        await st.session_state['app'].start_track_planner()
+
+    # Handling the addition of straight and turn segments
+    st.session_state['app'].handle_segment_addition()
+
+    # Dynamic track name input and save functionality
+    st.session_state['app'].track_name_input_and_save()
+
+    # Plot the existing track
+    st.session_state['app'].plot_existing_track()
 
 
 def main():
-    st.markdown("<h1 style='text-align: center;'>Amiga Track Planner</h1>", unsafe_allow_html=True)
-    # Initialize or retrieve the track builder from session state
-    if 'track_builder' not in st.session_state:
-        start = asyncio.run(create_start_pose())
-        st.session_state['track_builder'] = TrackBuilder(start=start)
-
-    # Handling the addition of straight and turn segments
-    handle_segment_addition()
-
-    # Dynamic track name input and save functionality
-    track_name_input_and_save()
-
-    # Plot the track if there are waypoints
-    plot_existing_track()
-
-
-def handle_segment_addition():
-    st.sidebar.title("Add Track Segments")
-    # Distance input remains in the sidebar, outside of the columns
-    distance = st.sidebar.number_input("Distance (meters)", value=10.0, step=1.0)
-
-    # For the Add straight segment button and the logic associated with it
-    if st.sidebar.button("Add straight segment"):
-        st.session_state.track_builder.create_straight_segment(next_frame_b="goal1", distance=distance, spacing=0.1)
-        st.sidebar.write("Straight segment added.")
-
-    # Use st.sidebar.columns to create a two-column layout for Angle and Radius
-    col1, col2 = st.sidebar.columns(2)
-
-    with col1:
-        # Place the Angle input in the first column
-        angle = st.number_input("Angle (degrees)", value=90.0, step=1.0)
-
-    with col2:
-        # Place the Radius input in the second column
-        radius = st.number_input("Radius (meters)", value=1.0, step=0.1)
-
-    # For the Add turn segment button and the logic associated with it
-    if st.sidebar.button("Add turn segment"):
-        st.session_state.track_builder.create_arc_segment(
-            next_frame_b="goal2", radius=radius, angle=np.radians(angle), spacing=0.1
-        )
-        st.sidebar.write("Turn segment added.")
-
-    st.sidebar.markdown("<hr>", unsafe_allow_html=True)
-    st.sidebar.title("Remove Last Segment")
-
-    # Undo last segment button with a unique key to avoid any widget ID conflicts
-    if st.sidebar.button("Undo", key="undo_last_segment"):
-        st.session_state.track_builder.pop_last_segment()
-        st.sidebar.write("Last segment removed.")
-
-    st.sidebar.markdown("<hr>", unsafe_allow_html=True)
-
-
-def track_name_input_and_save():
-    st.sidebar.title("Send Track to Amiga")
-    home_directory = Path.home()
-    save_track = home_directory / st.sidebar.text_input("Filename", value="custom_track")
-    save_track = save_track.with_suffix(".json")
-
-    if st.sidebar.button("Send", key="save_track_button"):
-        st.session_state.track_builder.save_track(save_track)
-        st.write(f"Track saved as {save_track}!")
-
-        success, message = scp_file_to_robot(save_track)
-        if success:
-            st.success(message)
-        else:
-            st.error(message)
-
-
-def plot_existing_track():
-    if 'track_builder' in st.session_state and hasattr(st.session_state.track_builder, 'unpack_track'):
-        waypoints = st.session_state.track_builder.unpack_track()
-        if waypoints and len(waypoints[0]) > 0:  # Check if there are waypoints to plot
-            plot_track(waypoints)
-
-
-def scp_file_to_robot(file_path):
-    client_path = Path("./service_config.json")
-
-    if client_path is not None:
-        client = EventClient(proto_from_json_file(client_path, EventServiceConfig()))
-        print(client.config.host)
-        if client is None:
-            raise RuntimeError(f"No filter service config in {client_path}")
-        if client.config.name != "filter":
-            raise RuntimeError(f"Expected filter service in {client_path}, got {client.config.name}")
-    destination = f"adminfarmng@{client.config.host}:/mnt/data/tracks/{file_path.name}"
-    command = ["scp", str(file_path), destination]
-    try:
-        subprocess.run(command, check=True)
-        return True, f"File successfully transferred to {client.config.host}"
-    except subprocess.CalledProcessError as e:
-        return False, f"Error transferring file: {e}"
-
+    asyncio.run(main_async())
 
 if __name__ == "__main__":
     main()
