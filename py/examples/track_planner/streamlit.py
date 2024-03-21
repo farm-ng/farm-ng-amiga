@@ -134,7 +134,7 @@ class StreamlitApp:
 
         # Convert all waypoints to lat/lon format
         for i in range(len(x)):
-            lat, lon = self.relposned_to_latlon(self.start_pvt[0], self.start_pvt[1], x[i], y[i])
+            lat, lon = self.relposned_to_latlon(self.start_pvt[0], self.start_pvt[1], x[i], -y[i])
             lats.append(lat)
             lons.append(lon)
 
