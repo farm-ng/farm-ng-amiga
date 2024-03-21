@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import asyncio
+import math
 import subprocess
 from pathlib import Path
 
@@ -60,7 +61,6 @@ class StreamlitApp:
         self.start_relposned = await self.create_start_pose()
         self.track_builder = TrackBuilder(start=self.start_relposned)
 
-
     async def subscribe(self, client: EventClient, path: str) -> list:
         """Subscribe to the GPS position and velocity topic.
 
@@ -74,6 +74,7 @@ class StreamlitApp:
         while True:
             async for _, msg in client.subscribe(SubscribeRequest(uri=Uri(path=f"/{path}"), every_n=1), decode=True):
                 self._current_pvt = [msg.latitude, msg.longitude]
+
     @property
     def current_pvt(self):
         return self._current_pvt
@@ -128,6 +129,7 @@ class StreamlitApp:
         waypoints = self.track_builder.unpack_track()
         x = waypoints[0]
         y = waypoints[1]
+        headings = waypoints[2]
 
         lats = []
         lons = []
@@ -139,20 +141,56 @@ class StreamlitApp:
             lons.append(lon)
 
         # Assuming the first waypoint is the starting point, create a map centered around it
-        folium_map = folium.Map(location=[self.current_pvt[0], self.current_pvt[1]], zoom_start=35)
+        folium_map = folium.Map(location=[lats[0], lons[0]], zoom_start=35)
+
+        if len(headings) > 0:
+            current_heading = headings[0]  # Assuming the first heading is what you want
+            scale_factor = 3.0  # Adjust this value for arrow length
+
+            # Calculate the end point of the arrow based on the heading and scale factor
+            end_lat, end_lon = self.relposned_to_latlon(
+                lats[0],
+                lons[0],
+                +math.cos((current_heading)) * scale_factor,
+                -math.sin((current_heading)) * scale_factor,
+            )
+
+            # Calculate the coordinates for the feathers of the arrow
+            feather1_lat, feather1_lon = self.relposned_to_latlon(
+                end_lat,
+                end_lon,
+                -math.cos((current_heading + math.pi / 6)) * scale_factor / 2,
+                math.sin((current_heading + math.pi / 6)) * scale_factor / 2,
+            )
+            feather2_lat, feather2_lon = self.relposned_to_latlon(
+                end_lat,
+                end_lon,
+                -math.cos((current_heading - math.pi / 6)) * scale_factor / 2,
+                math.sin((current_heading - math.pi / 6)) * scale_factor / 2,
+            )
+
+            # Draw the arrow from the start position to the calculated end position
+            folium.PolyLine([[lats[0], lons[0]], [end_lat, end_lon]], color="red", weight=2.5, opacity=1).add_to(
+                folium_map
+            )
+            # Draw the feathers of the arrow
+            folium.PolyLine(
+                [[end_lat, end_lon], [feather1_lat, feather1_lon]], color="red", weight=2.5, opacity=1
+            ).add_to(folium_map)
+            folium.PolyLine(
+                [[end_lat, end_lon], [feather2_lat, feather2_lon]], color="red", weight=2.5, opacity=1
+            ).add_to(folium_map)
 
         # Add markers for start and end points, and current robot position
         folium.Marker([lats[0], lons[0]], popup='Start Location', icon=folium.Icon(color='green')).add_to(folium_map)
         folium.Marker([lats[-1], lons[-1]], popup='End Location', icon=folium.Icon(color='red')).add_to(folium_map)
-        # folium.Marker([self.current_pvt[0], self.current_pvt[1]], popup='Current Location', icon=folium.Icon(color='blue')).add_to(folium_map)
 
         # Use PolyLine to draw the track on the map using the converted coordinates
         track_coords = list(zip(lats, lons))
         folium.PolyLine(track_coords, color="blue", weight=2.5, opacity=1).add_to(folium_map)
 
         # Display the Folium map in Streamlit
-        folium_static(folium_map)
-
+        folium_static(folium_map, width=800, height=600)
 
     # App logic
     def handle_segment_addition(self):
@@ -244,6 +282,7 @@ async def main_async():
 
 def main():
     asyncio.run(main_async())
+
 
 if __name__ == "__main__":
     main()
