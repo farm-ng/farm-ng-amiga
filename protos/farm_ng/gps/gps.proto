@@ -44,7 +44,7 @@ message UtcStamp {
     int32 valid_date = 11;     // uint8 validDate -> Valid UTC Date
     int32 valid_time = 12;     // uint8 validTime -> Valid UTC Time of Day
     int32 fully_resolved = 13; // uint8 fullyResolved -> UTC time of day has been fully resolved (no seconds uncertainty)
-    int32 valid_mag = 14;      // uint8 validMag -> Valid Magnetic Declination
+    // Removed: int32 valid_mag = 14; // uint8 validMag -> Valid Magnetic Declination
 }
 
 message GpsFrame { // NAV-PVT
