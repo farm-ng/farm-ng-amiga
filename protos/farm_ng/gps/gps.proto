@@ -105,3 +105,17 @@ message GpsCoordinates{
   double latitude = 2;  // angle from equator (Wgs84), radians  (+ive northerly)
   double altitude = 3;  // meters above Wgs84 reference geoid
 }
+
+message EcefCoordinates {
+  farm_ng.core.proto.Timestamp stamp = 1;    // seconds, host receive time in monotonic clock
+  farm_ng.core.proto.Timestamp gps_time = 2; // seconds, measurement sample time converted to POSIX clock
+  double x = 3;    // meters
+  double y = 4;    // meters
+  double z = 5;    // meters
+  float accuracy = 6;   // stddev meters
+  EcefFlags flags = 7;
+}
+
+message EcefFlags {
+  bool INVALID_ECEF = 1;
+}
