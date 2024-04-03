@@ -24,7 +24,7 @@ from farm_ng.core.event_service_pb2 import EventServiceConfig
 from farm_ng.core.events_file_reader import proto_from_json_file
 
 
-async def main(service_config_path: Path) -> None:
+async def main(service_config_path: Path, store: bool) -> None:
     """Run the canbus service client.
 
     Args:
@@ -50,19 +50,20 @@ async def main(service_config_path: Path) -> None:
         node_id=DASHBOARD_NODE_ID,
         op_id=amiga_v6_pb2.ConfigOperationIds.READ,
         val_id=amiga_v6_pb2.ConfigValueIds.WHEEL_TRACK,
-        unit=amiga_v6_pb2.ConfigValueUnits.M,
+        unit=amiga_v6_pb2.ConfigValueUnits.METERS,
     )
 
-    track_store_req = amiga_v6_pb2.ConfigRequestReply(
+    track_write_req = amiga_v6_pb2.ConfigRequestReply(
         node_id=DASHBOARD_NODE_ID,
-        op_id=amiga_v6_pb2.ConfigOperationIds.STORE,
+        op_id=amiga_v6_pb2.ConfigOperationIds.WRITE,
         val_id=amiga_v6_pb2.ConfigValueIds.WHEEL_TRACK,
-        unit=amiga_v6_pb2.ConfigValueUnits.M,
+        unit=amiga_v6_pb2.ConfigValueUnits.METERS,
         double_value=0.8,
     )
 
-    config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
+    store_req = amiga_v6_pb2.ConfigRequestReply(node_id=DASHBOARD_NODE_ID, op_id=amiga_v6_pb2.ConfigOperationIds.STORE)
 
+    config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
     # Read and write the VEL_MAX parameter.
     for req in [vmax_read_req, vmax_write_req, vmax_read_req]:
         print("###################")
@@ -70,17 +71,25 @@ async def main(service_config_path: Path) -> None:
         res = await EventClient(config).request_reply("/config_request", req, decode=True)
         print(f"Response:\n{res}\n")
 
-    # Read and store the WHEEL_TRACK parameter.
-    for req in [track_read_req, track_store_req, track_read_req]:
+    # Read and write the WHEEL_TRACK parameter.
+    for req in [track_read_req, track_write_req, track_read_req]:
         print("###################")
         print(f"Request:\n{req}\n")
         res = await EventClient(config).request_reply("/config_request", req, decode=True)
+        print(f"Response:\n{res}\n")
+
+    # Optionally, store the parameters.
+    if store:
+        print("###################")
+        print(f"Request:\n{store_req}\n")
+        res = await EventClient(config).request_reply("/config_request", store_req, decode=True)
         print(f"Response:\n{res}\n")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="Query / set dashboard config parameters.")
     parser.add_argument("--service-config", type=Path, required=True, help="The canbus service config.")
+    parser.add_argument("--store", action="store_true", help="Store the persistent parameters on the dashboard.")
     args = parser.parse_args()
 
-    asyncio.run(main(args.service_config))
+    asyncio.run(main(args.service_config, args.store))
