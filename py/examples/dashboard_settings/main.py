@@ -50,14 +50,14 @@ async def main(service_config_path: Path, store: bool) -> None:
         node_id=DASHBOARD_NODE_ID,
         op_id=amiga_v6_pb2.ConfigOperationIds.READ,
         val_id=amiga_v6_pb2.ConfigValueIds.WHEEL_TRACK,
-        unit=amiga_v6_pb2.ConfigValueUnits.M,
+        unit=amiga_v6_pb2.ConfigValueUnits.METERS,
     )
 
     track_write_req = amiga_v6_pb2.ConfigRequestReply(
         node_id=DASHBOARD_NODE_ID,
         op_id=amiga_v6_pb2.ConfigOperationIds.WRITE,
         val_id=amiga_v6_pb2.ConfigValueIds.WHEEL_TRACK,
-        unit=amiga_v6_pb2.ConfigValueUnits.M,
+        unit=amiga_v6_pb2.ConfigValueUnits.METERS,
         double_value=0.8,
     )
 
@@ -71,7 +71,7 @@ async def main(service_config_path: Path, store: bool) -> None:
         res = await EventClient(config).request_reply("/config_request", req, decode=True)
         print(f"Response:\n{res}\n")
 
-    # Read and store the WHEEL_TRACK parameter.
+    # Read and write the WHEEL_TRACK parameter.
     for req in [track_read_req, track_write_req, track_read_req]:
         print("###################")
         print(f"Request:\n{req}\n")
