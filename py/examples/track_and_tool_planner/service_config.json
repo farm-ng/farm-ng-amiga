@@ -1,0 +1,39 @@
+{
+  "configs": [
+    {
+      "name": "track_follower",
+      "port": 20101,
+      "host": "localhost",
+      "subscriptions": [
+          {
+              "uri": {
+              "path": "/state",
+              "query": "service_name=track_follower"
+              },
+              "every_n": 1
+          }
+      ],
+      "log_level": "INFO"
+  },
+    {
+      "name": "filter",
+      "port": 20001,
+      "host": "localhost"
+    },
+    {
+      "name": "canbus",
+      "port": 6001,
+      "host": "localhost",
+      "subscriptions": [
+          {
+              "uri": {
+              "path": "/tool_statuses",
+              "query": "service_name=canbus"
+              },
+              "every_n": 1
+          }
+      ],
+      "log_level": "INFO"
+  }
+  ]
+}
