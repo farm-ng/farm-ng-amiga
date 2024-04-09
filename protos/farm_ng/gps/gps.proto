@@ -29,22 +29,23 @@ message UtcStamp {
     // Based (closely) on the fields in NAV-PVT message
     // https://github.com/KumarRobotics/ublox/blob/master/ublox_msgs/msg/NavPVT.msg
     // But tweaked to match the UBX NAV-PVT message we get from the Ublox
+    reserved 14; // Removed fields cannot be reused
 
-    int32 iTOW = 1;    // uint32 iTOW  -> GPS Millisecond time of week [ms]
-    int32 year = 2;    // uint16 year  -> Year (UTC)
-    int32 month = 3;   // uint8 month  -> Month, range 1..12 (UTC)
-    int32 day = 4;     // uint8 day    -> Day of month, range 1..31 (UTC)
-    int32 hour = 5;    // uint8 hour   -> Hour of day, range 0..23 (UTC)
-    int32 min = 6;     // uint8 min    -> Minute of hour, range 0..59 (UTC)
-    int32 sec = 7;     // uint8 second -> Seconds of minute, range 0..60 (UTC)
-    int32 nano = 8;    // int32 nano   -> Fraction of second, range -1e9 .. 1e9 (UTC)
-    int32 tAcc = 9;    // uint32 tAcc  -> Time accuracy estimate (UTC)
+    uint32 iTOW = 1;    // uint32 iTOW  -> GPS Millisecond time of week [ms]
+    uint32 year = 2;    // uint16 year  -> Year (UTC)
+    uint32 month = 3;   // uint8 month  -> Month, range 1..12 (UTC)
+    uint32 day = 4;     // uint8 day    -> Day of month, range 1..31 (UTC)
+    uint32 hour = 5;    // uint8 hour   -> Hour of day, range 0..23 (UTC)
+    uint32 min = 6;     // uint8 min    -> Minute of hour, range 0..59 (UTC)
+    uint32 sec = 7;     // uint8 second -> Seconds of minute, range 0..60 (UTC)
+    int32 nano = 8;     // int32 nano   -> Fraction of second, range -1e9 .. 1e9 (UTC)
+    uint32 tAcc = 9;    // uint32 tAcc  -> Time accuracy estimate (UTC)
 
     // Validity flags
-    int32 valid_date = 11;     // uint8 validDate -> Valid UTC Date
-    int32 valid_time = 12;     // uint8 validTime -> Valid UTC Time of Day
-    int32 fully_resolved = 13; // uint8 fullyResolved -> UTC time of day has been fully resolved (no seconds uncertainty)
-    int32 valid_mag = 14;      // uint8 validMag -> Valid Magnetic Declination
+    bool valid_date = 11;     // uint8 validDate -> Valid UTC Date
+    bool valid_time = 12;     // uint8 validTime -> Valid UTC Time of Day
+    bool fully_resolved = 13; // uint8 fullyResolved -> UTC time of day has been fully resolved (no seconds uncertainty)
+    // Removed: int32 valid_mag = 14; // uint8 validMag -> Valid Magnetic Declination
 }
 
 message GpsFrame { // NAV-PVT
@@ -63,17 +64,18 @@ message GpsFrame { // NAV-PVT
     double vel_down = 12;           // m/s N.E.D. down velocity
     float horizontal_accuracy = 15; // stddev m/s?
     float vertical_accuracy = 16;   // stddev m/s?
-    int32 position_mode = 17;       // GNSSfix Type: 0: no fix 1: dead reckoning only 2: 2D-fix 3: 3D-fix 4: GNSS + dead reckoning combined 5: time only fix
+    uint32 position_mode = 17;      // GNSSfix Type: 0: no fix 1: dead reckoning only 2: 2D-fix 3: 3D-fix 4: GNSS + dead reckoning combined 5: time only fix
     double p_dop = 18;              // Position DOP [1 / 0.01]
     double height = 19;             // Height above ellipsoid
     GpsFrameStatus status = 13;
     UtcStamp utc_stamp = 20;
+    uint32 num_satellites = 21;      // Number of satellites used in Nav Solution
 }
 
 message RelativePositionFrame { // NAV-RELPOSNED
   farm_ng.core.proto.Timestamp stamp = 1;    // seconds, host receive time in monotonic clock
   farm_ng.core.proto.Timestamp gps_time = 2; // seconds, measurement sample time converted to POSIX clock
-  int32 base_station_id = 3;
+  uint32 base_station_id = 3;
   double relative_pose_north = 4;    // northerly distance from base in meters
   double relative_pose_east = 5;     // easterly distance from base in meters
   double relative_pose_down = 6;     // down distance from base in meters
@@ -86,7 +88,7 @@ message RelativePositionFrame { // NAV-RELPOSNED
   float accuracy_down = 13;          // stddev meters
   float accuracy_length = 14;        // stddev meters
   float accuracy_heading = 15;       // stddev radians (check?)
-  int32 carr_soln = 16;              // Carrier phase range solution status: 0 = no carrier phase range solution 1 = carrier phase range solution with floating ambiguities 2 = carrier phase range solution with fixed ambiguities
+  uint32 carr_soln = 16;              // Carrier phase range solution status: 0 = no carrier phase range solution 1 = carrier phase range solution with floating ambiguities 2 = carrier phase range solution with fixed ambiguities
   bool is_moving = 17;               // 1 if the receiver is operating in moving base mode
   bool ref_obs_miss = 18;            // 1 if extrapolated reference observations were used to compute moving base solution this epoch
   bool ref_pos_miss = 19;            // 1 if extrapolated reference position was used to compute moving base solution this epoch
@@ -102,4 +104,18 @@ message GpsCoordinates{
   double longitude = 1; // angle from meridian (Wgs84), radians (+ive easterly)
   double latitude = 2;  // angle from equator (Wgs84), radians  (+ive northerly)
   double altitude = 3;  // meters above Wgs84 reference geoid
+}
+
+message EcefCoordinates {
+  farm_ng.core.proto.Timestamp stamp = 1;    // seconds, host receive time in monotonic clock
+  farm_ng.core.proto.Timestamp gps_time = 2; // seconds, measurement sample time converted to POSIX clock
+  double x = 3;    // meters
+  double y = 4;    // meters
+  double z = 5;    // meters
+  float accuracy = 6;   // stddev meters
+  EcefFlags flags = 7;
+}
+
+message EcefFlags {
+  bool INVALID_ECEF = 1;
 }
