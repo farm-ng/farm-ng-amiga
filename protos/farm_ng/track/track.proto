@@ -100,6 +100,8 @@ enum TrackStatusEnum {
   // Following the track was aborted (e.g., ability to control was lost)
   // See RobotStatus for more details
   TRACK_ABORTED = 7;
+  // Following the track was cancelled (e.g., user requested)
+  TRACK_CANCELLED = 8;
 }
 
 // Message representing the status of a robot's controlability
