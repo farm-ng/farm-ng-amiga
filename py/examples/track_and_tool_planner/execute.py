@@ -41,7 +41,7 @@ async def set_track(client: EventClient, track: Track) -> None:
         service_config (EventServiceConfig): The track_follower service config.
         track (Track): The track for the track_follower to follow.
     """
-    print(f"Setting track:\n{track}")
+    # print(f"Setting track:\n{track}")
     await client.request_reply("/set_track", TrackFollowRequest(track=track))
 
 
@@ -72,7 +72,7 @@ async def main(event_manager: EventClientSubscriptionManager, track_path: Path) 
     await start(event_manager.clients["track_follower"])
 
 
-async def control_tool(event_manager: EventClientSubscriptionManager, tool_state: Path) -> None:
+async def control_tool(event_manager: EventClientSubscriptionManager, service_config_list, tool_state: Path) -> None:
     """Stream the track_follower state.
 
     Args:
@@ -84,6 +84,7 @@ async def control_tool(event_manager: EventClientSubscriptionManager, tool_state
 
     # create a client to the camera service
     track_follower_client: EventClient = event_manager.clients["track_follower"]
+    tf_reader = service_config_list.configs[0].subscriptions[0]
     canbus_client: EventClient = event_manager.clients["canbus"]
 
     # create dictionary with tool state
@@ -92,18 +93,19 @@ async def control_tool(event_manager: EventClientSubscriptionManager, tool_state
 
     message: TrackFollowerState
     async for _, message in track_follower_client.subscribe(
-        track_follower_client.subscriptions[0], decode=True, every_n=1
+        tf_reader, decode=True
     ):
         current_waypoint = message.progress.closest_waypoint_index
+        print(f"Current waypoint: {current_waypoint}")
         next_tool_state = tool_state[str(current_waypoint)]
         commands = ActuatorCommands()
-        command_type_pto = PtoCommandType.PTO_FORWARD if next_tool_state else PtoCommandType.PTO_STOPPED
+        # command_type_pto = PtoCommandType.PTO_FORWARD if next_tool_state else PtoCommandType.PTO_STOPPED
         command_type_hbridge = (
             HBridgeCommandType.HBRIDGE_FORWARD if next_tool_state else HBridgeCommandType.HBRIDGE_REVERSE
         )
-        commands.pto.append(PtoCommand(id=0, command=command_type_pto, rpm=20.0))
-        commands.hbridge.append(HBridgeCommand(id=0, command=command_type_hbridge))
-        await canbus_client.request_reply("/control_tools", next_tool_state)
+        # commands.ptos.append(PtoCommand(id=0, command=command_type_pto, rpm=20.0))
+        commands.hbridges.append(HBridgeCommand(id=0, command=command_type_hbridge))
+        await canbus_client.request_reply("/control_tools", commands)
 
 
 async def run(args) -> None:
@@ -118,7 +120,7 @@ async def run(args) -> None:
 
     tasks: list[asyncio.Task] = [
         asyncio.create_task(main(event_manager, args.track)),
-        asyncio.create_task(control_tool(event_manager, args.tool_state)),
+        asyncio.create_task(control_tool(event_manager, service_config_list, args.tool_state)),
     ]
     await asyncio.gather(*tasks)
 
