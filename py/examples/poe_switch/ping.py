@@ -28,12 +28,12 @@ async def main(service_config_path: Path) -> None:
     Args:
         service_config_path (Path): The path to the camera service config.
     """
-    # create a client to the camera service
+    # Create a client to the camera service
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
 
-    # get the calibration message
-    ping_ok = await EventClient(config).request_reply("/ping", Empty(), decode=True)
-    print(ping_ok)
+    # Get the ping request reply message (bool_value is True if the device can be pinged, False otherwise)
+    reply = await EventClient(config).request_reply("/ping", Empty(), decode=True)
+    print(reply.bool_value)
 
 
 if __name__ == "__main__":
