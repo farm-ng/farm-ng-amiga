@@ -31,8 +31,8 @@ async def main(service_config_path: Path) -> None:
     # Create a client to the camera service
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
 
-    # Get the ping request reply message (bool_value is True if the device can be pinged, False otherwise)
-    reply = await EventClient(config).request_reply("/ping", Empty(), decode=True)
+    # Get the request reply message (bool_value is True if the device was successfully reset, False otherwise)
+    reply = await EventClient(config).request_reply("/reset_poe", Empty(), decode=True)
     print(reply.bool_value)
 
 
