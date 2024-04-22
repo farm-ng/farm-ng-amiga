@@ -1,5 +1,5 @@
 {
-    "name": "oak0",
+    "name": "poe_switch/1",
     "port": 50010,
     "host": "localhost",
     "log_level": "INFO"

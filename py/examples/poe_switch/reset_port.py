@@ -32,7 +32,7 @@ async def main(service_config_path: Path) -> None:
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
 
     # Get the request reply message (bool_value is True if the device was successfully reset, False otherwise)
-    reply = await EventClient(config).request_reply("/reset_camera", Empty(), decode=True)
+    reply = await EventClient(config).request_reply("/reset_port", Empty(), decode=True)
     print(reply.bool_value)
 
 
