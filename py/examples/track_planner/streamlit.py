@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import asyncio
 import math
-import subprocess
 from pathlib import Path
 
 import folium
@@ -262,33 +261,15 @@ class StreamlitApp:
             self.plot_track()
 
     def track_name_input_and_save(self):
-        st.sidebar.title("Send Track to Amiga")
+        st.sidebar.title("Save Track Locally")
         home_directory = Path.home()
         save_track = home_directory / st.sidebar.text_input("Filename", value="custom_track")
         save_track = save_track.with_suffix(".json")
 
-        if st.sidebar.button("Send", key="save_track_button"):
+        if st.sidebar.button("Save", key="save_track_button"):
             self.track_builder.save_track(save_track)
             st.write(f"Track saved as {save_track}!")
-
-            success, message = self.scp_file_to_robot(save_track)
-            if success:
-                st.success(message)
-            else:
-                st.error(message)
-
-    def scp_file_to_robot(self, file_path):
-        if self.clients is None:
-            raise RuntimeError(f"No filter service config found in {self.config_path}")
-
-        ip = self.clients["gps"].config.host
-        destination = f"adminfarmng@{ip}:/mnt/data/tracks/{file_path.name}"
-        command = ["scp", str(file_path), destination]
-        try:
-            subprocess.run(command, check=True)
-            return True, f"File successfully transferred to {ip}"
-        except subprocess.CalledProcessError as e:
-            return False, f"Error transferring file: {e}"
+            st.success("File successfully saved locally.")
 
 
 async def main_async():
