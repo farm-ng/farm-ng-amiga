@@ -98,7 +98,7 @@ message RelativePositionFrame { // NAV-RELPOSNED
   GpsCoordinates base_coords = 23;   // base / reference station coordinates, if known
 }
 
-message GpsCoordinates{
+message GpsCoordinates {
   // Not necessarily a reading directly from the GPS receiver.
   // Likely a created / calculated set of GPS coordinates.
   double longitude = 1; // angle from meridian (Wgs84), radians (+ive easterly)
