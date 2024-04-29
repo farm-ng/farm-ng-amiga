@@ -1,9 +1,5 @@
 {
     "name": "recorder",
-    "port": 5000,
-    "host": "localhost",
-    "log_level": "INFO",
-    "args": [
-      "--data-dir", "/mnt/data"
-    ]
+    "port": 50010,
+    "host": "localhost"
 }

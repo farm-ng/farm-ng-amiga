@@ -18,13 +18,12 @@ from pathlib import Path
 
 from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfig
-from farm_ng.core.event_service_pb2 import EventServiceConfigList
 from farm_ng.core.events_file_reader import proto_from_json_file
 from google.protobuf.empty_pb2 import Empty
 
 
-async def start_recording(service_config: EventServiceConfig, recording_profile: EventServiceConfigList) -> None:
-    reply = await EventClient(service_config).request_reply("start", recording_profile, decode=True)
+async def start_recording(service_config: EventServiceConfig, recording_profile: EventServiceConfig) -> None:
+    reply = await EventClient(service_config).request_reply("/start", recording_profile, decode=True)
     print(reply)
 
 
@@ -50,7 +49,7 @@ if __name__ == "__main__":
     service_config: EventServiceConfig = proto_from_json_file(args.service_config, EventServiceConfig())
 
     if args.command == "start_recording":
-        recording_profile = proto_from_json_file(args.recording_profile, EventServiceConfigList())
+        recording_profile = proto_from_json_file(args.recording_profile, EventServiceConfig())
         asyncio.run(start_recording(service_config, recording_profile))
 
     if args.command == "stop_recording":
