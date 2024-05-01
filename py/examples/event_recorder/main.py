@@ -23,12 +23,12 @@ from google.protobuf.empty_pb2 import Empty
 
 
 async def start_recording(service_config: EventServiceConfig, recording_profile: EventServiceConfig) -> None:
-    reply = await EventClient(service_config).request_reply("/start", recording_profile, decode=True)
+    reply = await EventClient(service_config).request_reply("recorder/start", recording_profile, decode=True)
     print(reply)
 
 
 async def stop_recording(service_config: EventServiceConfig) -> None:
-    reply = await EventClient(service_config).request_reply("/stop", Empty(), decode=True)
+    reply = await EventClient(service_config).request_reply("recorder/stop", Empty(), decode=True)
     print(reply)
 
 
