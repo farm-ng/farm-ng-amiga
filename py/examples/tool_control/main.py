@@ -138,7 +138,9 @@ async def run(service_config_path: Path, keyboard_listener: KeyboardListener):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="Command and monitor tools with the canbus service.")
+    parser = argparse.ArgumentParser(
+        prog="python main.py", description="Command and monitor tools with the canbus service."
+    )
     parser.add_argument("--service-config", type=Path, required=True, help="The canbus service config.")
     args = parser.parse_args()
 

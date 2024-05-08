@@ -54,7 +54,9 @@ def main(file_name: str) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="Event file reader example for parsing CAN messages.")
+    parser = argparse.ArgumentParser(
+        prog="python main.py", description="Event file reader example for parsing CAN messages."
+    )
     parser.add_argument("--file-name", type=str, required=True, help="Path to the `events.bin` file.")
     args = parser.parse_args()
     main(args.file_name)

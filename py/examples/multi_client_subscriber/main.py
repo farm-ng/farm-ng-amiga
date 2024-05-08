@@ -65,7 +65,7 @@ class MultiClientSubscriber:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        prog="amiga-multi-client-subscriber", description="Example of subscribing to events."
+        prog="python main.py", description="Example of subscribing to events from multiple clients."
     )
     parser.add_argument("--config", type=Path, required=True, help="The system config.")
     args = parser.parse_args()

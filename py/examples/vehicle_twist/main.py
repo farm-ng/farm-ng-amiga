@@ -89,7 +89,9 @@ async def main(service_config_path: Path) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="Send twist commands to control Amiga through the canbus service.")
+    parser = argparse.ArgumentParser(
+        prog="python main.py", description="Send twist commands to control Amiga through the canbus service."
+    )
     parser.add_argument("--service-config", type=Path, required=True, help="The canbus service config.")
     args = parser.parse_args()
 

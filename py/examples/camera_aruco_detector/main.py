@@ -138,7 +138,7 @@ class ArucoDetector:
 
 
 async def main() -> None:
-    parser = argparse.ArgumentParser(prog="amiga-camera-aruco-detector")
+    parser = argparse.ArgumentParser(prog="python main.py", description="Amiga camera aruco-detector example")
     parser.add_argument("--service-config", type=Path, required=True, help="The camera config.")
     parser.add_argument("--aruco-type", type=str, default="DICT_6X6_250", help="The ArUco dictionary type.")
     parser.add_argument("--marker-size", type=float, default=0.0145, help="The size of the ArUco marker in meters.")

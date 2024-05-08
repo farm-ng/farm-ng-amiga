@@ -59,7 +59,7 @@ class AddTwoIntServer:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="farm-ng-service")
+    parser = argparse.ArgumentParser(prog="python service.py", description="Farm-ng how to create a service example")
     parser.add_argument("--service-config", type=Path, required=True, help="The service config.")
     args = parser.parse_args()
 

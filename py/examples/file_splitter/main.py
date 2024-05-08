@@ -68,7 +68,7 @@ if __name__ == "__main__":
     # Get the current directory
     cwd = Path(__file__).resolve().parent
 
-    parser = argparse.ArgumentParser(prog="Event file reader example for parsing CAN messages.")
+    parser = argparse.ArgumentParser(prog="python main.py", description="Example to show how to split a log file.")
     parser.add_argument("--file-name", type=str, required=True, help="Path to the `events.bin` file to split.")
     parser.add_argument("--split-mb", type=int, required=True, help="Size of each split file in MB.")
     parser.add_argument(

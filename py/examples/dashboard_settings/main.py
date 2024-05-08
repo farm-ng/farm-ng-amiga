@@ -87,7 +87,7 @@ async def main(service_config_path: Path, store: bool) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="Query / set dashboard config parameters.")
+    parser = argparse.ArgumentParser(prog="python main.py", description="Query / set dashboard config parameters.")
     parser.add_argument("--service-config", type=Path, required=True, help="The canbus service config.")
     parser.add_argument("--store", action="store_true", help="Store the persistent parameters on the dashboard.")
     args = parser.parse_args()
