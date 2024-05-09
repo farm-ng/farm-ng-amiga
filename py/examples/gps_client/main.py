@@ -69,7 +69,7 @@ async def main(service_config_path: Path) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="python main.py", description="Amiga GPS stream example")
+    parser = argparse.ArgumentParser(prog="python main.py", description="Amiga GPS stream example.")
     parser.add_argument("--service-config", type=Path, required=True, help="The GPS config.")
     args = parser.parse_args()
 

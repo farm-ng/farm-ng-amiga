@@ -72,7 +72,7 @@ async def main() -> None:
     Args:
         service_config_path (Path): The path to the camera service config.
     """
-    parser = argparse.ArgumentParser(prog="python main.py", description="Amiga camera-pointcloud example")
+    parser = argparse.ArgumentParser(prog="python main.py", description="Amiga camera-pointcloud example.")
     parser.add_argument("--service-config", type=Path, required=True, help="The camera config.")
     parser.add_argument("--save-disparity", action="store_true", help="Save the disparity image.")
     parser.add_argument("--save-pointcloud", action="store_true", help="Save the depth image.")

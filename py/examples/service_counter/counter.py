@@ -60,7 +60,7 @@ class CounterServer:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="python counter.py", description="Farm-ng counter service example")
+    parser = argparse.ArgumentParser(prog="python counter.py", description="Farm-ng counter service example.")
     parser.add_argument("--service-config", type=Path, required=True, help="The service list config.")
     args = parser.parse_args()
 

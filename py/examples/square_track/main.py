@@ -268,7 +268,7 @@ async def run(args) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="python main.py", description="Amiga track_follower square example")
+    parser = argparse.ArgumentParser(prog="python main.py", description="Amiga track_follower square example.")
     parser.add_argument("--service-config", type=Path, required=True, help="The service config.")
     parser.add_argument("--side-length", type=float, default=2.0, help="The side length of the square.")
     parser.add_argument(

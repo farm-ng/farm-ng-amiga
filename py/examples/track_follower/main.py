@@ -98,7 +98,7 @@ async def run(args) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="python main.py", description="Amiga track-follower example")
+    parser = argparse.ArgumentParser(prog="python main.py", description="Amiga track-follower example.")
     parser.add_argument("--service-config", type=Path, required=True, help="The track_follower service config.")
     parser.add_argument("--track", type=Path, required=True, help="The filepath of the track to follow.")
     args = parser.parse_args()

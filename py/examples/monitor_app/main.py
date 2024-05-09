@@ -87,7 +87,7 @@ def read_root():
 if __name__ == "__main__":
     # NOTE: alternatively, we can use uvicorn to run the server
     # uvicorn main:app --reload --port 8002
-    parser = argparse.ArgumentParser(prog="python main.py", description="Amiga Monitor App example")
+    parser = argparse.ArgumentParser(prog="python main.py", description="Amiga Monitor App example.")
     parser.add_argument("--config", type=Path, required=True, help="config file")
     parser.add_argument("--port", type=int, default=8002, help="port to run the server")
     args = parser.parse_args()
