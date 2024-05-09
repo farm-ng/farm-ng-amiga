@@ -63,7 +63,7 @@ async def main(service_config_path: Path, track_name: str, output_dir: Path) -> 
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="amiga-track-recorder")
+    parser = argparse.ArgumentParser(prog="python main.py", description="Amiga track recording example.")
     parser.add_argument("--service-config", type=Path, required=True, help="The filter service config.")
     parser.add_argument("--track-name", type=str, required=True, help="The name of the track.")
     parser.add_argument(

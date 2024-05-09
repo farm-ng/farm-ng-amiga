@@ -66,7 +66,7 @@ async def main(service_config_path: Path) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="amiga-filter-stream")
+    parser = argparse.ArgumentParser(prog="python main.py", description="Amiga filter stream example.")
     parser.add_argument("--service-config", type=Path, required=True, help="The filter service config.")
     args = parser.parse_args()
 

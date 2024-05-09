@@ -198,7 +198,7 @@ async def run(args) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="amiga-track_follower")
+    parser = argparse.ArgumentParser(prog="python main.py", description="Amiga path planning example.")
     parser.add_argument("--save-track", type=Path, help="Save the track to a file.")
     parser.add_argument("--reverse", action='store_true', help="Reverse the track.")
     parser.add_argument("--service-config", type=Path, help="Path to the service config file.")

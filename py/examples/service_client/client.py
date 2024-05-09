@@ -23,7 +23,7 @@ from two_ints_pb2 import AddTwoIntsRequest
 
 
 async def main() -> None:
-    parser = argparse.ArgumentParser(prog="farm-ng-client")
+    parser = argparse.ArgumentParser(prog="python client.py", description="Farm-ng service client example.")
     parser.add_argument("--service-config", type=Path, required=True, help="The service config.")
     parser.add_argument("--a", type=int, required=True, help="The first integer.")
     parser.add_argument("--b", type=int, required=True, help="The second integer.")

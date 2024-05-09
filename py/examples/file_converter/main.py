@@ -110,7 +110,7 @@ def main(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="Event file converter example.")
+    parser = argparse.ArgumentParser(prog="python main.py", description="Event file converter example.")
     parser.add_argument("--file-name", type=Path, required=True, help="Path to the `events.bin` file.")
     parser.add_argument("--output-path", type=Path, help="Path to the folder where converted data will be written.")
     parser.add_argument(

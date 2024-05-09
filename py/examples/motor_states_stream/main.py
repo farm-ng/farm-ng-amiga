@@ -43,7 +43,7 @@ async def main(service_config_path: Path) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="Stream motor states from the canbus service.")
+    parser = argparse.ArgumentParser(prog="python main.py", description="Stream motor states from the canbus service.")
     parser.add_argument("--service-config", type=Path, required=True, help="The camera config.")
     args = parser.parse_args()
 

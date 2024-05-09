@@ -80,7 +80,7 @@ def main(file_name: Path, camera_name: str, view_name: str) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="Event file reader example.")
+    parser = argparse.ArgumentParser(prog="python main.py", description="Event file reader example.")
     parser.add_argument("--file-name", type=Path, required=True, help="Path to the `events.bin` file.")
     parser.add_argument(
         "--camera-name", type=str, default="oak0", help="The name of the camera to visualize. Default: oak0."

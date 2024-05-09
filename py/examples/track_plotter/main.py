@@ -114,7 +114,7 @@ def main(track_path: Path) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="amiga-track-plotter")
+    parser = argparse.ArgumentParser(prog="python main.py", description="Amiga track-plotter example.")
     parser.add_argument("--track", type=Path, required=True, help="The filepath of the track to plot.")
     args = parser.parse_args()
 

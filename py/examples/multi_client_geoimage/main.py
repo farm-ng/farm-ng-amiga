@@ -106,9 +106,7 @@ class GeoTaggedImageSubscriber:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        prog="amiga-multi-client-subscriber", description="Example of subscribing to events."
-    )
+    parser = argparse.ArgumentParser(prog="python main.py", description="Example of subscribing to events.")
     parser.add_argument("--config", type=Path, required=True, help="The system config.")
     parser.add_argument("--time-delta", type=float, default=0.1, help="The time delta threshold.")
     args = parser.parse_args()

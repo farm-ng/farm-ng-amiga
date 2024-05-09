@@ -101,7 +101,9 @@ def main(file_name: str, topic_name: str) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="Event file reader example for parsing GPS messages.")
+    parser = argparse.ArgumentParser(
+        prog="python main.py", description="Event file reader example for parsing GPS messages."
+    )
     parser.add_argument("--file-name", type=str, required=True, help="Path to the `events.bin` file.")
     parser.add_argument(
         "--topic-name",

@@ -38,7 +38,7 @@ async def main(service_config_path: Path) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="amiga-camera-calibration")
+    parser = argparse.ArgumentParser(prog="python main.py", description="Amiga camera-calibration example.")
     parser.add_argument("--service-config", type=Path, required=True, help="The camera config.")
     args = parser.parse_args()
 

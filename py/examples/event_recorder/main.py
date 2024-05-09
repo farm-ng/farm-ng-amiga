@@ -33,7 +33,7 @@ async def stop_recording(service_config: EventServiceConfig) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="amiga-camera-calibration")
+    parser = argparse.ArgumentParser(prog="python main.py", description="Record logs from the robot.")
     parser.add_argument("--service-config", type=Path, required=True, help="The camera config.")
 
     subparsers = parser.add_subparsers(dest="command")

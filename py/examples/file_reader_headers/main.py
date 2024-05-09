@@ -56,7 +56,9 @@ def main(file_name: str, skip_calibrations: bool) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="Event file reader example for parsing header messages.")
+    parser = argparse.ArgumentParser(
+        prog="python main.py", description="Event file reader example for parsing header messages."
+    )
     parser.add_argument("--file-name", type=str, required=True, help="Path to the `events.bin` file.")
     parser.add_argument("--skip-calibrations", action="store_true", help="Skip camera calibration header messages.")
     args = parser.parse_args()
