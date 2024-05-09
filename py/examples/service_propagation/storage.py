@@ -83,7 +83,9 @@ class StorageServer:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="python storage.py", description="Farm-ng service propagation example")
+    parser = argparse.ArgumentParser(
+        prog="python storage.py", description="Farm-ng service propagation example storage service."
+    )
     parser.add_argument("--config", type=Path, required=True, help="The service list config.")
     parser.add_argument("--service-name", type=str, required=True, help="The service name.")
     args = parser.parse_args()

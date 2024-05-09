@@ -54,7 +54,9 @@ async def command_reset(client: CounterClient) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="python client.py", description="Farm-ng service example")
+    parser = argparse.ArgumentParser(
+        prog="python client.py", description="Farm-ng client to the counter-service example"
+    )
     parser.add_argument("--service-config", type=Path, required=True, help="The service config.")
 
     sub_parsers = parser.add_subparsers(dest="command")
