@@ -81,7 +81,7 @@ class AgentServer:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="python agent.py", description="Farm-ng service propagation example agent.")
-    parser.add_argument("--config", type=Path, required=True, help="The service list config.")
+    parser.add_argument("--service-config", type=Path, required=True, help="The service list config.")
     parser.add_argument("--service-name", type=str, required=True, help="The service name.")
     args = parser.parse_args()
 
