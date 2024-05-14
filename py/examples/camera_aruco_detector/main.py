@@ -154,7 +154,7 @@ async def main() -> None:
     calibration: oak_pb2.OakCalibration = await camera_client.request_reply("/calibration", Empty(), decode=True)
 
     # create the ArUco detector
-    detector = ArucoDetector(aruco_dict_type=args.aruc_type, marker_size=args.marker_size)
+    detector = ArucoDetector(aruco_dict_type=args.aruco_type, marker_size=args.marker_size)
 
     # NOTE: The OakCalibration message contains the camera calibration data for all the cameras.
     # Since we are interested in the disparity image, we will use the calibration data for the right camera
