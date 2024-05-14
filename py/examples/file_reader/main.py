@@ -69,7 +69,7 @@ def main(file_name: Path, camera_name: str, view_name: str) -> None:
             img = cv2.applyColorMap(img * 3, cv2.COLORMAP_JET)
 
         # Get the timestamp from the monotonic clock when the driver received the message.
-        stamp = get_stamp_by_semantics_and_clock_type(event_log.event, StampSemantics.DRIVER_RECEIVE, "monotonic")
+        stamp = get_stamp_by_semantics_and_clock_type(event_log.event, StampSemantics.FILE_WRITE, "monotonic")
 
         # show image
         cv2.imshow(topic_name, img)
