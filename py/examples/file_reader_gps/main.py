@@ -25,7 +25,9 @@ from farm_ng.gps import gps_pb2
 
 def print_relative_position_frame(msg):
     """Prints the relative position frame message.
-        Args: msg: The relative position frame message."""
+
+    Args: msg: The relative position frame message.
+    """
     print("RELATIVE POSITION FRAME \n")
     print(f"Message stamp: {msg.stamp.stamp}")
     print(f"GPS time: {msg.gps_time.stamp}")
@@ -43,7 +45,9 @@ def print_relative_position_frame(msg):
 
 def print_gps_frame(msg):
     """Prints the gps frame message.
-        Args: msg: The gps frame message."""
+
+    Args: msg: The gps frame message.
+    """
     print("PVT FRAME \n")
     print(f"Message stamp: {msg.stamp.stamp}")
     print(f"GPS time: {msg.gps_time.stamp}")
@@ -57,9 +61,12 @@ def print_gps_frame(msg):
     print(f"P DOP: {msg.p_dop}")
     print("-" * 50)
 
+
 def print_ecef_frame(msg):
     """Prints the ecef frame message.
-        Args: msg: The ecef frame message."""
+
+    Args: msg: The ecef frame message.
+    """
     print("ECEF FRAME \n")
     print(f"Message stamp: {msg.stamp.stamp}")
     print(f"GPS time: {msg.gps_time.stamp}")
