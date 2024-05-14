@@ -25,6 +25,9 @@ from farm_ng.gps import gps_pb2
 
 
 def print_relative_position_frame(msg):
+    """Prints the relative position frame message.
+        Args: msg: The relative position frame message."""
+    print("RELATIVE POSITION FRAME \n")
     print(f"Message stamp: {msg.stamp.stamp}")
     print(f"GPS time: {msg.gps_time.stamp}")
     print(f"Relative pose north: {msg.relative_pose_north}")
@@ -40,6 +43,9 @@ def print_relative_position_frame(msg):
 
 
 def print_gps_frame(msg):
+    """Prints the gps frame message.
+        Args: msg: The gps frame message."""
+    print("PVT FRAME \n")
     print(f"Message stamp: {msg.stamp.stamp}")
     print(f"GPS time: {msg.gps_time.stamp}")
     print(f"Latitude: {msg.latitude}")
@@ -52,6 +58,18 @@ def print_gps_frame(msg):
     print(f"P DOP: {msg.p_dop}")
     print("-" * 50)
 
+def print_ecef_frame(msg):
+    """Prints the ecef frame message.
+        Args: msg: The ecef frame message."""
+    print("ECEF FRAME \n")
+    print(f"Message stamp: {msg.stamp.stamp}")
+    print(f"GPS time: {msg.gps_time.stamp}")
+    print(f"x: {msg.x}")
+    print(f"y: {msg.y}")
+    print(f"z: {msg.z}")
+    print(f"Accuracy: {msg.accuracy}")
+    print(f"Flags: {msg.flags}")
+    print("-" * 50)
 
 async def main(service_config_path: Path) -> None:
     """Run the gps service client.
@@ -66,6 +84,8 @@ async def main(service_config_path: Path) -> None:
             print_relative_position_frame(msg)
         elif isinstance(msg, gps_pb2.GpsFrame):
             print_gps_frame(msg)
+        elif isinstance(msg, gps_pb2.EcefCoordinates):
+            print_ecef_frame(msg)
 
 
 if __name__ == "__main__":
