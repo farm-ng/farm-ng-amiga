@@ -1,4 +1,4 @@
 farm-ng-amiga
 # update kornia==0.7.0 to kornia==0.7.1 after release
 kornia@git+https://github.com/kornia/kornia.git
-kornia_rs==0.0.8
+kornia_rs==0.1.0

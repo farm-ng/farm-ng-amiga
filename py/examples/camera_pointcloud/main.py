@@ -98,7 +98,7 @@ async def main() -> None:
 
     # stream the disparity image
     async for event, message in camera_client.subscribe(
-        SubscribeRequest(uri=uri_pb2.Uri(path="/disparity"), every_n=5), decode=True
+        SubscribeRequest(uri=uri_pb2.Uri(path="oak/1/disparity"), every_n=5), decode=True
     ):
         # cast image data bytes to a tensor and decode
         disparity_t = decode_disparity(message, image_decoder)  # HxW
