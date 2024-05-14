@@ -24,6 +24,9 @@ from farm_ng.gps import gps_pb2
 
 
 def print_relative_position_frame(msg):
+    """Prints the relative position frame message.
+        Args: msg: The relative position frame message."""
+    print("RELATIVE POSITION FRAME \n")
     print(f"Message stamp: {msg.stamp.stamp}")
     print(f"GPS time: {msg.gps_time.stamp}")
     print(f"Relative pose north: {msg.relative_pose_north}")
@@ -39,6 +42,9 @@ def print_relative_position_frame(msg):
 
 
 def print_gps_frame(msg):
+    """Prints the gps frame message.
+        Args: msg: The gps frame message."""
+    print("PVT FRAME \n")
     print(f"Message stamp: {msg.stamp.stamp}")
     print(f"GPS time: {msg.gps_time.stamp}")
     print(f"Latitude: {msg.latitude}")
@@ -51,9 +57,22 @@ def print_gps_frame(msg):
     print(f"P DOP: {msg.p_dop}")
     print("-" * 50)
 
+def print_ecef_frame(msg):
+    """Prints the ecef frame message.
+        Args: msg: The ecef frame message."""
+    print("ECEF FRAME \n")
+    print(f"Message stamp: {msg.stamp.stamp}")
+    print(f"GPS time: {msg.gps_time.stamp}")
+    print(f"x: {msg.x}")
+    print(f"y: {msg.y}")
+    print(f"z: {msg.z}")
+    print(f"Accuracy: {msg.accuracy}")
+    print(f"Flags: {msg.flags}")
+    print("-" * 50)
+
 
 def main(file_name: str, topic_name: str) -> None:
-    if topic_name not in [None, "relposned", "pvt"]:
+    if topic_name not in [None, "relposned", "pvt", "ecef"]:
         raise RuntimeError(f"Topic name not recognized: {topic_name}")
 
     # create the file reader
@@ -77,7 +96,9 @@ def main(file_name: str, topic_name: str) -> None:
         print(f"Found {len(relposned_events)} packets of /gps/relposned\n")
         pvt_events = events_dict["/gps/pvt"]
         print(f"Found {len(pvt_events)} packets of /gps/pvt\n")
-        gps_events = relposned_events + pvt_events
+        ecef_events = events_dict["/gps/ecef"]
+        print(f"Found {len(ecef_events)} packets of /gps/ecef\n")
+        gps_events = relposned_events + pvt_events + ecef_events
 
         # Sort the pvt and relposned events by the DRIVER_RECEIVE timestamp
         # DRIVER_RECEIVE is the monotonic time the GPS service on the amiga brain
@@ -96,6 +117,8 @@ def main(file_name: str, topic_name: str) -> None:
             print_relative_position_frame(msg)
         elif isinstance(msg, gps_pb2.GpsFrame):
             print_gps_frame(msg)
+        elif isinstance(msg, gps_pb2.EcefCoordinates):
+            print_ecef_frame(msg)
 
     assert reader.close()
 
@@ -108,7 +131,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--topic-name",
         type=str,
-        help="The name of the gps interface to print: `relposned` or `pvt`. Default is both topics.",
+        help="The name of the gps interface to print: `relposned`, `pvt`, or `ecef`. Default is both topics.",
     )
     args = parser.parse_args()
     main(args.file_name, args.topic_name)
