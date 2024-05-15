@@ -2,7 +2,7 @@
   "configs": [
     {
       "name": "gps",
-      "port": 3001,
+      "port": 50010,
       "host": "localhost"
     },
     {
@@ -11,13 +11,13 @@
       "host": "localhost"
     },
     {
-      "name": "oak0",
+      "name": "oak/0",
       "port": 50010,
       "host": "localhost"
     },
     {
-      "name": "oak1",
-      "port": 50011,
+      "name": "oak/1",
+      "port": 50010,
       "host": "localhost"
     },
     {

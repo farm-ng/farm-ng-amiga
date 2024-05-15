@@ -27,7 +27,9 @@ from farm_ng.core.uri_pb2 import Uri
 from fastapi import FastAPI
 from fastapi import WebSocket
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from google.protobuf.json_format import MessageToJson
 
 app = FastAPI()
@@ -39,6 +41,8 @@ app.add_middleware(
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
 )
+
+app.mount("/static", StaticFiles(directory="./ts/dist"), name="static")
 
 # to store the events clients
 clients: dict[str, EventClient] = {}
@@ -81,7 +85,7 @@ async def subscribe(websocket: WebSocket, service_name: str, uri_path: str, ever
 
 @app.get("/")
 def read_root():
-    return {"Hello": "World"}
+    return FileResponse('./ts/dist/index.html')
 
 
 if __name__ == "__main__":
