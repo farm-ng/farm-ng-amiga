@@ -1,6 +1,6 @@
 {
     "name": "oak0",
     "port": 50010,
-    "host": "localhost",
+    "host": "100.109.169.103",
     "log_level": "INFO"
 }
