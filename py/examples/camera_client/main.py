@@ -1,3 +1,16 @@
+# Copyright (c) farm-ng, inc.
+#
+# Licensed under the Amiga Development Kit License (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://github.com/farm-ng/amiga-dev-kit/blob/main/LICENSE
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 from __future__ import annotations
 
 import argparse
@@ -6,24 +19,26 @@ from collections import deque
 from pathlib import Path
 
 import cv2
-import numpy as np
 import numba as nb  # Importing numba for the unpacking function
+import numpy as np
 from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfig
 from farm_ng.core.events_file_reader import proto_from_json_file
 from farm_ng.core.stamp import get_stamp_by_semantics_and_clock_type
 from farm_ng.core.stamp import StampSemantics
 
+
 @nb.njit(parallel=True, cache=True)
 def unpack_raw10(input: nb.uint8[::1], out: nb.uint16[::1], expand16bit: bool) -> nb.uint16[::1]:
     lShift = 6 if expand16bit else 0
     for i in nb.prange(input.size // 5):
         b4 = input[i * 5 + 4]
-        out[i * 4]     = ((input[i * 5]     << 2) | ( b4       & 0x3)) << lShift
+        out[i * 4] = ((input[i * 5] << 2) | (b4 & 0x3)) << lShift
         out[i * 4 + 1] = ((input[i * 5 + 1] << 2) | ((b4 >> 2) & 0x3)) << lShift
         out[i * 4 + 2] = ((input[i * 5 + 2] << 2) | ((b4 >> 4) & 0x3)) << lShift
-        out[i * 4 + 3] = ((input[i * 5 + 3] << 2) |  (b4 >> 6)       ) << lShift
+        out[i * 4 + 3] = ((input[i * 5 + 3] << 2) | (b4 >> 6)) << lShift
     return out
+
 
 async def main(service_config_path: Path) -> None:
     """Run the camera service client.
@@ -66,14 +81,14 @@ async def main(service_config_path: Path) -> None:
                 # print(f"Raw data size: {raw_data.size}")
                 unpacked_data = np.empty((raw_data.size // 5) * 4, dtype=np.uint16)
                 unpacked_data = unpack_raw10(raw_data, unpacked_data, False)
-                
+
                 # Print the size of unpacked data - should be 4/5 of the original size
                 # print(f"Size of unpacked data: {unpacked_data.size}")
-                
+
                 # Try the expected resolution
                 try:
                     bayer_image = unpacked_data.reshape((1080, 1920))
-                    
+
                     # Convert Bayer to RGB
                     image = cv2.cvtColor(bayer_image.astype(np.uint16), cv2.COLOR_BayerBG2BGR)
                 except ValueError as e:
@@ -95,6 +110,7 @@ async def main(service_config_path: Path) -> None:
             cv2.namedWindow("image", cv2.WINDOW_NORMAL)
             cv2.imshow("image", image)
             cv2.waitKey(1)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="amiga-camera-stream")
