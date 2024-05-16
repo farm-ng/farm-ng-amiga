@@ -34,7 +34,7 @@ async def main(service_config_path: Path) -> None:
     # create a client to the camera service
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
 
-    timestamps = deque(maxlen=10)  # Store the last 10 timestamps
+    timestamps = deque(maxlen=5)  # Store the last 5 (arbitrary number) timestamps
 
     async for event, message in EventClient(config).subscribe(config.subscriptions[0], decode=True):
         # Find the monotonic driver receive timestamp, or the first timestamp if not available.
@@ -53,11 +53,9 @@ async def main(service_config_path: Path) -> None:
             fps = 1 / average_delta if average_delta > 0 else 0
             print(f"FPS: {fps:.2f}")
 
-        # Log the first few bytes of the image data for debugging
-        print(f"First few bytes of image data: {message.image_data[:20]}")
-        print(f"Raw data size: {len(message.image_data)}")
+        # print(f"Raw data size: {len(message.image_data)}")
 
-        # Initialize the image as None
+        # Initialize the image as None and try to decode it
         image = None
 
         # Check the event URI path to apply specific processing
@@ -65,18 +63,16 @@ async def main(service_config_path: Path) -> None:
             # Attempt to decode the RAW10 packed data
             try:
                 raw_data = np.frombuffer(message.image_data, dtype=np.uint8)
-                print(f"Raw data size: {raw_data.size}")
+                # print(f"Raw data size: {raw_data.size}")
                 unpacked_data = np.empty((raw_data.size // 5) * 4, dtype=np.uint16)
-                unpacked_data = unpack_raw10(raw_data, unpacked_data, True)  # Set expand16bit to True
+                unpacked_data = unpack_raw10(raw_data, unpacked_data, False)
                 
-                # Print the size of unpacked data
-                print(f"Size of unpacked data: {unpacked_data.size}")
-                print(f"First few values of unpacked data: {unpacked_data[:20]}")
+                # Print the size of unpacked data - should be 4/5 of the original size
+                # print(f"Size of unpacked data: {unpacked_data.size}")
                 
                 # Try the expected resolution
                 try:
                     bayer_image = unpacked_data.reshape((1080, 1920))
-                    print(f"Successfully reshaped to resolution: (1080, 1920)")
                     
                     # Convert Bayer to RGB
                     image = cv2.cvtColor(bayer_image.astype(np.uint16), cv2.COLOR_BayerBG2BGR)
@@ -91,14 +87,11 @@ async def main(service_config_path: Path) -> None:
             except ValueError:
                 print("Error reshaping mono image")
 
-        if event.uri.path == "/disparity":
-            image = cv2.applyColorMap(image * 3, cv2.COLORMAP_JET)
-
         # Print the resolution of the image
         if image is not None:
             print(f"Resolution: {image.shape}")
 
-            # visualize the image
+            # Visualize the image
             cv2.namedWindow("image", cv2.WINDOW_NORMAL)
             cv2.imshow("image", image)
             cv2.waitKey(1)
