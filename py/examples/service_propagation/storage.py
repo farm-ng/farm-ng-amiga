@@ -86,12 +86,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         prog="python storage.py", description="Farm-ng service propagation example storage service."
     )
-    parser.add_argument("--config", type=Path, required=True, help="The service list config.")
+    parser.add_argument("--service-config", type=Path, required=True, help="The service list config.")
     parser.add_argument("--service-name", type=str, required=True, help="The service name.")
     args = parser.parse_args()
 
     # load the service config
-    config_list: EventServiceConfigList = proto_from_json_file(args.config, EventServiceConfigList())
+    config_list: EventServiceConfigList = proto_from_json_file(args.service_config, EventServiceConfigList())
 
     service_config: EventServiceConfig | None = None
     for config in config_list.configs:

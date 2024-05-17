@@ -1,4 +1,3 @@
-import React from 'react';
 import TopicMonitor from './TopicMonitor';
 
 function App() {

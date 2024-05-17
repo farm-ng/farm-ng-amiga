@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { JsonView, allExpanded, defaultStyles } from 'react-json-view-lite';
 import 'react-json-view-lite/dist/index.css';
 
@@ -12,7 +12,7 @@ function TopicMonitor() {
             try {
                 // Replace with your backend URL
                 const response = await fetch(
-                    `${window.location.protocol}//${window.location.hostname}:8002/list_uris`
+                    `${window.location.protocol}//${window.location.hostname}:8042/list_uris`
                 );
                 // Check if the request was successful
                 if (!response.ok) {
@@ -34,7 +34,7 @@ function TopicMonitor() {
         if (!selectedUri) return;
 
         const detailSocket = new WebSocket(
-            `ws://${window.location.hostname}:8002/subscribe/${selectedUri}`
+            `ws://${window.location.hostname}:8042/subscribe/${selectedUri}`
         );
 
         detailSocket.onopen = (event) => {
