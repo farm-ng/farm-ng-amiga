@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 from pathlib import Path
+from typing import Optional
 
 import uvicorn
 from farm_ng.core.event_client_manager import EventClient
@@ -80,7 +81,7 @@ async def list_uris() -> JSONResponse:
 @app.websocket("/subscribe/{service_name}/{uri_path:path}")
 @app.websocket("/subscribe/{service_name}/{sub_service_name}/{uri_path:path}")
 async def subscribe(
-    websocket: WebSocket, service_name: str, uri_path: str, sub_service_name: str | None = None, every_n: int = 1
+    websocket: WebSocket, service_name: str, uri_path: str, sub_service_name: Optional[str] = None, every_n: int = 1
 ):
     """Coroutine to subscribe to an event service via websocket.
 
