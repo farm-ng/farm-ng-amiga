@@ -3,101 +3,27 @@
     {
       "name": "amiga",
       "port": 50010,
-      "host": "localhost",
-      "args": [
-        "--oak-config", "./oaks_config_default.json"
-      ],
-      "subscriptions": [],
-      "uris": [],
-      "logLevel": 0
+      "host": "localhost"
     },
     {
       "name": "canbus",
       "port": 6001,
-      "host": "localhost",
-      "args": [
-          "--can-id=can0",
-          "--port=50060",
-          "--bitrate=250000",
-          "--restart_ms=500",
-          "--sample-point=.65"
-      ],
-      "log_level": "INFO"
+      "host": "localhost"
     },
     {
         "name": "filter",
         "port": 20001,
-        "host": "localhost",
-        "args": [
-            "--robot-config=/mnt/service_config/robot_config.json"
-        ],
-        "subscriptions": [
-          {
-            "uri": {
-              "path": "/twist",
-              "query": "service_name=canbus"
-            },
-            "every_n": 1
-          },
-          {
-            "uri": {
-              "path": "/imu",
-              "query": "service_name=oak0"
-            },
-            "every_n": 1
-          },
-          {
-            "uri": {
-              "path": "/relposned",
-              "query": "service_name=gps"
-            },
-            "every_n": 1
-          }
-        ],
-        "log_level": "INFO"
+        "host": "localhost"
     },
     {
         "name": "track_follower",
         "port": 20101,
-        "host": "localhost",
-        "subscriptions": [
-          {
-            "uri": {
-              "path": "/state",
-              "query": "service_name=filter"
-            },
-            "every_n": 1
-          },
-          {
-            "uri": {
-              "path": "/state",
-              "query": "service_name=canbus"
-            },
-            "every_n": 1
-          }
-        ],
-        "log_level": "INFO"
+        "host": "localhost"
     },
     {
       "name": "system_monitor",
       "port": 20201,
-      "host": "localhost",
-      "subscriptions": [
-        {
-          "uri": {
-            "path": "/state",
-            "query": "service_name=filter"
-          },
-          "every_n": 1
-        },
-        {
-          "uri": {
-            "path": "/state",
-            "query": "service_name=canbus"
-          },
-          "every_n": 1
-        }
-      ]
+      "host": "localhost"
     }
   ]
 }
