@@ -15,11 +15,11 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import json
 from pathlib import Path
 
 import uvicorn
-from farm_ng.core.event_client import EventClient
+from farm_ng.core.event_client_manager import EventClient
+from farm_ng.core.event_client_manager import EventClientSubscriptionManager
 from farm_ng.core.event_service_pb2 import EventServiceConfigList
 from farm_ng.core.event_service_pb2 import SubscribeRequest
 from farm_ng.core.events_file_reader import proto_from_json_file
@@ -34,6 +34,13 @@ from google.protobuf.json_format import MessageToJson
 
 app = FastAPI()
 
+
+@app.on_event("startup")
+async def startup_event():
+    print("Initializing App...")
+    asyncio.create_task(event_manager.update_subscriptions())
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Allows all origins
@@ -42,45 +49,8 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
-app.mount("/static", StaticFiles(directory="./ts/dist"), name="static")
-
 # to store the events clients
 clients: dict[str, EventClient] = {}
-
-
-@app.get("/list_uris")
-async def list_uris() -> JSONResponse:
-    all_uris = {}
-
-    for service_name, client in clients.items():
-        # get the list of uris from the event service
-        uris: list[Uri] = []
-        try:
-            # NOTE: some services may not be available, so we need to handle the timeout
-            uris = await asyncio.wait_for(client.list_uris(), timeout=0.1)
-        except asyncio.TimeoutError:
-            continue
-
-        # convert the uris to a dict, where the key is the uri full path
-        # and the value is the uri proto as a json string
-        for uri in uris:
-            all_uris[f"{service_name}{uri.path}"] = json.loads(MessageToJson(uri))
-
-    return JSONResponse(content=all_uris, status_code=200)
-
-
-@app.websocket("/subscribe/{service_name}/{uri_path}")
-async def subscribe(websocket: WebSocket, service_name: str, uri_path: str, every_n: int = 1):
-    client: EventClient = clients[service_name]
-
-    await websocket.accept()
-
-    async for event, message in client.subscribe(
-        request=SubscribeRequest(uri=Uri(path=f"/{uri_path}"), every_n=every_n), decode=True
-    ):
-        await websocket.send_json(MessageToJson(message))
-
-    await websocket.close()
 
 
 @app.get("/")
@@ -88,23 +58,85 @@ def read_root():
     return FileResponse('./ts/dist/index.html')
 
 
+@app.get("/list_uris")
+async def list_uris() -> JSONResponse:
+    """Return all the uris from the event manager."""
+    all_uris_list: EventServiceConfigList = event_manager.get_all_uris_config_list(config_name="all_subscription_uris")
+
+    all_uris = {}
+    for config in all_uris_list.configs:
+        if config.name == "all_subscription_uris":
+            for subscription in config.subscriptions:
+                uri = subscription.uri
+                service_name = uri.query.split("=")[1]
+                key = f"{service_name}{uri.path}"
+                value = {"scheme": "protobuf", "authority": config.host, "path": uri.path, "query": uri.query}
+                all_uris[key] = value
+
+    return JSONResponse(content=dict(sorted(all_uris.items())), status_code=200)
+
+
+@app.websocket("/subscribe/{service_name}/{uri_path:path}")
+@app.websocket("/subscribe/{service_name}/{sub_service_name}/{uri_path:path}")
+async def subscribe(
+    websocket: WebSocket, service_name: str, uri_path: str, sub_service_name: str = None, every_n: int = 1
+):
+    """Coroutine to subscribe to an event service via websocket.
+
+    Args:
+        websocket (WebSocket): the websocket connection
+        service_name (str): the name of the event service
+        sub_service_name (str, optional): the sub service name, if any
+        uri_path (str): the uri path to subscribe to
+        every_n (int, optional): the frequency to receive events. Defaults to 1.
+
+    Usage:
+        ws = new WebSocket("ws://localhost:8042/subscribe/gps/pvt")
+        ws = new WebSocket("ws://localhost:8042/subscribe/oak/0/imu")
+    """
+
+    if sub_service_name:
+        full_service_name = f"{service_name}/{sub_service_name}"
+    else:
+        full_service_name = service_name
+
+    if full_service_name not in ["gps", "oak/0", "oak/1", "oak/2", "oak/3"]:
+        client: EventClient = event_manager.clients[full_service_name]
+    else:
+        client: EventClient = event_manager.clients["amiga"]
+
+    print(f"Service: {full_service_name}, topic: {uri_path}")
+    await websocket.accept()
+
+    async for _, msg in client.subscribe(
+        SubscribeRequest(uri=Uri(path=f"/{uri_path}", query=f"service_name={full_service_name}"), every_n=every_n),
+        decode=True,
+    ):
+        await websocket.send_json(MessageToJson(msg))
+
+    await websocket.close()
+
+
 if __name__ == "__main__":
-    # NOTE: alternatively, we can use uvicorn to run the server
-    # uvicorn main:app --reload --port 8002
-    parser = argparse.ArgumentParser(prog="python main.py", description="Amiga Monitor App example.")
+    parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=Path, required=True, help="config file")
-    parser.add_argument("--port", type=int, default=8002, help="port to run the server")
+    parser.add_argument("--port", type=int, default=8042, help="port to run the server")
     args = parser.parse_args()
 
-    # config list with all the configs
-    config_list: EventServiceConfigList = proto_from_json_file(args.config, EventServiceConfigList())
+    app.mount("/static", StaticFiles(directory="./ts/dist"), name="static")
 
-    for config in config_list.configs:
-        # create the event client
-        client = EventClient(config=config)
+    # config with all the configs
+    base_config_list: EventServiceConfigList = proto_from_json_file(args.config, EventServiceConfigList())
 
-        # add the client to the clients dict
-        clients[config.name] = client
+    # filter out services to pass to the events client manager
+    service_config_list = EventServiceConfigList()
+    for config in base_config_list.configs:
+        if config.port == 0:
+            continue
+        service_config_list.configs.append(config)
+
+    event_manager = EventClientSubscriptionManager(config_list=service_config_list)
+    print(event_manager)
 
     # run the server
     uvicorn.run(app, host="0.0.0.0", port=args.port)  # noqa: S104

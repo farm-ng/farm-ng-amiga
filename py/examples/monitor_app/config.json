@@ -1,34 +1,265 @@
 {
   "configs": [
     {
-      "name": "gps",
+      "name": "amiga",
       "port": 50010,
-      "host": "localhost"
+      "host": "localhost",
+      "args": [
+        "--oak-config", "./oaks_config_default.json"
+      ],
+      "subscriptions": [],
+      "uris": [],
+      "logLevel": 0
+    },
+    {
+      "name": "recorder",
+      "port": 5000,
+      "host": "localhost",
+      "log_level": "INFO",
+      "args": [
+        "--data-dir", "/mnt/data"
+      ]
     },
     {
       "name": "canbus",
       "port": 6001,
-      "host": "localhost"
+      "host": "localhost",
+      "args": [
+          "--can-id=can0",
+          "--port=50060",
+          "--bitrate=250000",
+          "--restart_ms=500",
+          "--sample-point=.65"
+      ],
+      "log_level": "INFO"
     },
     {
-      "name": "oak/0",
-      "port": 50010,
-      "host": "localhost"
-    },
-    {
-      "name": "oak/1",
-      "port": 50010,
-      "host": "localhost"
+      "name": "foxglove",
+      "args": [
+        "--foxglove-port=8765"
+      ],
+      "log_level": "INFO"
     },
     {
         "name": "filter",
         "port": 20001,
-        "host": "localhost"
+        "host": "localhost",
+        "args": [
+            "--robot-config=/mnt/service_config/robot_config.json"
+        ],
+        "subscriptions": [
+          {
+            "uri": {
+              "path": "/twist",
+              "query": "service_name=canbus"
+            },
+            "every_n": 1
+          },
+          {
+            "uri": {
+              "path": "/imu",
+              "query": "service_name=oak0"
+            },
+            "every_n": 1
+          },
+          {
+            "uri": {
+              "path": "/relposned",
+              "query": "service_name=gps"
+            },
+            "every_n": 1
+          }
+        ],
+        "log_level": "INFO"
     },
     {
         "name": "track_follower",
         "port": 20101,
-        "host": "localhost"
-    }
+        "host": "localhost",
+        "subscriptions": [
+          {
+            "uri": {
+              "path": "/state",
+              "query": "service_name=filter"
+            },
+            "every_n": 1
+          },
+          {
+            "uri": {
+              "path": "/state",
+              "query": "service_name=canbus"
+            },
+            "every_n": 1
+          }
+        ],
+        "log_level": "INFO"
+    },
+    {
+      "name": "system_monitor",
+      "port": 20201,
+      "host": "localhost",
+      "subscriptions": [
+        {
+          "uri": {
+            "path": "/state",
+            "query": "service_name=filter"
+          },
+          "every_n": 1
+        },
+        {
+          "uri": {
+            "path": "/state",
+            "query": "service_name=canbus"
+          },
+          "every_n": 1
+        }
+      ]
+    },
+    {
+      "name": "record_default",
+      "subscriptions": [
+        {
+          "uri": {
+            "path": "*",
+            "query": "service_name=canbus"
+          },
+          "every_n": 1
+        },
+        {
+          "uri": {
+            "path": "*",
+            "query": "service_name=gps"
+          },
+          "every_n": 1
+        },
+        {
+          "uri": {
+            "path": "*",
+            "query": "service_name=oak0"
+          },
+          "every_n": 1
+        },
+        {
+          "uri": {
+            "path": "*",
+            "query": "service_name=oak1"
+          },
+          "every_n": 1
+        }
+      ]
+    },
+    {
+        "name": "record_filter",
+        "subscriptions": [
+          {
+            "uri": {
+              "path": "*",
+              "query": "service_name=canbus"
+            },
+            "every_n": 1
+          },
+          {
+            "uri": {
+              "path": "*",
+              "query": "service_name=gps"
+            },
+            "every_n": 1
+          },
+          {
+            "uri": {
+              "path": "/imu",
+              "query": "service_name=oak0"
+            },
+            "every_n": 1
+          },
+          {
+            "uri": {
+              "path": "*",
+              "query": "service_name=filter"
+            },
+            "every_n": 1
+          }
+        ]
+    },
+    {
+      "name": "record_oaks",
+      "subscriptions": [
+        {
+          "uri": {
+            "path": "*",
+            "query": "service_name=oak0"
+          },
+          "every_n": 1
+        },
+        {
+          "uri": {
+            "path": "*",
+            "query": "service_name=oak1"
+          },
+          "every_n": 1
+        },
+        {
+          "uri": {
+            "path": "*",
+            "query": "service_name=oak2"
+          },
+          "every_n": 1
+        },
+        {
+          "uri": {
+            "path": "*",
+            "query": "service_name=oak3"
+          },
+          "every_n": 1
+        }
+      ]
+    },
+    {
+      "name": "record_track_follower",
+      "subscriptions": [
+        {
+          "uri": {
+            "path": "/state",
+            "query": "service_name=canbus"
+          },
+          "every_n": 1
+        },
+        {
+          "uri": {
+            "path": "*",
+            "query": "service_name=gps"
+          },
+          "every_n": 1
+        },
+        {
+          "uri": {
+            "path": "/imu",
+            "query": "service_name=oak0"
+          },
+          "every_n": 1
+        },
+        {
+          "uri": {
+            "path": "*",
+            "query": "service_name=filter"
+          },
+          "every_n": 1
+        },
+        {
+          "uri": {
+            "path": "*",
+            "query": "service_name=track_follower"
+          },
+          "every_n": 1
+        },
+        {
+          "uri": {
+            "path": "*",
+            "query": "service_name=system_monitor"
+          },
+          "every_n": 1
+        }
+      ]
+  }
   ]
 }
