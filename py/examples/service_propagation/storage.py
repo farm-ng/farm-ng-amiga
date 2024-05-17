@@ -91,7 +91,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # load the service config
-    config_list: EventServiceConfigList = proto_from_json_file(args.config, EventServiceConfigList())
+    config_list: EventServiceConfigList = proto_from_json_file(args.service_config, EventServiceConfigList())
 
     service_config: EventServiceConfig | None = None
     for config in config_list.configs:
