@@ -18,6 +18,70 @@ import "farm_ng/core/timestamp.proto";
 
 package farm_ng.gps.proto;
 
+
+message GpsdTpvFull {
+  // Corresponds directly to all fields in:
+  // https://gpsd.gitlab.io/gpsd/gpsd_json.html#_tpv
+  // Always required fields
+  string class = 1;  // Fixed: "TPV"
+  int32 mode = 2;    // NMEA mode: 0=unknown, 1=no fix, 2=2D, 3=3D
+
+  // Optional fields
+  string device = 3; // Name of the originating device.
+  float alt = 4;     // Deprecated. Undefined. Use altHAE or altMSL.
+  float altHAE = 5;  // Altitude, height above ellipsoid, in meters. Probably WGS84.
+  float altMSL = 6;  // MSL Altitude in meters. altMSL is altHAE minus geoidSep.
+  int32 ant = 7;     // Antenna Status: 2=Short, 3=Open.
+  float climb = 8;   // Climb (positive) or sink (negative) rate, meters per second.
+  float clockbias = 9; // Offset of local GNSS clock relative to UTC, in ns. AKA Clock Offset.
+  float clockdrift = 10; // The rate at which the local clock is drifting, in ns/s.
+  string datum = 11; // Current datum. Hopefully WGS84.
+  float depth = 12;  // Depth in meters.
+  float dgpsAge = 13; // Age of DGPS data, in seconds.
+  int32 dgpsSta = 14; // Station of DGPS data.
+  float ecefx = 15; // ECEF X position in meters.
+  float ecefy = 16; // ECEF Y position in meters.
+  float ecefz = 17; // ECEF Z position in meters.
+  float ecefpAcc = 18; // ECEF position error in meters. Certainty unknown.
+  float ecefvx = 19; // ECEF X velocity in meters per second.
+  float ecefvy = 20; // ECEF Y velocity in meters per second.
+  float ecefvz = 21; // ECEF Z velocity in meters per second.
+  float ecefvAcc = 22; // ECEF velocity error in meters per second. Certainty unknown.
+  float epc = 23; // Estimated climb error in meters per second. Certainty unknown.
+  float epd = 24; // Estimated track (direction) error in degrees. Certainty unknown.
+  float eph = 25; // Estimated horizontal Position (2D) Error in meters. Also known as Estimated Position Error (epe). Certainty unknown.
+  float eps = 26; // Estimated speed error in meters per second. Certainty unknown.
+  float ept = 27; // Estimated time stamp error in seconds. Certainty unknown.
+  float epx = 28; // Longitude error estimate in meters. Certainty unknown.
+  float epy = 29; // Latitude error estimate in meters. Certainty unknown.
+  float epv = 30; // Estimated vertical error in meters. Certainty unknown.
+  float geoidSep = 31; // Geoid separation is the difference between the WGS84 reference ellipsoid and the geoid (Mean Sea Level) in meters.
+  int32 jam = 32; // Jamming Indicator 0 (no jamming) to 255 (severe jamming). -1 means unset.
+  float lat = 33; // Latitude in degrees: +/- signifies North/South.
+  int32 leapseconds = 34; // Current leap seconds.
+  float lon = 35; // Longitude in degrees: +/- signifies East/West.
+  float magtrack = 36; // Course over ground, degrees magnetic.
+  float magvar = 37; // Magnetic variation, degrees. Positive is West variation. Negative is East variation.
+  float relD = 38; // Down component of relative position vector in meters.
+  float relE = 39; // East component of relative position vector in meters.
+  float relN = 40; // North component of relative position vector in meters.
+  float sep = 41; // Estimated Spherical (3D) Position Error in meters. Certainty unknown.
+  float speed = 42; // Speed over ground, meters per second.
+  int32 status = 43; // GPS fix status: 0=Unknown, 1=Normal, 2=DGPS, 3=RTK Fixed, 4=RTK Floating, 5=DR, 6=GNSSDR, 7=Time (surveyed), 8=Simulated, 9=P(Y)
+  float temp = 44; // Receiver temperature in degrees Celsius.
+  string time = 45; // Time/date stamp in ISO8601 format, UTC. May have a fractional part of up to .001sec precision.
+  float track = 46; // Course over ground, degrees from true north.
+  float velD = 47; // Down velocity component in meters.
+  float velE = 48; // East velocity component in meters.
+  float velN = 49; // North velocity component in meters.
+  float wanglem = 50; // Wind angle magnetic in degrees.
+  float wangler = 51; // Wind angle relative in degrees.
+  float wanglet = 52; // Wind angle true in degrees.
+  float wspeedr = 53; // Wind speed relative in meters per second.
+  float wspeedt = 54; // Wind speed true in meters per second.
+  float wtemp = 55; // Water temperature in degrees Celsius.
+}
+
 message GpsFrameStatus {
     bool time_fully_resolved = 1; // means that the UTC time is known without full seconds ambiguity
     bool gnss_fix_ok = 2; // fixes not marked valid should not normally be used
