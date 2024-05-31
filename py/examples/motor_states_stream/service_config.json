@@ -1,13 +1,13 @@
 {
-    "name": "canbus",
-    "port": 6001,
-    "host": "localhost",
+    "name": "amiga",
+    "port": 50010,
+    "host": "100.118.52.117",
     "log_level": "INFO",
     "subscriptions": [
         {
             "uri": {
-                "path": "/motor_states",
-                "query": "service_name=canbus"
+                "path": "*",
+                "query": "service_name=lidar"
             },
             "every_n": 1
         }
