@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+import "farm_ng/core/event_service.proto";
+
+package farm_ng.recorder.proto;
+
+message RecorderProfile {
+    string name = 1;
+    repeated farm_ng.core.proto.SubscribeRequest subscriptions = 2; 
+}
