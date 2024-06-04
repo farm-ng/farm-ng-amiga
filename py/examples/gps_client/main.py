@@ -86,14 +86,24 @@ async def main(service_config_path: Path) -> None:
         service_config_path (Path): The path to the gps service config.
     """
     # create a client to the camera service
+    ecef = True
+    pvt = True
+    relposned = True
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
-    async for event, msg in EventClient(config).subscribe(config.subscriptions[0]):
-        if isinstance(msg, gps_pb2.RelativePositionFrame):
-            print_relative_position_frame(msg)
-        elif isinstance(msg, gps_pb2.GpsFrame):
-            print_gps_frame(msg)
-        elif isinstance(msg, gps_pb2.EcefCoordinates):
-            print_ecef_frame(msg)
+    async for event, msg in EventClient(config).subscribe(config.subscriptions[0], decode=True):
+        if isinstance(msg, gps_pb2.RelativePositionFrame) and relposned:
+            print(f"Event: \n {event} \nMessage: \n {msg}")
+            print("-" * 50)
+            relposned = False
+        elif isinstance(msg, gps_pb2.GpsFrame) and pvt:
+            print(f"Event: \n {event} \nMessage: \n {msg}")
+            print("-" * 50)
+            pvt = False
+        elif isinstance(msg, gps_pb2.EcefCoordinates) and ecef:
+            print(f"Event: \n {event} \nMessage: \n {msg}")
+            print("-" * 50)
+            ecef = False
+        
 
 
 if __name__ == "__main__":

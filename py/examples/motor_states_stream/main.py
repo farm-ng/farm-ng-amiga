@@ -28,15 +28,26 @@ async def main(service_config_path: Path) -> None:
     Args:
         service_config_path (Path): The path to the LiDAR service config.
     """
+    position = True
+    data = True
     # Create a client to the LiDAR service
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
 
     async for event, message in EventClient(config).subscribe(config.subscriptions[0], decode=False):
-        if "position" in event.uri.path or "data" in event.uri.path:
-            print(f"Event: {event}")
+        if "position" in event.uri.path and position:
+            print(f"Event: \n{event}")
+            print("-" * 30)
             decoded_message = decode_message(message)
-            print(f"Decoded Message: {format_message(decoded_message)}")
+            print(f"Decoded Message: \n{format_message(decoded_message)}")
             print("-" * 50)
+            position = False
+        elif "data" in event.uri.path and data:
+            print(f"Event: \n{event}")
+            print("-" * 30)
+            decoded_message = decode_message(message)
+            print(f"Decoded Message: \n{format_message(decoded_message)}")
+            print("-" * 50)
+            data = False
 
 
 def decode_message(raw_data: bytes):
