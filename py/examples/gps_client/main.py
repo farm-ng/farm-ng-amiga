@@ -24,58 +24,8 @@ from farm_ng.core.events_file_reader import proto_from_json_file
 from farm_ng.gps import gps_pb2
 
 
-def print_relative_position_frame(msg):
-    """Prints the relative position frame message.
-
-    Args: msg: The relative position frame message.
-    """
-    print("RELATIVE POSITION FRAME \n")
-    print(f"Message stamp: {msg.stamp.stamp}")
-    print(f"GPS time: {msg.gps_time.stamp}")
-    print(f"Relative pose north: {msg.relative_pose_north}")
-    print(f"Relative pose east: {msg.relative_pose_east}")
-    print(f"Relative pose down: {msg.relative_pose_down}")
-    print(f"Relative pose length: {msg.relative_pose_length}")
-    print(f"Accuracy north: {msg.accuracy_north}")
-    print(f"Accuracy east: {msg.accuracy_east}")
-    print(f"Accuracy down: {msg.accuracy_down}")
-    print(f"Carrier solution: {msg.carr_soln}")
-    print(f"GNSS fix ok: {msg.gnss_fix_ok}")
-    print("-" * 50)
-
-
-def print_gps_frame(msg):
-    """Prints the gps frame message.
-
-    Args: msg: The gps frame message.
-    """
-    print("PVT FRAME \n")
-    print(f"Message stamp: {msg.stamp.stamp}")
-    print(f"GPS time: {msg.gps_time.stamp}")
-    print(f"Latitude: {msg.latitude}")
-    print(f"Longitude: {msg.longitude}")
-    print(f"Altitude: {msg.altitude}")
-    print(f"Ground speed: {msg.ground_speed}")
-    print(f"Speed accuracy: {msg.speed_accuracy}")
-    print(f"Horizontal accuracy: {msg.horizontal_accuracy}")
-    print(f"Vertical accuracy: {msg.vertical_accuracy}")
-    print(f"P DOP: {msg.p_dop}")
-    print("-" * 50)
-
-
-def print_ecef_frame(msg):
-    """Prints the ecef frame message.
-
-    Args: msg: The ecef frame message.
-    """
-    print("ECEF FRAME \n")
-    print(f"Message stamp: {msg.stamp.stamp}")
-    print(f"GPS time: {msg.gps_time.stamp}")
-    print(f"x: {msg.x}")
-    print(f"y: {msg.y}")
-    print(f"z: {msg.z}")
-    print(f"Accuracy: {msg.accuracy}")
-    print(f"Flags: {msg.flags}")
+def print_event(event, msg):
+    print(f"Event: \n {event} \nMessage: \n {msg}")
     print("-" * 50)
 
 
@@ -92,18 +42,14 @@ async def main(service_config_path: Path) -> None:
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
     async for event, msg in EventClient(config).subscribe(config.subscriptions[0], decode=True):
         if isinstance(msg, gps_pb2.RelativePositionFrame) and relposned:
-            print(f"Event: \n {event} \nMessage: \n {msg}")
-            print("-" * 50)
-            relposned = False
+            print_event(event, msg)
+            # relposned = False
         elif isinstance(msg, gps_pb2.GpsFrame) and pvt:
-            print(f"Event: \n {event} \nMessage: \n {msg}")
-            print("-" * 50)
-            pvt = False
+            print_event(event, msg)
+            # pvt = False
         elif isinstance(msg, gps_pb2.EcefCoordinates) and ecef:
-            print(f"Event: \n {event} \nMessage: \n {msg}")
-            print("-" * 50)
-            ecef = False
-        
+            print_event(event, msg)
+            # ecef = False
 
 
 if __name__ == "__main__":

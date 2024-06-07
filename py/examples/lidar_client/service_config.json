@@ -1,0 +1,15 @@
+{
+    "name": "amiga",
+    "port": 50010,
+    "host": "100.118.52.117",
+    "log_level": "INFO",
+    "subscriptions": [
+        {
+            "uri": {
+                "path": "*",
+                "query": "service_name=lidar"
+            },
+            "every_n": 1
+        }
+    ]
+}
