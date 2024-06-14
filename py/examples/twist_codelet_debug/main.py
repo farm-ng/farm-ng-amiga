@@ -13,26 +13,53 @@
 # limitations under the License.
 import argparse
 import asyncio
+import time
 from pathlib import Path
 
+import matplotlib.pyplot as plt
+from farm_ng.canbus.canbus_pb2 import Twist2d
 from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfig
 from farm_ng.core.events_file_reader import proto_from_json_file
 
 
 async def main(service_config_path: Path) -> None:
-    """Run the camera service client.
+    """Run the camera service client and collect data for 10 seconds.
 
     Args:
         service_config_path (Path): The path to the camera service config.
     """
-    # create a client to the camera service
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
 
+    twist_data = []
+    twist_recv_data = []
+
+    start_time = time.time()
+    collection_duration = 30  # seconds
+
     async for event, message in EventClient(config).subscribe(config.subscriptions[0], decode=True):
-        print(f"Event: \n{event}")
-        print("-" * 80)
-        print(f"Message: \n{message}")
+        if isinstance(message, Twist2d):
+            if event.uri.path == "/twist":
+                twist_data.append(message.linear_velocity_x)
+            elif event.uri.path == "/twist_recv":
+                twist_recv_data.append(message.linear_velocity_x)
+            print(f"Event: \n{event}")
+            print("-" * 80)
+            print(f"Message: \n{message}")
+
+        # Check if the collection duration has elapsed
+        if time.time() - start_time > collection_duration:
+            break
+
+    # Plot the collected data
+    plt.figure()
+    plt.plot(twist_data, label='/twist')
+    plt.plot(twist_recv_data, label='/twist_recv')
+    plt.xlabel('Time (arbitrary units)')
+    plt.ylabel('linear_velocity_x')
+    plt.legend()
+    plt.title('Twist and Twist Recv Data')
+    plt.show()
 
 
 if __name__ == "__main__":
@@ -40,4 +67,7 @@ if __name__ == "__main__":
     parser.add_argument("--service-config", type=Path, required=True, help="The camera config.")
     args = parser.parse_args()
 
-    asyncio.run(main(args.service_config))
+    try:
+        asyncio.run(main(args.service_config))
+    except KeyboardInterrupt:
+        print("Interrupted by user. Exiting...")

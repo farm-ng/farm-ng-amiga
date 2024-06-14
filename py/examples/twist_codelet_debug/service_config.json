@@ -6,7 +6,7 @@
     "subscriptions": [
         {
             "uri": {
-                "path": "/twist_recv",
+                "path": "*",
                 "query": "service_name=canbus"
             },
             "every_n": 1
