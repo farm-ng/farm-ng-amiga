@@ -12,7 +12,7 @@ from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfig
 from farm_ng.core.events_file_reader import proto_from_json_file
 
-async def main(service_config_path: Path, data_time: float) -> None:
+async def main(service_config_path: Path) -> None:
     """Collect and plot data from the twist, twist_recv, and twist_send topics.
 
     Args:
@@ -115,10 +115,9 @@ async def main(service_config_path: Path, data_time: float) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="python main.py", description="Stream motor states from the canbus service.")
     parser.add_argument("--service-config", type=Path, required=True, help="The path to the service config.")
-    parser.add_argument("--data-time", type=float, required=True, help="Duration to collect data (in seconds).")
     args = parser.parse_args()
 
     try:
-        asyncio.run(main(args.service_config, args.data_time))
+        asyncio.run(main(args.service_config))
     except KeyboardInterrupt:
         print("Interrupted by user. Exiting...")
