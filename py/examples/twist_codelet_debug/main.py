@@ -23,7 +23,7 @@ from farm_ng.core.event_service_pb2 import EventServiceConfig
 from farm_ng.core.events_file_reader import proto_from_json_file
 
 
-async def main(service_config_path: Path) -> None:
+async def main(service_config_path: Path, data_time: float) -> None:
     """Run the camera service client and collect data for 10 seconds.
 
     Args:
@@ -35,7 +35,6 @@ async def main(service_config_path: Path) -> None:
     twist_recv_data = []
 
     start_time = time.time()
-    collection_duration = 30  # seconds
 
     async for event, message in EventClient(config).subscribe(config.subscriptions[0], decode=True):
         if isinstance(message, Twist2d):
@@ -48,7 +47,7 @@ async def main(service_config_path: Path) -> None:
             print(f"Message: \n{message}")
 
         # Check if the collection duration has elapsed
-        if time.time() - start_time > collection_duration:
+        if time.time() - start_time > data_time:
             break
 
     # Plot the collected data
@@ -65,9 +64,10 @@ async def main(service_config_path: Path) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="python main.py", description="Stream motor states from the canbus service.")
     parser.add_argument("--service-config", type=Path, required=True, help="The camera config.")
+    parser.add_argument("--data-time", type=float, required=True, help="The camera config.")
     args = parser.parse_args()
 
     try:
-        asyncio.run(main(args.service_config))
+        asyncio.run(main(args.service_config, args.data_time))
     except KeyboardInterrupt:
         print("Interrupted by user. Exiting...")
