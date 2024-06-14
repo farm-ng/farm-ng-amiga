@@ -5,6 +5,7 @@ import asyncio
 import time
 from pathlib import Path
 import matplotlib.pyplot as plt
+from matplotlib import cm
 from math import cos, sin
 from farm_ng.canbus.canbus_pb2 import Twist2d
 from farm_ng.core.event_client import EventClient
@@ -28,11 +29,13 @@ async def main(service_config_path: Path, data_time: float) -> None:
 
     start_time = time.monotonic()
 
+    last_twist_send = time.monotonic()
     async for event, message in EventClient(config).subscribe(config.subscriptions[0], decode=True):
         current_time = time.monotonic() - start_time
-        if current_time > data_time:
+        # if current_time > data_time:
+        #     break
+        if current_time - last_twist_send > 5.0:
             break
-        
         if isinstance(message, Twist2d):
             if event.uri.path == "/twist":
                 twist_data.append(message)
@@ -43,9 +46,7 @@ async def main(service_config_path: Path, data_time: float) -> None:
             elif event.uri.path == "/twist_send":
                 twist_send_data.append(message)
                 twist_send_stamps.append(current_time)
-
-        if current_time > data_time:
-            break
+                last_twist_send = current_time
 
     # Integrate poses from velocities
     def integrate_poses(stamps, twists):
@@ -64,36 +65,49 @@ async def main(service_config_path: Path, data_time: float) -> None:
     twist_send_poses = integrate_poses(twist_send_stamps, twist_send_data)
 
     # Plot the collected data
-    plt.figure(figsize=(14, 10))
+    fig, axs = plt.subplots(4, 1, figsize=(14, 18))
 
-    # Subplot 1: Velocities
-    plt.subplot(2, 1, 1)
-    plt.plot(twist_stamps, [x.linear_velocity_x for x in twist_data], label='/twist')
-    plt.plot(twist_recv_stamps, [x.linear_velocity_x for x in twist_recv_data], label='/twist_recv')
-    plt.plot(twist_send_stamps, [x.linear_velocity_x for x in twist_send_data], label='/twist_send')
-    plt.xlabel('Time (s)')
-    plt.ylabel('linear_velocity_x')
-    plt.legend()
-    plt.title('Twist Data Over Time')
+    # Subplot 1: Linear Velocities
+    axs[0].plot(twist_stamps, [x.linear_velocity_x for x in twist_data], label='/twist')
+    axs[0].plot(twist_recv_stamps, [x.linear_velocity_x for x in twist_recv_data], label='/twist_recv')
+    axs[0].plot(twist_send_stamps, [x.linear_velocity_x for x in twist_send_data], label='/twist_send')
+    axs[0].set_xlabel('Time (s)')
+    axs[0].set_ylabel('Linear Velocity (m/s)')
+    axs[0].legend()
+    axs[0].set_title('Linear Velocity Over Time')
 
-    # Subplot 2: Poses
-    plt.subplot(2, 1, 2)
+    # Subplot 2: Angular Velocities
+    axs[1].plot(twist_stamps, [x.angular_velocity for x in twist_data], label='/twist')
+    axs[1].plot(twist_recv_stamps, [x.angular_velocity for x in twist_recv_data], label='/twist_recv')
+    axs[1].plot(twist_send_stamps, [x.angular_velocity for x in twist_send_data], label='/twist_send')
+    axs[1].set_xlabel('Time (s)')
+    axs[1].set_ylabel('Angular Velocity (rad/s)')
+    axs[1].legend()
+    axs[1].set_title('Angular Velocity Over Time')
+
+    # Subplot 3: Heading
+    if twist_poses[2]:
+        axs[2].plot(twist_stamps[1:], twist_poses[2], label='/twist heading')
+    if twist_recv_poses[2]:
+        axs[2].plot(twist_recv_stamps[1:], twist_recv_poses[2], label='/twist_recv heading')
+    if twist_send_poses[2]:
+        axs[2].plot(twist_send_stamps[1:], twist_send_poses[2], label='/twist_send heading')
+    axs[2].set_xlabel('Time (s)')
+    axs[2].set_ylabel('Heading (rad)')
+    axs[2].legend()
+    axs[2].set_title('Heading Over Time')
+
+    # Subplot 4: x vs y Scatter Plot with Color Coding for Progression
     if twist_poses[0]:
-        plt.plot(twist_stamps[1:], twist_poses[0], label='/twist x position')
-        plt.plot(twist_stamps[1:], twist_poses[1], label='/twist y position')
-        plt.plot(twist_stamps[1:], twist_poses[2], label='/twist heading')
+        axs[3].scatter(twist_poses[0], twist_poses[1], c=range(len(twist_poses[0])), cmap='viridis', label='/twist', s=10, marker='o')
     if twist_recv_poses[0]:
-        plt.plot(twist_recv_stamps[1:], twist_recv_poses[0], label='/twist_recv x position')
-        plt.plot(twist_recv_stamps[1:], twist_recv_poses[1], label='/twist_recv y position')
-        plt.plot(twist_recv_stamps[1:], twist_recv_poses[2], label='/twist_recv heading')
+        axs[3].scatter(twist_recv_poses[0], twist_recv_poses[1], c=range(len(twist_recv_poses[0])), cmap='plasma', label='/twist_recv', s=10, marker='x')
     if twist_send_poses[0]:
-        plt.plot(twist_send_stamps[1:], twist_send_poses[0], label='/twist_send x position')
-        plt.plot(twist_send_stamps[1:], twist_send_poses[1], label='/twist_send y position')
-        plt.plot(twist_send_stamps[1:], twist_send_poses[2], label='/twist_send heading')
-    plt.xlabel('Time (s)')
-    plt.ylabel('Pose')
-    plt.legend()
-    plt.title('Poses Derived from Velocities')
+        axs[3].scatter(twist_send_poses[0], twist_send_poses[1], c=range(len(twist_send_poses[0])), cmap='cividis', label='/twist_send', s=10, marker='^')
+    axs[3].set_xlabel('x position (m)')
+    axs[3].set_ylabel('y position (m)')
+    axs[3].legend()
+    axs[3].set_title('x vs y Position with Color Progression')
 
     plt.tight_layout()
     plt.show()
