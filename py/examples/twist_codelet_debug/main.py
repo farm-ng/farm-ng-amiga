@@ -32,7 +32,9 @@ async def main(service_config_path: Path, data_time: float) -> None:
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
 
     twist_data = []
+    twist_stamps = []
     twist_recv_data = []
+    twist_recv_stamps = []
 
     start_time = time.time()
 
@@ -40,8 +42,10 @@ async def main(service_config_path: Path, data_time: float) -> None:
         if isinstance(message, Twist2d):
             if event.uri.path == "/twist":
                 twist_data.append(message.linear_velocity_x)
+                twist_stamps.append(time.time() - start_time)
             elif event.uri.path == "/twist_recv":
                 twist_recv_data.append(message.linear_velocity_x)
+                twist_recv_stamps.append(time.time() - start_time)
             print(f"Event: \n{event}")
             print("-" * 80)
             print(f"Message: \n{message}")
@@ -52,9 +56,11 @@ async def main(service_config_path: Path, data_time: float) -> None:
 
     # Plot the collected data
     plt.figure()
-    plt.plot(twist_data, label='/twist')
-    plt.plot(twist_recv_data, label='/twist_recv')
-    plt.xlabel('Time (arbitrary units)')
+    # plt.plot(twist_data, label='/twist')
+    plt.plot(twist_stamps, twist_data, label='/twist')
+    # plt.plot(twist_recv_data, label='/twist_recv')
+    plt.plot(twist_recv_stamps, twist_recv_data, label='/twist_recv')
+    plt.xlabel('Time (s)')
     plt.ylabel('linear_velocity_x')
     plt.legend()
     plt.title('Twist and Twist Recv Data')
