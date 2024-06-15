@@ -38,9 +38,8 @@ enum PtoCommandType {
 // Enum for commanding BugDispenser devices, sent in its own CAN message
 enum BugDispenserDirection {
   BUG_DISPENSER_UNKNOW = 0; // Default value indicating unknown command
-  BUG_DISPENSER_PASSIVE = 1; // Release auto control of the bug dispenser
-  BUG_DISPENSER_ACTIVE = 2; // Activate the bug dispenser
-  BUG_DISPENSER_STOPPED = 3; // Stop the bug dispenser
+  BUG_DISPENSER_ACTIVE = 1; // Activate the bug dispenser
+  BUG_DISPENSER_STOPPED = 2; // Stop the bug dispenser
 }
 
 // Tool command replies, decoded from AmigaTpdo1 CAN messages
@@ -139,7 +138,7 @@ message PtoStatus {
 
 // Message to receive bug dispenser status
 message BugDispenserStatus {
-  double stamp = 1; // Stamp of the bug dispenser RawCanbusMessage event 
+  double stamp = 1; // Stamp of the bug dispenser RawCanbusMessage event
   uint32 id = 2; // Bug dispenser ID (e.g., 0x0 - 0x2)
   ToolCommandReply command_reply = 3; // PASSIVE, FORWARD, REVERSE, STOPPED
   float rate = 4; // Dispensing rate in meters between drops

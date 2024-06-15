@@ -491,3 +491,95 @@ class PendantState(Packet):
 
     def __str__(self):
         return "x {:0.3f} y {:0.3f} buttons {}".format(self.x, self.y, self.buttons)
+
+
+class BugDispenserRpdo1(Packet):
+    cob_id = 0x210
+
+    def __init__(self, rate1=0, direction1=0, rate2=0, direction2=0, rate3=0, direction3=0):
+        self.rate1 = rate1 & 0xFF
+        self.direction1 = direction1 & 0x1
+        self.rate2 = rate2 & 0xFF
+        self.direction2 = direction2 & 0x1
+        self.rate3 = rate3 & 0xFF
+        self.direction3 = direction3 & 0x1
+        # Format for packing the rates and directions
+        self.format = '<BBB1B4x'  # 3 bytes for rates, 1 byte for combined directions, 4 bytes padding
+
+    def encode(self):
+        """Returns the data contained by the class encoded as CAN message data."""
+        combined_directions = (self.direction1 << 0) | (self.direction2 << 1) | (self.direction3 << 2)
+        packed_bytes = pack(self.format, self.rate1, self.rate2, self.rate3, combined_directions)
+        return packed_bytes
+
+    def decode(self, data):
+        """Decodes CAN message data and populates the values of the class."""
+        unpacked_data = unpack(self.format, data)[0]
+        self.rate1 = unpacked_data & 0xFF
+        self.direction1 = (unpacked_data >> 8) & 0x1
+        self.rate2 = (unpacked_data >> 9) & 0xFF
+        self.direction2 = (unpacked_data >> 17) & 0x1
+        self.rate3 = (unpacked_data >> 18) & 0xFF
+        self.direction3 = (unpacked_data >> 26) & 0x1
+
+    def __str__(self):
+        return (
+            f"Bug DispenserRpdo1: Rates: {self.rate1}, {self.rate2}, {self.rate3} | "
+            f"Directions: {self.direction1}, {self.direction2}, {self.direction3}"
+        )
+
+
+class BugDispenserTpdo1(Packet):
+    cob_id = 0x290
+
+    def __init__(
+        self, rate1=0, counter1=0, direction1=0, rate2=0, counter2=0, direction2=0, rate3=0, counter3=0, direction3=0
+    ):
+        self.rate1 = rate1 & 0xFF
+        self.counter1 = counter1 & 0xFF
+        self.direction1 = direction1 & 0x1
+        self.rate2 = rate2 & 0xFF
+        self.counter2 = counter2 & 0xFF
+        self.direction2 = direction2 & 0x1
+        self.rate3 = rate3 & 0xFF
+        self.counter3 = counter3 & 0xFF
+        self.direction3 = direction3 & 0x1
+        # Format for packing the rates and directions
+        self.format = (
+            '<BBBBBB1B1x'  # 3 bytes for rates, 3 bytes for counters, 1 byte for combined directions, 1 byte padding
+        )
+
+    def encode(self):
+        """Returns the data contained by the class encoded as CAN message data."""
+        combined_directions = (self.direction1 << 0) | (self.direction2 << 1) | (self.direction3 << 2)
+        packed_bytes = pack(
+            self.format,
+            self.rate1,
+            self.rate2,
+            self.rate3,
+            self.counter1,
+            self.counter2,
+            self.counter3,
+            combined_directions,
+        )
+        return packed_bytes
+
+    def decode(self, data):
+        """Decodes CAN message data and populates the values of the class."""
+        rate1, rate2, rate3, counter1, counter2, counter3, dirs = unpack('<BBBBBB1Bx', data[:8])
+        self.rate1 = rate1
+        self.rate2 = rate2
+        self.rate3 = rate3
+        self.counter1 = counter1
+        self.counter2 = counter2
+        self.counter3 = counter3
+        self.direction1 = dirs & 0x1
+        self.direction2 = (dirs >> 1) & 0x1
+        self.direction3 = (dirs >> 2) & 0x1
+
+    def __str__(self):
+        return (
+            f"BugDispenserTpdo1: Rates {self.rate1}, {self.rate2}, {self.rate3} "
+            "| Counters {self.counter1}, {self.counter2}, {self.counter3} "
+            "| Directions {self.direction1}, {self.direction2}, {self.direction3}"
+        )
