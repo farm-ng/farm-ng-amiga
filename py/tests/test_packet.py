@@ -175,12 +175,12 @@ def test_bug_dispenser_tpdo3_to_raw_canbus(bug_dispenser_tpdo3_instance):
 def test_bug_dispenser_tpdo3_to_proto(bug_dispenser_tpdo3_instance):
     proto = bug_dispenser_tpdo3_instance.to_proto()
     assert isinstance(proto, tool_control_pb2.BugDispenserTpdo3)
-    assert proto.rate1 == pytest.approx(bug_dispenser_tpdo3_instance.rate1, abs=1e-1)
-    assert proto.counter1 == pytest.approx(bug_dispenser_tpdo3_instance.counter1, abs=1e-1)
-    assert proto.rate2 == pytest.approx(bug_dispenser_tpdo3_instance.rate2, abs=1e-1)
-    assert proto.counter2 == pytest.approx(bug_dispenser_tpdo3_instance.counter2, abs=1e-1)
-    assert proto.rate3 == pytest.approx(bug_dispenser_tpdo3_instance.rate3, abs=1e-1)
-    assert proto.counter3 == pytest.approx(bug_dispenser_tpdo3_instance.counter3, abs=1e-1)
+    assert proto.bug_dispenser_1_rate == pytest.approx(bug_dispenser_tpdo3_instance.rate1, abs=1e-1)
+    assert proto.bug_dispenser_1_counter == pytest.approx(bug_dispenser_tpdo3_instance.counter1, abs=1e-1)
+    assert proto.bug_dispenser_2_rate == pytest.approx(bug_dispenser_tpdo3_instance.rate2, abs=1e-1)
+    assert proto.bug_dispenser_2_counter == pytest.approx(bug_dispenser_tpdo3_instance.counter2, abs=1e-1)
+    assert proto.bug_dispenser_3_rate == pytest.approx(bug_dispenser_tpdo3_instance.rate3, abs=1e-1)
+    assert proto.bug_dispenser_3_counter == pytest.approx(bug_dispenser_tpdo3_instance.counter3, abs=1e-1)
 
 
 def test_bug_dispenser_tpdo3_from_proto():
