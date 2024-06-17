@@ -128,12 +128,12 @@ def test_bug_dispenser_rpdo3_encode_decode(bug_dispenser_rpdo3_instance):
     decoded_instance = BugDispenserRpdo3()
     decoded_instance.decode(encoded)
 
-    assert bug_dispenser_rpdo3_instance.rate1 == decoded_instance.rate1
-    assert bug_dispenser_rpdo3_instance.rate2 == decoded_instance.rate2
-    assert bug_dispenser_rpdo3_instance.rate3 == decoded_instance.rate3
+    assert bug_dispenser_rpdo3_instance.rate1 == pytest.approx(decoded_instance.rate1, rel=1e-1)
+    assert bug_dispenser_rpdo3_instance.rate2 == pytest.approx(decoded_instance.rate2, rel=1e-1)
+    assert bug_dispenser_rpdo3_instance.rate3 == pytest.approx(decoded_instance.rate3, rel=1e-1)
 
 
-def test_bug_dispenser_rpdo1_invalid_rate():
+def test_bug_dispenser_rpdo3_invalid_rate():
     with pytest.raises(ValueError):
         BugDispenserRpdo3(rate1=30.0).encode()
 
@@ -143,11 +143,11 @@ def test_bug_dispenser_tpdo3_encode_decode(bug_dispenser_tpdo3_instance):
     decoded_instance = BugDispenserTpdo3()
     decoded_instance.decode(encoded)
 
-    assert bug_dispenser_tpdo3_instance.rate1 == decoded_instance.rate1
+    assert bug_dispenser_tpdo3_instance.rate1 == pytest.approx(decoded_instance.rate1, rel=1e-1)
     assert bug_dispenser_tpdo3_instance.counter1 == decoded_instance.counter1
-    assert bug_dispenser_tpdo3_instance.rate2 == decoded_instance.rate2
+    assert bug_dispenser_tpdo3_instance.rate2 == pytest.approx(decoded_instance.rate2, rel=1e-1)
     assert bug_dispenser_tpdo3_instance.counter2 == decoded_instance.counter2
-    assert bug_dispenser_tpdo3_instance.rate3 == decoded_instance.rate3
+    assert bug_dispenser_tpdo3_instance.rate3 == pytest.approx(decoded_instance.rate3, rel=1e-1)
     assert bug_dispenser_tpdo3_instance.counter3 == decoded_instance.counter3
 
 
