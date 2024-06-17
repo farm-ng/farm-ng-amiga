@@ -36,7 +36,7 @@ enum PtoCommandType {
 }
 
 // Enum for commanding BugDispenser devices, sent in its own CAN message
-enum BugDispenserDirection {
+enum BugDispenserState {
   BUG_DISPENSER_UNKNOW = 0; // Default value indicating unknown command
   BUG_DISPENSER_ACTIVE = 1; // Activate the bug dispenser
   BUG_DISPENSER_STOPPED = 2; // Stop the bug dispenser
@@ -83,7 +83,7 @@ message PtoCommand {
 message BugDispenserCommand {
   uint32 id = 1; // Bug dispenser ID (e.g., 0x0 - 0x2)
   float rate = 2; // Dispensing rate in meters between drops
-  BugDispenserDirection direction = 3; // Dispensing direction
+  BugDispenserState state = 3; // Dispensing direction
 }
 
 
@@ -140,7 +140,7 @@ message PtoStatus {
 message BugDispenserStatus {
   double stamp = 1; // Stamp of the bug dispenser RawCanbusMessage event
   uint32 id = 2; // Bug dispenser ID (e.g., 0x0 - 0x2)
-  ToolCommandReply command_reply = 3; // PASSIVE, FORWARD, REVERSE, STOPPED
+  BugDispenserState state = 3; // UNKNOWN, STOPPED, ACTIVE
   float rate = 4; // Dispensing rate in meters between drops
   bool bug_dispenser_empty = 5; // Whether the hopper is empty
   float volume_dispensed = 6; // Volume of product dispensed
@@ -152,4 +152,16 @@ message ToolStatuses {
   repeated HBridgeStatus hbridges = 1;
   repeated PtoStatus ptos = 2;
   repeated BugDispenserStatus bug_dispensers = 3;
+}
+
+// BugDispenserTpdo1 encapsulates the state of a bug dispenser.
+message BugDispenserTpdo1 {
+  uint32 node_id = 1;    // Node ID of sender
+  double stamp = 2;      // Timestamp
+  uint32 bug_dispenser_1_rate = 3;  // Rate of bug dispenser 1
+  uint32 bug_dispenser_1_counter = 4;  // Counter of bug dispenser 1
+  uint32 bug_dispenser_2_rate = 5;  // Rate of bug dispenser 2
+  uint32 bug_dispenser_2_counter = 6;  // Counter of bug dispenser 2
+  uint32 bug_dispenser_3_rate = 7;  // Rate of bug dispenser 3
+  uint32 bug_dispenser_3_counter = 8;  // Counter of bug dispenser 3
 }

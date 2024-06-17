@@ -165,10 +165,3 @@ message ConfigRequestReply {
     bool bool_value = 9;        // Used for boolean values, e.g. M10_ON
   }
 }
-
-// BugDispenserTpdo1 encapsulates the state of a bug dispenser.
-message BugDispenserTpdo1 {
-  uint32 node_id = 1;    // Node ID of sender
-  double stamp = 2;      // Timestamp
-  uint32 bug_dispenser_bits = 3;  // Bit masked bug dispenser states
-}
