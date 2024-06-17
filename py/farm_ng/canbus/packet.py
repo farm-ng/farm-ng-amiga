@@ -494,7 +494,7 @@ class PendantState(Packet):
         return "x {:0.3f} y {:0.3f} buttons {}".format(self.x, self.y, self.buttons)
 
 
-class BugDispenserRpdo1(Packet):
+class BugDispenserRpdo3(Packet):
     """Bug dispenser rate in m/drop (request) sent to the Amiga dashboard."""
 
     cob_id = 0x400
@@ -533,7 +533,7 @@ class BugDispenserRpdo1(Packet):
         )
 
 
-class BugDispenserTpdo1(Packet):
+class BugDispenserTpdo3(Packet):
     """Bug dispenser rate in m/drop, 8-bit counter (response) received from the Amiga dashboard."""
 
     cob_id = 0x380
@@ -585,9 +585,9 @@ class BugDispenserTpdo1(Packet):
             stamp=self.stamp.stamp, id=self.cob_id + DASHBOARD_NODE_ID, data=self.encode()
         )
 
-    def to_proto(self) -> tool_control_pb2.BugDispenserTpdo1:
+    def to_proto(self) -> tool_control_pb2.BugDispenserTpdo3:
         """Packs the class data into a BugDispenserTpdo1 proto message."""
-        return tool_control_pb2.BugDispenserTpdo1(
+        return tool_control_pb2.BugDispenserTpdo3(
             bug_dispenser_1_rate=self.rate1,
             bug_dispenser_1_counter=self.counter1,
             bug_dispenser_2_rate=self.rate2,
@@ -597,9 +597,9 @@ class BugDispenserTpdo1(Packet):
         )
 
     @classmethod
-    def from_proto(cls, proto: tool_control_pb2.BugDispenserTpdo1) -> BugDispenserTpdo1:
+    def from_proto(cls, proto: tool_control_pb2.BugDispenserTpdo3) -> BugDispenserTpdo3:
         """Creates an instance of the class from a proto message."""
-        if not isinstance(proto, tool_control_pb2.BugDispenserTpdo1):
+        if not isinstance(proto, tool_control_pb2.BugDispenserTpdo3):
             raise TypeError(f"Expected tool_control_pb2.BugDispenserTpdo1 proto, received {type(proto)}")
         obj = cls()
         obj.rate1 = proto.bug_dispenser_1_rate
@@ -612,7 +612,7 @@ class BugDispenserTpdo1(Packet):
         return obj
 
     @classmethod
-    def from_raw_canbus_message(cls, message: canbus_pb2.RawCanbusMessage) -> BugDispenserTpdo1:
+    def from_raw_canbus_message(cls, message: canbus_pb2.RawCanbusMessage) -> BugDispenserTpdo3:
         """Parses a canbus_pb2.RawCanbusMessage."""
         return cls.from_can_data(message.data, message.stamp)
 

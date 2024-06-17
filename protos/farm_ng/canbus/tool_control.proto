@@ -155,7 +155,7 @@ message ToolStatuses {
 }
 
 // BugDispenserTpdo1 encapsulates the state of a bug dispenser.
-message BugDispenserTpdo1 {
+message BugDispenserTpdo3 {
   uint32 node_id = 1;    // Node ID of sender
   double stamp = 2;      // Timestamp
   uint32 bug_dispenser_1_rate = 3;  // Rate of bug dispenser 1
