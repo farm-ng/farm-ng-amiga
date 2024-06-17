@@ -529,7 +529,7 @@ class BugDispenserRpdo1(Packet):
 
 
 class BugDispenserTpdo1(Packet):
-    """Bug dispenser rate in m/drop (response) received from the Amiga dashboard."""
+    """Bug dispenser rate in m/drop, 8-bit counter (response) received from the Amiga dashboard."""
 
     cob_id = 0x380
 
@@ -544,18 +544,36 @@ class BugDispenserTpdo1(Packet):
         self.stamp_packet(time.monotonic())
 
     def encode(self):
-        # R1 C1 R2 C2 R3 C3
-        return pack(self.format, self.rate1, self.counter1, self.rate2, self.counter2, self.rate3, self.counter3)
+        """Returns the data contained by the class encoded as CAN message data.
+
+        Data is encoded as follows:
+        R1 C1 R2 C2 R3 C3
+        """
+        return pack(
+            self.format,
+            int(self.rate1 * 10.0),
+            self.counter1,
+            int(self.rate2 * 10.0),
+            self.counter2,
+            int(self.rate3 * 10.0),
+            self.counter3,
+        )
 
     def decode(self, data):
+        """Decodes CAN message data and populates the values of the class."""
         self.rate1, self.counter1, self.rate2, self.counter2, self.rate3, self.counter3 = unpack(self.format, data)
+        self.rate1 /= 10.0
+        self.rate2 /= 10.0
+        self.rate3 /= 10.0
 
     def to_raw_canbus_message(self) -> canbus_pb2.RawCanbusMessage:
+        """Packs the class data into a canbus_pb2.RawCanbusMessage."""
         return canbus_pb2.RawCanbusMessage(
             stamp=self.stamp.stamp, id=self.cob_id + DASHBOARD_NODE_ID, data=self.encode()
         )
 
     def to_proto(self) -> tool_control_pb2.BugDispenserTpdo1:
+        """Packs the class data into a BugDispenserTpdo1 proto message."""
         return tool_control_pb2.BugDispenserTpdo1(
             bug_dispenser_1_rate=self.rate1,
             bug_dispenser_1_counter=self.counter1,
@@ -567,6 +585,7 @@ class BugDispenserTpdo1(Packet):
 
     @classmethod
     def from_proto(cls, proto: tool_control_pb2.BugDispenserTpdo1) -> BugDispenserTpdo1:
+        """Creates an instance of the class from a proto message."""
         obj = cls()
         obj.rate1 = proto.bug_dispenser_1_rate
         obj.counter1 = proto.bug_dispenser_1_counter
@@ -579,9 +598,11 @@ class BugDispenserTpdo1(Packet):
 
     @classmethod
     def from_raw_canbus_message(cls, message: canbus_pb2.RawCanbusMessage) -> BugDispenserTpdo1:
+        """Parses a canbus_pb2.RawCanbusMessage."""
         return cls.from_can_data(message.data, message.stamp)
 
     def __str__(self):
+        """Returns a string representation of the class."""
         return (
             f"BugDispenserTpdo1: Rates: {self.rate1}, {self.rate2}, {self.rate3} "
             f"| Counters: {self.counter1}, {self.counter2}, {self.counter3}"
