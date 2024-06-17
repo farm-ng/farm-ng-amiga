@@ -19,6 +19,8 @@ from farm_ng.canbus import canbus_pb2
 from farm_ng.canbus.packet import AmigaControlState
 from farm_ng.canbus.packet import AmigaRpdo1
 from farm_ng.canbus.packet import AmigaTpdo1
+from farm_ng.canbus.packet import BugDispenserRpdo3
+from farm_ng.canbus.packet import BugDispenserTpdo3
 from farm_ng.canbus.packet import MotorControllerStatus
 from farm_ng.canbus.packet import MotorState
 from farm_ng.canbus.packet import PendantButtons
@@ -109,6 +111,54 @@ def test_motor_state_to_from_proto(motor_state_instance):
     assert from_proto_instance.voltage == motor_state_instance.voltage
     assert from_proto_instance.current == motor_state_instance.current
     assert from_proto_instance.temperature == motor_state_instance.temperature
+
+
+@pytest.fixture
+def bug_dispenser_rpdo3_instance():
+    return BugDispenserRpdo3(rate1=10.58, rate2=18.3462, rate3=0.559)
+
+
+@pytest.fixture
+def bug_dispenser_tpdo3_instance():
+    return BugDispenserTpdo3(rate1=1, counter1=138, rate2=15, counter2=200, rate3=12, counter3=255)
+
+
+def test_bug_dispenser_rpdo3_encode_decode(bug_dispenser_rpdo3_instance):
+    encoded = bug_dispenser_rpdo3_instance.encode()
+    decoded_instance = BugDispenserRpdo3()
+    decoded_instance.decode(encoded)
+
+    assert bug_dispenser_rpdo3_instance.rate1 == decoded_instance.rate1
+    assert bug_dispenser_rpdo3_instance.rate2 == decoded_instance.rate2
+    assert bug_dispenser_rpdo3_instance.rate3 == decoded_instance.rate3
+
+
+def test_bug_dispenser_rpdo1_invalid_rate():
+    with pytest.raises(ValueError):
+        BugDispenserRpdo3(rate1=30.0).encode()
+
+
+def test_bug_dispenser_tpdo3_encode_decode(bug_dispenser_tpdo3_instance):
+    encoded = bug_dispenser_tpdo3_instance.encode()
+    decoded_instance = BugDispenserTpdo3()
+    decoded_instance.decode(encoded)
+
+    assert bug_dispenser_tpdo3_instance.rate1 == decoded_instance.rate1
+    assert bug_dispenser_tpdo3_instance.counter1 == decoded_instance.counter1
+    assert bug_dispenser_tpdo3_instance.rate2 == decoded_instance.rate2
+    assert bug_dispenser_tpdo3_instance.counter2 == decoded_instance.counter2
+    assert bug_dispenser_tpdo3_instance.rate3 == decoded_instance.rate3
+    assert bug_dispenser_tpdo3_instance.counter3 == decoded_instance.counter3
+
+
+def test_bug_dispenser_tpdo3_invalid_rate():
+    with pytest.raises(ValueError):
+        BugDispenserTpdo3(rate1=300).encode()
+
+
+def test_bug_dispenser_tpdo3_invalid_counter():
+    with pytest.raises(ValueError):
+        BugDispenserTpdo3(counter1=300).encode()
 
 
 if __name__ == "__main__":
