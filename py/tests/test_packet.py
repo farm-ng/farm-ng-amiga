@@ -128,9 +128,9 @@ def test_bug_dispenser_rpdo3_encode_decode(bug_dispenser_rpdo3_instance):
     decoded_instance = BugDispenserRpdo3()
     decoded_instance.decode(encoded)
 
-    assert bug_dispenser_rpdo3_instance.rate1 == pytest.approx(decoded_instance.rate1, rel=1e-1)
-    assert bug_dispenser_rpdo3_instance.rate2 == pytest.approx(decoded_instance.rate2, rel=1e-1)
-    assert bug_dispenser_rpdo3_instance.rate3 == pytest.approx(decoded_instance.rate3, rel=1e-1)
+    assert bug_dispenser_rpdo3_instance.rate1 == pytest.approx(decoded_instance.rate1, abs=1e-1)
+    assert bug_dispenser_rpdo3_instance.rate2 == pytest.approx(decoded_instance.rate2, abs=1e-1)
+    assert bug_dispenser_rpdo3_instance.rate3 == pytest.approx(decoded_instance.rate3, abs=1e-1)
 
 
 def test_bug_dispenser_rpdo3_invalid_rate():
