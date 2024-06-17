@@ -508,10 +508,15 @@ class BugDispenserRpdo1(Packet):
 
     def encode(self):
         """Returns the data contained by the class encoded as CAN message data."""
+
+        if any(rate > 25.5 or rate < 0.0 for rate in [self.rate1, self.rate2, self.rate3]):
+            raise ValueError("Rates must be between 0.0 and 25.5 m/drop")
+
         return pack(self.format, int(self.rate1 * 10.0), int(self.rate2 * 10.0), int(self.rate3 * 10.0))
 
     def decode(self, data):
         """Decodes CAN message data and populates the values of the class."""
+
         self.rate1, self.rate2, self.rate3 = unpack(self.format, data)
         self.rate1 /= 10.0
         self.rate2 /= 10.0
@@ -549,6 +554,13 @@ class BugDispenserTpdo1(Packet):
         Data is encoded as follows:
         R1 C1 R2 C2 R3 C3
         """
+
+        if any(rate > 255 or rate < 0 for rate in [self.rate1, self.rate2, self.rate3]):
+            raise ValueError("Rates must be between 0 and 255")
+
+        if any(counter > 255 or counter < 0 for counter in [self.counter1, self.counter2, self.counter3]):
+            raise ValueError("Counters must be between 0 and 255")
+
         return pack(
             self.format,
             int(self.rate1 * 10.0),
@@ -562,6 +574,7 @@ class BugDispenserTpdo1(Packet):
     def decode(self, data):
         """Decodes CAN message data and populates the values of the class."""
         self.rate1, self.counter1, self.rate2, self.counter2, self.rate3, self.counter3 = unpack(self.format, data)
+
         self.rate1 /= 10.0
         self.rate2 /= 10.0
         self.rate3 /= 10.0
@@ -586,6 +599,8 @@ class BugDispenserTpdo1(Packet):
     @classmethod
     def from_proto(cls, proto: tool_control_pb2.BugDispenserTpdo1) -> BugDispenserTpdo1:
         """Creates an instance of the class from a proto message."""
+        if not isinstance(proto, tool_control_pb2.BugDispenserTpdo1):
+            raise TypeError(f"Expected tool_control_pb2.BugDispenserTpdo1 proto, received {type(proto)}")
         obj = cls()
         obj.rate1 = proto.bug_dispenser_1_rate
         obj.counter1 = proto.bug_dispenser_1_counter
