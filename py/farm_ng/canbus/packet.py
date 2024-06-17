@@ -495,32 +495,43 @@ class PendantState(Packet):
 
 
 class BugDispenserRpdo1(Packet):
-    cob_id = 0x200
+    """Bug dispenser rate in m/drop (request) sent to the Amiga dashboard."""
+
+    cob_id = 0x400
 
     def __init__(self, rate1=0, rate2=0, rate3=0):
-        self.rate1 = rate1 & 0xFF
-        self.rate2 = rate2 & 0xFF
-        self.rate3 = rate3 & 0xFF
+        self.rate1 = rate1
+        self.rate2 = rate2
+        self.rate3 = rate3
         self.format = '<3B5x'  # 3 bytes for rates, 5 bytes padding
         self.stamp_packet(time.monotonic())
 
     def encode(self):
-        return pack(self.format, self.rate1, self.rate2, self.rate3)
+        """Returns the data contained by the class encoded as CAN message data."""
+        return pack(self.format, int(self.rate1 * 10.0), int(self.rate2 * 10.0), int(self.rate3 * 10.0))
 
     def decode(self, data):
+        """Decodes CAN message data and populates the values of the class."""
         self.rate1, self.rate2, self.rate3 = unpack(self.format, data)
+        self.rate1 /= 10.0
+        self.rate2 /= 10.0
+        self.rate3 /= 10.0
 
     def __str__(self):
+        """Returns a string representation of the class."""
         return f"BugDispenserRpdo1: Rates: {self.rate1}, {self.rate2}, {self.rate3}"
 
     def to_raw_canbus_message(self) -> canbus_pb2.RawCanbusMessage:
+        """Packs the class data into a canbus_pb2.RawCanbusMessage."""
         return canbus_pb2.RawCanbusMessage(
             stamp=self.stamp.stamp, id=self.cob_id + DASHBOARD_NODE_ID, data=self.encode()
         )
 
 
 class BugDispenserTpdo1(Packet):
-    cob_id = 0x180
+    """Bug dispenser rate in m/drop (response) received from the Amiga dashboard."""
+
+    cob_id = 0x380
 
     def __init__(self, rate1=0, counter1=0, rate2=0, counter2=0, rate3=0, counter3=0):
         self.rate1 = rate1 & 0xFF
