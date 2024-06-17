@@ -21,6 +21,7 @@ from struct import unpack
 
 from farm_ng.canbus import amiga_v6_pb2
 from farm_ng.canbus import canbus_pb2
+from farm_ng.canbus import tool_control_pb2
 from farm_ng.core.stamp import timestamp_from_monotonic
 from farm_ng.core.timestamp_pb2 import Timestamp
 
@@ -517,24 +518,6 @@ class BugDispenserRpdo1(Packet):
             stamp=self.stamp.stamp, id=self.cob_id + DASHBOARD_NODE_ID, data=self.encode()
         )
 
-    def to_proto(self) -> canbus_pb2.BugDispenserRpdo1:
-        return canbus_pb2.BugDispenserRpdo1(
-            stamp=self.stamp.stamp, rate1=self.rate1, rate2=self.rate2, rate3=self.rate3
-        )
-
-    @classmethod
-    def from_proto(cls, proto: canbus_pb2.BugDispenserRpdo1) -> BugDispenserRpdo1:
-        obj = cls(rate1=proto.rate1, rate2=proto.rate2, rate3=proto.rate3)
-        obj.stamp_packet(proto.stamp)
-        return obj
-
-    @classmethod
-    def from_raw_canbus_message(cls, message: canbus_pb2.RawCanbusMessage) -> BugDispenserRpdo1:
-        obj = cls()
-        obj.decode(message.data)
-        obj.stamp_packet(message.stamp)
-        return obj
-
 
 class BugDispenserTpdo1(Packet):
     cob_id = 0x180
@@ -554,46 +537,41 @@ class BugDispenserTpdo1(Packet):
         return pack(self.format, self.rate1, self.counter1, self.rate2, self.counter2, self.rate3, self.counter3)
 
     def decode(self, data):
-        self.rate1, self.rate2, self.rate3, self.counter1, self.counter2, self.counter3 = unpack(self.format, data)
-
-    def __str__(self):
-        return f"BugDispenserTpdo1: Rates: {self.rate1}, {self.rate2}, {self.rate3}"
-
-    +" | Counters: {self.counter1}, {self.counter2}, {self.counter3}"
+        self.rate1, self.counter1, self.rate2, self.counter2, self.rate3, self.counter3 = unpack(self.format, data)
 
     def to_raw_canbus_message(self) -> canbus_pb2.RawCanbusMessage:
         return canbus_pb2.RawCanbusMessage(
             stamp=self.stamp.stamp, id=self.cob_id + DASHBOARD_NODE_ID, data=self.encode()
         )
 
-    def to_proto(self) -> canbus_pb2.BugDispenserTpdo1:
-        return canbus_pb2.BugDispenserTpdo1(
-            stamp=self.stamp.stamp,
-            rate1=self.rate1,
-            counter1=self.counter1,
-            rate2=self.rate2,
-            counter2=self.counter2,
-            direction2=self.direction2,
-            rate3=self.rate3,
-            counter3=self.counter3,
+    def to_proto(self) -> tool_control_pb2.BugDispenserTpdo1:
+        return tool_control_pb2.BugDispenserTpdo1(
+            bug_dispenser_1_rate=self.rate1,
+            bug_dispenser_1_counter=self.counter1,
+            bug_dispenser_2_rate=self.rate2,
+            bug_dispenser_2_counter=self.counter2,
+            bug_dispenser_3_rate=self.rate3,
+            bug_dispenser_3_counter=self.counter3,
         )
 
     @classmethod
-    def from_proto(cls, proto: canbus_pb2.BugDispenserTpdo1) -> BugDispenserTpdo1:
-        obj = cls(
-            rate1=proto.rate1,
-            counter1=proto.counter1,
-            rate2=proto.rate2,
-            counter2=proto.counter2,
-            rate3=proto.rate3,
-            counter3=proto.counter3,
-        )
+    def from_proto(cls, proto: tool_control_pb2.BugDispenserTpdo1) -> BugDispenserTpdo1:
+        obj = cls()
+        obj.rate1 = proto.bug_dispenser_1_rate
+        obj.counter1 = proto.bug_dispenser_1_counter
+        obj.rate2 = proto.bug_dispenser_2_rate
+        obj.counter2 = proto.bug_dispenser_2_counter
+        obj.rate3 = proto.bug_dispenser_3_rate
+        obj.counter3 = proto.bug_dispenser_3_counter
         obj.stamp_packet(proto.stamp)
         return obj
 
     @classmethod
     def from_raw_canbus_message(cls, message: canbus_pb2.RawCanbusMessage) -> BugDispenserTpdo1:
-        obj = cls()
-        obj.decode(message.data)
-        obj.stamp_packet(message.stamp)
-        return obj
+        return cls.from_can_data(message.data, message.stamp)
+
+    def __str__(self):
+        return (
+            f"BugDispenserTpdo1: Rates: {self.rate1}, {self.rate2}, {self.rate3} "
+            f"| Counters: {self.counter1}, {self.counter2}, {self.counter3}"
+        )
