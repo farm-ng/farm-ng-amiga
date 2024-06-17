@@ -494,7 +494,7 @@ class PendantState(Packet):
 
 
 class BugDispenserRpdo1(Packet):
-    cob_id = 0x210
+    cob_id = 0x200
 
     def __init__(self, rate1=0, direction1=0, rate2=0, direction2=0, rate3=0, direction3=0):
         self.rate1 = rate1 & 0xFF
@@ -530,7 +530,7 @@ class BugDispenserRpdo1(Packet):
 
 
 class BugDispenserTpdo1(Packet):
-    cob_id = 0x290
+    cob_id = 0x180
 
     def __init__(
         self, rate1=0, counter1=0, direction1=0, rate2=0, counter2=0, direction2=0, rate3=0, counter3=0, direction3=0
