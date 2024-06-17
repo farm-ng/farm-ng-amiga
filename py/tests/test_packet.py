@@ -162,19 +162,19 @@ def test_bug_dispenser_tpdo3_invalid_counter():
         BugDispenserTpdo3(counter1=300).encode()
 
 
-def test_bug_dispenser_rpdo3_to_raw_canbus():
+def test_bug_dispenser_rpdo3_to_raw_canbus(bug_dispenser_rpdo3_instance):
     raw_message = bug_dispenser_rpdo3_instance.to_raw_canbus_message()
     assert isinstance(raw_message, canbus_pb2.RawCanbusMessage)
 
 
-def test_bug_dispenser_tpdo3_to_raw_canbus(bug_dispenser_rpdo3_instance):
+def test_bug_dispenser_tpdo3_to_raw_canbus(bug_dispenser_tpdo3_instance):
     raw_message = bug_dispenser_tpdo3_instance.to_raw_canbus_message()
     assert isinstance(raw_message, canbus_pb2.RawCanbusMessage)
 
 
 def test_bug_dispenser_tpdo3_to_proto(bug_dispenser_tpdo3_instance):
     proto = bug_dispenser_tpdo3_instance.to_proto()
-    assert isinstance(proto, canbus_pb2.BugDispenserTpdo3)
+    assert isinstance(proto, tool_control_pb2.BugDispenserTpdo3)
     assert proto.rate1 == pytest.approx(bug_dispenser_tpdo3_instance.rate1, abs=1e-1)
     assert proto.counter1 == pytest.approx(bug_dispenser_tpdo3_instance.counter1, abs=1e-1)
     assert proto.rate2 == pytest.approx(bug_dispenser_tpdo3_instance.rate2, abs=1e-1)
