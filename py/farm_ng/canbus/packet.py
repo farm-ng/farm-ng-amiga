@@ -555,8 +555,8 @@ class BugDispenserTpdo3(Packet):
         R1 C1 R2 C2 R3 C3
         """
 
-        if any(rate > 255 or rate < 0 for rate in [self.rate1, self.rate2, self.rate3]):
-            raise ValueError("Rates must be between 0 and 255")
+        if any(rate > 25.5 or rate < 0.0 for rate in [self.rate1, self.rate2, self.rate3]):
+            raise ValueError("Rates must be between 0 and 25.5 m/drop")
 
         if any(counter > 255 or counter < 0 for counter in [self.counter1, self.counter2, self.counter3]):
             raise ValueError("Counters must be between 0 and 255")
