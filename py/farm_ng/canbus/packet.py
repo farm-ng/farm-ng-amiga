@@ -539,12 +539,12 @@ class BugDispenserTpdo3(Packet):
     cob_id = 0x380
 
     def __init__(self, rate1=0, counter1=0, rate2=0, counter2=0, rate3=0, counter3=0):
-        self.rate1 = rate1 & 0xFF
-        self.counter1 = counter1 & 0xFF
-        self.rate2 = rate2 & 0xFF
-        self.counter2 = counter2 & 0xFF
-        self.rate3 = rate3 & 0xFF
-        self.counter3 = counter3 & 0xFF
+        self.rate1 = rate1
+        self.counter1 = counter1
+        self.rate2 = rate2
+        self.counter2 = counter2
+        self.rate3 = rate3
+        self.counter3 = counter3
         self.format = '<6B2x'  # 3 bytes for rates, 3 bytes for counters, 2 padding bytes
         self.stamp_packet(time.monotonic())
 
