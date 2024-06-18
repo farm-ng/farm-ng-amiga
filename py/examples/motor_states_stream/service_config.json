@@ -1,13 +1,13 @@
 {
-    "name": "canbus",
-    "port": 6001,
-    "host": "localhost",
+    "name": "amiga",
+    "port": 50010,
+    "host": "100.122.250.35",
     "log_level": "INFO",
     "subscriptions": [
         {
             "uri": {
-                "path": "/motor_states",
-                "query": "service_name=canbus"
+                "path": "/imu",
+                "query": "service_name=oak/0"
             },
             "every_n": 1
         }

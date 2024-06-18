@@ -31,15 +31,10 @@ async def main(service_config_path: Path) -> None:
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
 
     async for event, message in EventClient(config).subscribe(config.subscriptions[0], decode=True):
-        # Unpack the motor states
-        motors = []
-        for motor in message.motors:
-            motors.append(MotorState.from_proto(motor))
-
-        # Print the motor states
-        print("\n###################\n")
-        for motor in sorted(motors, key=lambda m: m.id):
-            print(motor)
+        print(f"Event: \n{event}")
+        print("-"*80)
+        print(f"Message: \n{message}")
+        print("-"*80)
 
 
 if __name__ == "__main__":
