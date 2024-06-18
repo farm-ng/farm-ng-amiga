@@ -493,37 +493,40 @@ class PendantState(Packet):
         return "x {:0.3f} y {:0.3f} buttons {}".format(self.x, self.y, self.buttons)
 
 
-class BugDispenserRpdo3(Packet):
+class BugDispenserCommand(Packet):
     """Bug dispenser rate in m/drop (request) sent to the Amiga dashboard."""
 
     cob_id = 0x400
+    scale = 10.0
 
-    def __init__(self, rate1=0, rate2=0, rate3=0):
+    def __init__(self, rate0=0, rate1=0, rate2=0):
+        self.rate0 = rate0
         self.rate1 = rate1
         self.rate2 = rate2
-        self.rate3 = rate3
         self.format = '<3B5x'  # 3 bytes for rates, 5 bytes padding
         self.stamp_packet(time.monotonic())
 
     def encode(self):
         """Returns the data contained by the class encoded as CAN message data."""
 
-        if any(rate > 25.5 or rate < 0.0 for rate in [self.rate1, self.rate2, self.rate3]):
+        if any(rate > 25.5 or rate < 0.0 for rate in [self.rate0, self.rate1, self.rate2]):
             raise ValueError("Rates must be between 0.0 and 25.5 m/drop")
 
-        return pack(self.format, int(self.rate1 * 10.0), int(self.rate2 * 10.0), int(self.rate3 * 10.0))
+        return pack(
+            self.format, int(self.rate0 * self.scale), int(self.rate1 * self.scale), int(self.rate2 * self.scale)
+        )
 
     def decode(self, data):
         """Decodes CAN message data and populates the values of the class."""
 
-        self.rate1, self.rate2, self.rate3 = unpack(self.format, data)
-        self.rate1 /= 10.0
-        self.rate2 /= 10.0
-        self.rate3 /= 10.0
+        self.rate0, self.rate1, self.rate2 = unpack(self.format, data)
+        self.rate0 /= self.scale
+        self.rate1 /= self.scale
+        self.rate2 /= self.scale
 
     def __str__(self):
         """Returns a string representation of the class."""
-        return f"BugDispenserRpdo1: Rates: {self.rate1}, {self.rate2}, {self.rate3}"
+        return f"BugDispenserRpdo1: Rates: {self.rate0}, {self.rate1}, {self.rate2}"
 
     def to_raw_canbus_message(self) -> canbus_pb2.RawCanbusMessage:
         """Packs the class data into a canbus_pb2.RawCanbusMessage."""
@@ -532,18 +535,19 @@ class BugDispenserRpdo3(Packet):
         )
 
 
-class BugDispenserTpdo3(Packet):
+class BugDispenserState(Packet):
     """Bug dispenser rate in m/drop, 8-bit counter (response) received from the Amiga dashboard."""
 
     cob_id = 0x380
+    scale = 10.0
 
-    def __init__(self, rate1=0, counter1=0, rate2=0, counter2=0, rate3=0, counter3=0):
+    def __init__(self, rate0=0, counter0=0, rate1=0, counter1=0, rate2=0, counter2=0):
+        self.rate0 = rate0
+        self.counter0 = counter0
         self.rate1 = rate1
         self.counter1 = counter1
         self.rate2 = rate2
         self.counter2 = counter2
-        self.rate3 = rate3
-        self.counter3 = counter3
         self.format = '<6B2x'  # 3 bytes for rates, 3 bytes for counters, 2 padding bytes
         self.stamp_packet(time.monotonic())
 
@@ -554,70 +558,38 @@ class BugDispenserTpdo3(Packet):
         R1 C1 R2 C2 R3 C3
         """
 
-        if any(rate > 25.5 or rate < 0.0 for rate in [self.rate1, self.rate2, self.rate3]):
+        if any(rate > 25.5 or rate < 0.0 for rate in [self.rate0, self.rate1, self.rate2]):
             raise ValueError("Rates must be between 0 and 25.5 m/drop")
 
-        if any(counter > 255 or counter < 0 for counter in [self.counter1, self.counter2, self.counter3]):
+        if any(counter > 255 or counter < 0 for counter in [self.counter0, self.counter1, self.counter2]):
             raise ValueError("Counters must be between 0 and 255")
 
         return pack(
             self.format,
-            int(self.rate1 * 10.0),
+            int(self.rate0 * self.scale),
+            self.counter0,
+            int(self.rate1 * self.scale),
             self.counter1,
-            int(self.rate2 * 10.0),
+            int(self.rate2 * self.scale),
             self.counter2,
-            int(self.rate3 * 10.0),
-            self.counter3,
         )
 
     def decode(self, data):
         """Decodes CAN message data and populates the values of the class."""
-        self.rate1, self.counter1, self.rate2, self.counter2, self.rate3, self.counter3 = unpack(self.format, data)
+        self.rate0, self.counter0, self.rate1, self.counter1, self.rate2, self.counter2 = unpack(self.format, data)
 
-        self.rate1 /= 10.0
-        self.rate2 /= 10.0
-        self.rate3 /= 10.0
-
-    def to_raw_canbus_message(self) -> canbus_pb2.RawCanbusMessage:
-        """Packs the class data into a canbus_pb2.RawCanbusMessage."""
-        return canbus_pb2.RawCanbusMessage(
-            stamp=self.stamp.stamp, id=self.cob_id + DASHBOARD_NODE_ID, data=self.encode()
-        )
-
-    def to_proto(self) -> tool_control_pb2.BugDispenserTpdo3:
-        """Packs the class data into a BugDispenserTpdo1 proto message."""
-        return tool_control_pb2.BugDispenserTpdo3(
-            bug_dispenser_1_rate=self.rate1,
-            bug_dispenser_1_counter=self.counter1,
-            bug_dispenser_2_rate=self.rate2,
-            bug_dispenser_2_counter=self.counter2,
-            bug_dispenser_3_rate=self.rate3,
-            bug_dispenser_3_counter=self.counter3,
-        )
+        self.rate0 /= self.scale
+        self.rate1 /= self.scale
+        self.rate2 /= self.scale
 
     @classmethod
-    def from_proto(cls, proto: tool_control_pb2.BugDispenserTpdo3) -> BugDispenserTpdo3:
-        """Creates an instance of the class from a proto message."""
-        if not isinstance(proto, tool_control_pb2.BugDispenserTpdo3):
-            raise TypeError(f"Expected tool_control_pb2.BugDispenserTpdo1 proto, received {type(proto)}")
-        obj = cls()
-        obj.rate1 = proto.bug_dispenser_1_rate
-        obj.counter1 = proto.bug_dispenser_1_counter
-        obj.rate2 = proto.bug_dispenser_2_rate
-        obj.counter2 = proto.bug_dispenser_2_counter
-        obj.rate3 = proto.bug_dispenser_3_rate
-        obj.counter3 = proto.bug_dispenser_3_counter
-        obj.stamp_packet(proto.stamp)
-        return obj
-
-    @classmethod
-    def from_raw_canbus_message(cls, message: canbus_pb2.RawCanbusMessage) -> BugDispenserTpdo3:
+    def from_raw_canbus_message(cls, message: canbus_pb2.RawCanbusMessage) -> BugDispenserState:
         """Parses a canbus_pb2.RawCanbusMessage."""
         return cls.from_can_data(message.data, message.stamp)
 
     def __str__(self):
         """Returns a string representation of the class."""
         return (
-            f"BugDispenserTpdo1: Rates: {self.rate1}, {self.rate2}, {self.rate3} "
-            f"| Counters: {self.counter1}, {self.counter2}, {self.counter3}"
+            f"BugDispenserTpdo1: Rates: {self.rate0}, {self.rate1}, {self.rate2} "
+            f"| Counters: {self.counter0}, {self.counter1}, {self.counter2}"
         )
