@@ -16,7 +16,6 @@ import time
 import pytest
 from farm_ng.canbus import amiga_v6_pb2
 from farm_ng.canbus import canbus_pb2
-from farm_ng.canbus import tool_control_pb2
 from farm_ng.canbus.packet import AmigaControlState
 from farm_ng.canbus.packet import AmigaRpdo1
 from farm_ng.canbus.packet import AmigaTpdo1
@@ -115,89 +114,56 @@ def test_motor_state_to_from_proto(motor_state_instance):
 
 
 @pytest.fixture
-def bug_dispenser_rpdo3_instance():
-    return BugDispenserRpdo3(rate1=10.58, rate2=18.3462, rate3=0.559)
+def bug_dispenser_command_instance():
+    return BugDispenserRpdo3(rate0=10.58, rate1=18.3462, rate2=0.559)
 
 
 @pytest.fixture
-def bug_dispenser_tpdo3_instance():
-    return BugDispenserTpdo3(rate1=1, counter1=138, rate2=15, counter2=200, rate3=12, counter3=255)
+def bug_dispenser_state_instance():
+    return BugDispenserTpdo3(rate0=1, counter0=138, rate1=15, counter1=200, rate2=12, counter2=255)
 
 
-def test_bug_dispenser_rpdo3_encode_decode(bug_dispenser_rpdo3_instance):
-    encoded = bug_dispenser_rpdo3_instance.encode()
+def test_bug_dispenser_command_encode_decode(bug_dispenser_command_instance):
+    encoded = bug_dispenser_command_instance.encode()
     decoded_instance = BugDispenserRpdo3()
     decoded_instance.decode(encoded)
 
-    assert bug_dispenser_rpdo3_instance.rate1 == pytest.approx(decoded_instance.rate1, abs=1e-1)
-    assert bug_dispenser_rpdo3_instance.rate2 == pytest.approx(decoded_instance.rate2, abs=1e-1)
-    assert bug_dispenser_rpdo3_instance.rate3 == pytest.approx(decoded_instance.rate3, abs=1e-1)
+    assert bug_dispenser_command_instance.rate0 == pytest.approx(decoded_instance.rate0, abs=1e-1)
+    assert bug_dispenser_command_instance.rate1 == pytest.approx(decoded_instance.rate1, abs=1e-1)
+    assert bug_dispenser_command_instance.rate2 == pytest.approx(decoded_instance.rate2, abs=1e-1)
 
 
-def test_bug_dispenser_rpdo3_invalid_rate():
+def test_bug_dispenser_command_invalid_rate():
     with pytest.raises(ValueError):
-        BugDispenserRpdo3(rate1=30.0).encode()
+        BugDispenserRpdo3(rate0=30.0).encode()
 
 
-def test_bug_dispenser_tpdo3_encode_decode(bug_dispenser_tpdo3_instance):
-    encoded = bug_dispenser_tpdo3_instance.encode()
+def test_bug_dispenser_state_encode_decode(bug_dispenser_state_instance):
+    encoded = bug_dispenser_state_instance.encode()
     decoded_instance = BugDispenserTpdo3()
     decoded_instance.decode(encoded)
 
-    assert bug_dispenser_tpdo3_instance.rate1 == pytest.approx(decoded_instance.rate1, rel=1e-1)
-    assert bug_dispenser_tpdo3_instance.counter1 == decoded_instance.counter1
-    assert bug_dispenser_tpdo3_instance.rate2 == pytest.approx(decoded_instance.rate2, rel=1e-1)
-    assert bug_dispenser_tpdo3_instance.counter2 == decoded_instance.counter2
-    assert bug_dispenser_tpdo3_instance.rate3 == pytest.approx(decoded_instance.rate3, rel=1e-1)
-    assert bug_dispenser_tpdo3_instance.counter3 == decoded_instance.counter3
+    assert bug_dispenser_state_instance.rate0 == pytest.approx(decoded_instance.rate0, rel=1e-1)
+    assert bug_dispenser_state_instance.counter0 == decoded_instance.counter0
+    assert bug_dispenser_state_instance.rate1 == pytest.approx(decoded_instance.rate1, rel=1e-1)
+    assert bug_dispenser_state_instance.counter1 == decoded_instance.counter1
+    assert bug_dispenser_state_instance.rate2 == pytest.approx(decoded_instance.rate2, rel=1e-1)
+    assert bug_dispenser_state_instance.counter2 == decoded_instance.counter2
 
 
 def test_bug_dispenser_tpdo3_invalid_rate():
     with pytest.raises(ValueError):
-        BugDispenserTpdo3(rate1=300).encode()
+        BugDispenserTpdo3(rate0=300).encode()
 
 
 def test_bug_dispenser_tpdo3_invalid_counter():
     with pytest.raises(ValueError):
-        BugDispenserTpdo3(counter1=300).encode()
+        BugDispenserTpdo3(counter0=300).encode()
 
 
-def test_bug_dispenser_rpdo3_to_raw_canbus(bug_dispenser_rpdo3_instance):
-    raw_message = bug_dispenser_rpdo3_instance.to_raw_canbus_message()
+def test_bug_dispenser_rpdo3_to_raw_canbus(bug_dispenser_command_instance):
+    raw_message = bug_dispenser_command_instance.to_raw_canbus_message()
     assert isinstance(raw_message, canbus_pb2.RawCanbusMessage)
-
-
-def test_bug_dispenser_tpdo3_to_raw_canbus(bug_dispenser_tpdo3_instance):
-    raw_message = bug_dispenser_tpdo3_instance.to_raw_canbus_message()
-    assert isinstance(raw_message, canbus_pb2.RawCanbusMessage)
-
-
-def test_bug_dispenser_tpdo3_to_proto(bug_dispenser_tpdo3_instance):
-    proto = bug_dispenser_tpdo3_instance.to_proto()
-    assert isinstance(proto, tool_control_pb2.BugDispenserTpdo3)
-    assert proto.bug_dispenser_1_rate == pytest.approx(bug_dispenser_tpdo3_instance.rate1, abs=1e-1)
-    assert proto.bug_dispenser_1_counter == pytest.approx(bug_dispenser_tpdo3_instance.counter1, abs=1e-1)
-    assert proto.bug_dispenser_2_rate == pytest.approx(bug_dispenser_tpdo3_instance.rate2, abs=1e-1)
-    assert proto.bug_dispenser_2_counter == pytest.approx(bug_dispenser_tpdo3_instance.counter2, abs=1e-1)
-    assert proto.bug_dispenser_3_rate == pytest.approx(bug_dispenser_tpdo3_instance.rate3, abs=1e-1)
-    assert proto.bug_dispenser_3_counter == pytest.approx(bug_dispenser_tpdo3_instance.counter3, abs=1e-1)
-
-
-def test_bug_dispenser_tpdo3_from_proto():
-    proto = tool_control_pb2.BugDispenserTpdo3(
-        bug_dispenser_1_rate=1,
-        bug_dispenser_1_counter=138,
-        bug_dispenser_2_rate=15,
-        bug_dispenser_2_counter=200,
-        bug_dispenser_3_rate=12,
-        bug_dispenser_3_counter=255,
-    )
-    instance = BugDispenserTpdo3.from_proto(proto)
-    assert instance.rate1 == pytest.approx(proto.bug_dispenser_1_rate, abs=1e-1)
-    assert instance.counter1 == proto.bug_dispenser_1_counter
-    assert instance.rate2 == pytest.approx(proto.bug_dispenser_2_rate, abs=1e-1)
-    assert instance.counter2 == proto.bug_dispenser_2_counter
-    assert instance.rate3 == pytest.approx(proto.bug_dispenser_3_rate, abs=1e-1)
 
 
 if __name__ == "__main__":

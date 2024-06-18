@@ -21,7 +21,6 @@ from struct import unpack
 
 from farm_ng.canbus import amiga_v6_pb2
 from farm_ng.canbus import canbus_pb2
-from farm_ng.canbus import tool_control_pb2
 from farm_ng.core.stamp import timestamp_from_monotonic
 from farm_ng.core.timestamp_pb2 import Timestamp
 
