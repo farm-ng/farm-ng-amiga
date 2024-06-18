@@ -19,8 +19,8 @@ from farm_ng.canbus import canbus_pb2
 from farm_ng.canbus.packet import AmigaControlState
 from farm_ng.canbus.packet import AmigaRpdo1
 from farm_ng.canbus.packet import AmigaTpdo1
-from farm_ng.canbus.packet import BugDispenserRpdo3
-from farm_ng.canbus.packet import BugDispenserTpdo3
+from farm_ng.canbus.packet import BugDispenserCommand
+from farm_ng.canbus.packet import BugDispenserState
 from farm_ng.canbus.packet import MotorControllerStatus
 from farm_ng.canbus.packet import MotorState
 from farm_ng.canbus.packet import PendantButtons
@@ -115,17 +115,17 @@ def test_motor_state_to_from_proto(motor_state_instance):
 
 @pytest.fixture
 def bug_dispenser_command_instance():
-    return BugDispenserRpdo3(rate0=10.58, rate1=18.3462, rate2=0.559)
+    return BugDispenserCommand(rate0=10.58, rate1=18.3462, rate2=0.559)
 
 
 @pytest.fixture
 def bug_dispenser_state_instance():
-    return BugDispenserTpdo3(rate0=1, counter0=138, rate1=15, counter1=200, rate2=12, counter2=255)
+    return BugDispenserState(rate0=1, counter0=138, rate1=15, counter1=200, rate2=12, counter2=255)
 
 
 def test_bug_dispenser_command_encode_decode(bug_dispenser_command_instance):
     encoded = bug_dispenser_command_instance.encode()
-    decoded_instance = BugDispenserRpdo3()
+    decoded_instance = BugDispenserCommand()
     decoded_instance.decode(encoded)
 
     assert bug_dispenser_command_instance.rate0 == pytest.approx(decoded_instance.rate0, abs=1e-1)
@@ -135,12 +135,12 @@ def test_bug_dispenser_command_encode_decode(bug_dispenser_command_instance):
 
 def test_bug_dispenser_command_invalid_rate():
     with pytest.raises(ValueError):
-        BugDispenserRpdo3(rate0=30.0).encode()
+        BugDispenserCommand(rate0=30.0).encode()
 
 
 def test_bug_dispenser_state_encode_decode(bug_dispenser_state_instance):
     encoded = bug_dispenser_state_instance.encode()
-    decoded_instance = BugDispenserTpdo3()
+    decoded_instance = BugDispenserState()
     decoded_instance.decode(encoded)
 
     assert bug_dispenser_state_instance.rate0 == pytest.approx(decoded_instance.rate0, rel=1e-1)
@@ -153,12 +153,12 @@ def test_bug_dispenser_state_encode_decode(bug_dispenser_state_instance):
 
 def test_bug_dispenser_tpdo3_invalid_rate():
     with pytest.raises(ValueError):
-        BugDispenserTpdo3(rate0=300).encode()
+        BugDispenserState(rate0=300).encode()
 
 
 def test_bug_dispenser_tpdo3_invalid_counter():
     with pytest.raises(ValueError):
-        BugDispenserTpdo3(counter0=300).encode()
+        BugDispenserState(counter0=300).encode()
 
 
 def test_bug_dispenser_rpdo3_to_raw_canbus(bug_dispenser_command_instance):
