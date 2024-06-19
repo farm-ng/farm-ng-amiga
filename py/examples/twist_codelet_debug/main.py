@@ -140,7 +140,7 @@ async def main(service_config_path: Path) -> None:
     state_poses = integrate_poses(state_stamps, state_data)
 
     # Plot the collected data
-    fig, axs = plt.subplots(5, 1, figsize=(14, 22))
+    fig, axs = plt.subplots(4, 1, figsize=(14, 22))
 
     # Subplot 1: Linear Velocities
     axs[0].plot(
