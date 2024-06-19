@@ -491,3 +491,113 @@ class PendantState(Packet):
 
     def __str__(self):
         return "x {:0.3f} y {:0.3f} buttons {}".format(self.x, self.y, self.buttons)
+
+
+class BugDispenserCommand(Packet):
+    """Bug dispenser rate in m/drop (request) sent to the Amiga dashboard."""
+
+    cob_id = 0x400
+    scale = 10.0
+
+    def __init__(self, rate0=0, rate1=0, rate2=0):
+        self.rate0 = rate0
+        self.rate1 = rate1
+        self.rate2 = rate2
+        self.format = '<3B5x'  # 3 bytes for rates, 5 bytes padding
+        self.stamp_packet(time.monotonic())
+
+    def encode(self):
+        """Returns the data contained by the class encoded as CAN message data."""
+
+        if any(rate > 25.5 or rate < 0.0 for rate in [self.rate0, self.rate1, self.rate2]):
+            raise ValueError("Rates must be between 0.0 and 25.5 m/drop")
+
+        return pack(
+            self.format, int(self.rate0 * self.scale), int(self.rate1 * self.scale), int(self.rate2 * self.scale)
+        )
+
+    def decode(self, data):
+        """Decodes CAN message data and populates the values of the class."""
+
+        rate0, rate1, rate2 = unpack(self.format, data)
+
+        # Convert rates to m/drop
+        self.rate0 = rate0 / self.scale
+        self.rate1 = rate1 / self.scale
+        self.rate2 = rate2 / self.scale
+
+    def __str__(self):
+        """Returns a string representation of the class."""
+        return f"BugDispenserRpdo1: Rates: {self.rate0}, {self.rate1}, {self.rate2}"
+
+    def to_raw_canbus_message(self) -> canbus_pb2.RawCanbusMessage:
+        """Packs the class data into a canbus_pb2.RawCanbusMessage."""
+        return canbus_pb2.RawCanbusMessage(
+            stamp=self.stamp.stamp, id=self.cob_id + DASHBOARD_NODE_ID, data=self.encode()
+        )
+
+
+class BugDispenserState(Packet):
+    """Bug dispenser rate in m/drop, 8-bit counter (response) received from the Amiga dashboard."""
+
+    cob_id = 0x380
+    scale = 10.0
+
+    def __init__(self, rate0=0, counter0=0, rate1=0, counter1=0, rate2=0, counter2=0):
+        self.rate0 = rate0
+        self.counter0 = counter0
+        self.rate1 = rate1
+        self.counter1 = counter1
+        self.rate2 = rate2
+        self.counter2 = counter2
+        self.format = '<6B2x'  # 3 bytes for rates, 3 bytes for counters, 2 padding bytes
+        self.stamp_packet(time.monotonic())
+
+    def encode(self):
+        """Returns the data contained by the class encoded as CAN message data.
+
+        Data is encoded as follows:
+        R1 C1 R2 C2 R3 C3
+        """
+
+        if any(rate > 25.5 or rate < 0.0 for rate in [self.rate0, self.rate1, self.rate2]):
+            raise ValueError("Rates must be between 0 and 25.5 m/drop")
+
+        if any(counter > 255 or counter < 0 for counter in [self.counter0, self.counter1, self.counter2]):
+            raise ValueError("Counters must be between 0 and 255")
+
+        return pack(
+            self.format,
+            int(self.rate0 * self.scale),
+            self.counter0,
+            int(self.rate1 * self.scale),
+            self.counter1,
+            int(self.rate2 * self.scale),
+            self.counter2,
+        )
+
+    def decode(self, data):
+        """Decodes CAN message data and populates the values of the class."""
+
+        rate0, counter0, rate1, counter1, rate2, counter2 = unpack(self.format, data)
+
+        # Convert rates to m/drop
+        self.rate0 = rate0 / self.scale
+        self.rate1 = rate1 / self.scale
+        self.rate2 = rate2 / self.scale
+
+        self.counter0 = counter0
+        self.counter1 = counter1
+        self.counter2 = counter2
+
+    @classmethod
+    def from_raw_canbus_message(cls, message: canbus_pb2.RawCanbusMessage) -> BugDispenserState:
+        """Parses a canbus_pb2.RawCanbusMessage."""
+        return cls.from_can_data(message.data, message.stamp)
+
+    def __str__(self):
+        """Returns a string representation of the class."""
+        return (
+            f"BugDispenserTpdo1: Rates: {self.rate0}, {self.rate1}, {self.rate2} "
+            f"| Counters: {self.counter0}, {self.counter1}, {self.counter2}"
+        )

@@ -35,6 +35,13 @@ enum PtoCommandType {
   PTO_REVERSE = 4; // Drive the PTO in reverse
 }
 
+// Enum for commanding BugDispenser device state
+enum BugDispenserState {
+  BUG_DISPENSER_UNKNOW = 0; // Default value indicating unknown state
+  BUG_DISPENSER_ACTIVE = 1; // Activate the bug dispenser
+  BUG_DISPENSER_STOPPED = 2; // Stop the bug dispenser
+}
+
 // Tool command replies, decoded from AmigaTpdo1 CAN messages
 // These do not necessarily reflect the current state of the tool,
 // if the tool is not being commanded by AmigaTpdo1 messages.
@@ -72,10 +79,19 @@ message PtoCommand {
   double rpm = 3; // angular velocity in RPM of the output shaft
 }
 
+// For commanding a BugDispenser device
+message BugDispenserCommand {
+  uint32 id = 1; // Bug dispenser ID (e.g., 0x0 - 0x2)
+  float rate = 2; // Dispensing rate in meters between drops
+  BugDispenserState state = 3; // Dispensing state
+}
+
+
 // Combine all actuator commands into one message
 message ActuatorCommands {
   repeated HBridgeCommand hbridges = 1;
   repeated PtoCommand ptos = 2;
+  repeated BugDispenserCommand bug_dispensers = 3;
 }
 
 // HBridgeFaultCode defines the possible fault codes for an HBridge.
@@ -120,8 +136,20 @@ message PtoStatus {
   double gear_ratio = 6; // gear ratio of the PTO device, if known
 }
 
+// Message to receive bug dispenser status
+message BugDispenserStatus {
+  double stamp = 1; // Stamp of the bug dispenser RawCanbusMessage event
+  uint32 id = 2; // Bug dispenser ID (e.g., 0x0 - 0x2)
+  BugDispenserState state = 3; // UNKNOWN, STOPPED, ACTIVE
+  float rate = 4; // Dispensing rate in meters between drops
+  bool bug_dispenser_empty = 5; // Whether the hopper is empty
+  float volume_dispensed = 6; // Volume of product dispensed
+}
+
+
 // Combine all actuator statuses into one message
 message ToolStatuses {
   repeated HBridgeStatus hbridges = 1;
   repeated PtoStatus ptos = 2;
+  repeated BugDispenserStatus bug_dispensers = 3;
 }
