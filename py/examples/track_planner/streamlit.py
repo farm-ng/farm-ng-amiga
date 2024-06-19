@@ -73,7 +73,7 @@ class StreamlitApp:
         """
         msg: None = None
         while True:
-            async for _, msg in client.subscribe(SubscribeRequest(uri=Uri(path=f"/{path}"), every_n=1), decode=True):
+            async for _, msg in client.subscribe(SubscribeRequest(uri=Uri(path=f"gps/{path}"), every_n=1), decode=True):
                 self._current_pvt = [msg.latitude, msg.longitude]
 
     @property

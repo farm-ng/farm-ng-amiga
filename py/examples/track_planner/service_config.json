@@ -3,12 +3,12 @@
     {
       "name": "filter",
       "port": 20001,
-      "host": "100.86.111.28"
+      "host": "localhost"
     },
     {
       "name": "gps",
-      "port": 3001,
-      "host": "100.86.111.28"
+      "port": 50010,
+      "host": "localhost"
     }
   ]
 }
