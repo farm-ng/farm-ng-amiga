@@ -519,10 +519,12 @@ class BugDispenserCommand(Packet):
     def decode(self, data):
         """Decodes CAN message data and populates the values of the class."""
 
-        self.rate0, self.rate1, self.rate2 = unpack(self.format, data)
-        self.rate0 /= self.scale
-        self.rate1 /= self.scale
-        self.rate2 /= self.scale
+        rate0, rate1, rate2 = unpack(self.format, data)
+
+        # Convert rates to m/drop
+        self.rate0 = rate0 / self.scale
+        self.rate1 = rate1 / self.scale
+        self.rate2 = rate2 / self.scale
 
     def __str__(self):
         """Returns a string representation of the class."""
@@ -576,11 +578,17 @@ class BugDispenserState(Packet):
 
     def decode(self, data):
         """Decodes CAN message data and populates the values of the class."""
-        self.rate0, self.counter0, self.rate1, self.counter1, self.rate2, self.counter2 = unpack(self.format, data)
 
-        self.rate0 /= self.scale
-        self.rate1 /= self.scale
-        self.rate2 /= self.scale
+        rate0, counter0, rate1, counter1, rate2, counter2 = unpack(self.format, data)
+
+        # Convert rates to m/drop
+        self.rate0 = rate0 / self.scale
+        self.rate1 = rate1 / self.scale
+        self.rate2 = rate2 / self.scale
+
+        self.counter0 = counter0
+        self.counter1 = counter1
+        self.counter2 = counter2
 
     @classmethod
     def from_raw_canbus_message(cls, message: canbus_pb2.RawCanbusMessage) -> BugDispenserState:
