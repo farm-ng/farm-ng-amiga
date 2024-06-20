@@ -1,0 +1,15 @@
+{
+    "name": "oak1",
+    "port": 50010,
+    "host": "100.118.52.117",
+    "log_level": "INFO",
+    "subscriptions": [
+        {
+            "uri": {
+                "path": "/left",
+                "query": "service_name=oak1"
+            },
+            "every_n": 1
+        }
+    ]
+}
