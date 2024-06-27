@@ -528,7 +528,7 @@ class BugDispenserCommand(Packet):
 
     def __str__(self):
         """Returns a string representation of the class."""
-        return f"BugDispenserRpdo1: Rates: {self.rate0}, {self.rate1}, {self.rate2}"
+        return f"BugDispenserRpdo3: Rates: {self.rate0}, {self.rate1}, {self.rate2}"
 
     def to_raw_canbus_message(self) -> canbus_pb2.RawCanbusMessage:
         """Packs the class data into a canbus_pb2.RawCanbusMessage."""
@@ -598,6 +598,6 @@ class BugDispenserState(Packet):
     def __str__(self):
         """Returns a string representation of the class."""
         return (
-            f"BugDispenserTpdo1: Rates: {self.rate0}, {self.rate1}, {self.rate2} "
+            f"BugDispenserTpdo3: Rates: {self.rate0}, {self.rate1}, {self.rate2} "
             f"| Counters: {self.counter0}, {self.counter1}, {self.counter2}"
         )
