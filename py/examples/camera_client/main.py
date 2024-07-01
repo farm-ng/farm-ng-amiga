@@ -79,9 +79,9 @@ async def main(service_config_path: Path) -> None:
         service_config_path (Path): The path to the camera service config.
     """
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
-    monitor_duration = 3 * 60  # 3 minutes
-    wait_duration = 5 * 60 + 1  # 5 minutes and 1 second
-    repeat_count = 3
+    monitor_duration = 1 * 30
+    wait_durations = [3, 17, 60, 301, 1, 301, 400] # Random wait durations, but at least two larger than 300 s (grace period)
+    repeat_count = len(wait_durations)
 
     for i in range(repeat_count):
         print(f"--- Monitoring session {i+1}/{repeat_count} ---")
@@ -89,6 +89,7 @@ async def main(service_config_path: Path) -> None:
         print(f"Session {i+1} complete. Missed frames: {missed_frames}")
 
         if i < repeat_count - 1:
+            wait_duration = wait_durations[i]
             print(f"Waiting for {wait_duration} seconds before the next session...")
             await asyncio.sleep(wait_duration)
 
