@@ -18,7 +18,7 @@ import argparse
 import asyncio
 from pathlib import Path
 
-import cv2
+import time
 import numpy as np
 from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfig
@@ -35,28 +35,33 @@ async def main(service_config_path: Path) -> None:
     """
     # create a client to the camera service
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
+    start = time.monotonic()
+    last_stamp: float | None = None
+    missed_frames = 0
 
     async for event, message in EventClient(config).subscribe(config.subscriptions[0], decode=True):
         # Find the monotonic driver receive timestamp, or the first timestamp if not available.
-        stamp = (
-            get_stamp_by_semantics_and_clock_type(event, StampSemantics.DRIVER_RECEIVE, "monotonic")
-            or event.timestamps[0].stamp
-        )
+        now = time.monotonic()
+        if last_stamp is None:
+            last_stamp = now
+        
+        # We expected frames at 10 fps, so we should see a frame every 0.1 seconds.
+        if now - last_stamp > 3 * (1.0/10.0):
+            missed_frames += 1
+            
+        
+        elif now - last_stamp > 3.0:
+            print(f"Stopping after: {now - start}")
+            print(f"Missed frames: {missed_frames}")
+            break
+        
+        if event.timestamps is not None:
+            last_stamp = now
 
-        # print the timestamp and metadata
-        print(f"Timestamp: {stamp}\n")
-        print(f"Meta: {message.meta}")
-        print("###################\n")
-
-        # cast image data bytes to numpy and decode
-        image = cv2.imdecode(np.frombuffer(message.image_data, dtype="uint8"), cv2.IMREAD_UNCHANGED)
-        if event.uri.path == "/disparity":
-            image = cv2.applyColorMap(image * 3, cv2.COLORMAP_JET)
-
-        # visualize the image
-        cv2.namedWindow("image", cv2.WINDOW_NORMAL)
-        cv2.imshow("image", image)
-        cv2.waitKey(1)
+        time_elapsed = now - start
+        time_formatted = time.strftime("%H:%M:%S", time.gmtime(time_elapsed))
+        print(f"Total time elapsed: {time_formatted}")
+            
 
 
 if __name__ == "__main__":

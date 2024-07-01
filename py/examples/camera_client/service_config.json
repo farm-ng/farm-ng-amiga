@@ -1,13 +1,13 @@
 {
-    "name": "oak0",
+    "name": "amiga",
     "port": 50010,
-    "host": "localhost",
+    "host": "100.118.52.117",
     "log_level": "INFO",
     "subscriptions": [
         {
             "uri": {
-                "path": "/rgb",
-                "query": "service_name=oak0"
+                "path": "/left",
+                "query": "service_name=oak/0"
             },
             "every_n": 1
         }
