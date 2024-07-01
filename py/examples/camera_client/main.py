@@ -16,15 +16,60 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import time
 from pathlib import Path
 
-import time
-import numpy as np
 from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfig
 from farm_ng.core.events_file_reader import proto_from_json_file
-from farm_ng.core.stamp import get_stamp_by_semantics_and_clock_type
-from farm_ng.core.stamp import StampSemantics
+
+
+async def monitor_connection(config: EventServiceConfig, duration: int) -> int:
+    """Monitor the connection for a specified duration.
+
+    Args:
+        config (EventServiceConfig): The configuration for the event service.
+        duration (int): The duration to monitor in seconds.
+
+    Returns:
+        int: The number of missed frames.
+    """
+    start = time.monotonic()
+    last_stamp: float | None = None
+    missed_frames = 0
+
+    try:
+        async for event, message in EventClient(config).subscribe(config.subscriptions[0], decode=True):
+            now = time.monotonic()
+            if last_stamp is None:
+                last_stamp = now
+
+            # We stream at 3 fps, so if we haven't received a frame in 0.3 seconds, we consider it a missed frame.
+            if now - last_stamp > 0.35:
+                missed_frames += 1
+
+            if now - start > duration:
+                break
+
+            if now - last_stamp > 3.0:
+                print(f"Breaking due to timeout. Last frame received {now - last_stamp} seconds ago.")
+                break
+
+            if event.timestamps:
+                last_stamp = now
+
+            time_elapsed = now - start
+            hours, remainder = divmod(time_elapsed, 3600)
+            minutes, seconds = divmod(remainder, 60)
+            time_formatted = f"{int(hours):02}:{int(minutes):02}:{seconds:06.3f}"
+            print(f"Total time elapsed: {time_formatted}")
+
+    except asyncio.CancelledError:
+        print("Subscription cancelled.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+    return missed_frames
 
 
 async def main(service_config_path: Path) -> None:
@@ -33,35 +78,21 @@ async def main(service_config_path: Path) -> None:
     Args:
         service_config_path (Path): The path to the camera service config.
     """
-    # create a client to the camera service
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
-    start = time.monotonic()
-    last_stamp: float | None = None
-    missed_frames = 0
+    monitor_duration = 3 * 60  # 3 minutes
+    wait_duration = 5 * 60 + 1  # 5 minutes and 1 second
+    repeat_count = 3
 
-    async for event, message in EventClient(config).subscribe(config.subscriptions[0], decode=True):
-        # Find the monotonic driver receive timestamp, or the first timestamp if not available.
-        now = time.monotonic()
-        if last_stamp is None:
-            last_stamp = now
-        
-        # We expected frames at 10 fps, so we should see a frame every 0.1 seconds.
-        if now - last_stamp > 3 * (1.0/10.0):
-            missed_frames += 1
-            
-        
-        elif now - last_stamp > 3.0:
-            print(f"Stopping after: {now - start}")
-            print(f"Missed frames: {missed_frames}")
-            break
-        
-        if event.timestamps is not None:
-            last_stamp = now
+    for i in range(repeat_count):
+        print(f"--- Monitoring session {i+1}/{repeat_count} ---")
+        missed_frames = await monitor_connection(config, monitor_duration)
+        print(f"Session {i+1} complete. Missed frames: {missed_frames}")
 
-        time_elapsed = now - start
-        time_formatted = time.strftime("%H:%M:%S", time.gmtime(time_elapsed))
-        print(f"Total time elapsed: {time_formatted}")
-            
+        if i < repeat_count - 1:
+            print(f"Waiting for {wait_duration} seconds before the next session...")
+            await asyncio.sleep(wait_duration)
+
+    print("All monitoring sessions complete.")
 
 
 if __name__ == "__main__":
@@ -69,4 +100,7 @@ if __name__ == "__main__":
     parser.add_argument("--service-config", type=Path, required=True, help="The camera config.")
     args = parser.parse_args()
 
-    asyncio.run(main(args.service_config))
+    try:
+        asyncio.run(main(args.service_config))
+    except KeyboardInterrupt:
+        print("Interrupted by user")

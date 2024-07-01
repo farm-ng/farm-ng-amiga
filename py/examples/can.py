@@ -1,13 +1,31 @@
+# Copyright (c) farm-ng, inc.
+#
+# Licensed under the Amiga Development Kit License (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://github.com/farm-ng/amiga-dev-kit/blob/main/LICENSE
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from __future__ import annotations
-from struct import pack, unpack
+
 import time
-from farm_ng.core.stamp import timestamp_from_monotonic
-from farm_ng.core.timestamp_pb2 import Timestamp
+from struct import pack
+from struct import unpack
+
 from farm_ng.canbus import canbus_pb2
 from farm_ng.canbus import tool_control_pb2
+from farm_ng.core.stamp import timestamp_from_monotonic
+from farm_ng.core.timestamp_pb2 import Timestamp
 
 # Important CAN node IDs
 DASHBOARD_NODE_ID = 0xE
+
 
 class Packet:
     """Base class inherited by all CAN message data structures."""
@@ -31,6 +49,7 @@ class Packet:
     def age(self):
         """Age of the most recent message."""
         return time.monotonic() - self.stamp.stamp
+
 
 class BugDispenserRpdo3(Packet):
     """Bug dispenser rate in m/drop (request) sent to the Amiga dashboard."""
@@ -162,9 +181,6 @@ class BugDispenserTpdo3(Packet):
         )
 
 
-
-
-
 # Rpdo1 example
 message = BugDispenserRpdo3(rate1=10.58, rate2=18.3462, rate3=0.559)
 encoded_message = message.encode()
@@ -191,7 +207,7 @@ decoded_message = BugDispenserTpdo3()
 decoded_message.decode(encoded_message)
 print(decoded_message)
 
-# To RawCanbusMessage   
+# To RawCanbusMessage
 raw_message = message.to_raw_canbus_message()
 print(raw_message)
 

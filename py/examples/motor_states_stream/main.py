@@ -32,9 +32,9 @@ async def main(service_config_path: Path) -> None:
 
     async for event, message in EventClient(config).subscribe(config.subscriptions[0], decode=True):
         print(f"Event: \n{event}")
-        print("-"*80)
+        print("-" * 80)
         print(f"Message: \n{message}")
-        print("-"*80)
+        print("-" * 80)
 
 
 if __name__ == "__main__":
