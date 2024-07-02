@@ -15,7 +15,6 @@ import argparse
 import asyncio
 from pathlib import Path
 
-from farm_ng.canbus.packet import MotorState
 from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfig
 from farm_ng.core.events_file_reader import proto_from_json_file

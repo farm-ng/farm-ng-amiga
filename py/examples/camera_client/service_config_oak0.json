@@ -1,7 +1,7 @@
 {
     "name": "amiga",
     "port": 50010,
-    "host": "100.118.52.117",
+    "host": "localhost",
     "log_level": "INFO",
     "subscriptions": [
         {
