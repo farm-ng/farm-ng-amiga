@@ -1,7 +1,7 @@
 {
     "name": "gps",
     "port": 50010,
-    "host": "100.118.52.117",
+    "host": "100.122.250.35",
     "log_level": "INFO",
     "subscriptions": [
         {

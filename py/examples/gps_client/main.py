@@ -25,7 +25,7 @@ from farm_ng.gps import gps_pb2
 
 
 def print_event(event, msg):
-    print(f"Event: \n {event} \nMessage: \n {msg}")
+    print(f"Event: \n {event}")
     print("-" * 50)
 
 
