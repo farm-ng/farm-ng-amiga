@@ -42,12 +42,6 @@ enum BugDispenserState {
   BUG_DISPENSER_STOPPED = 2; // The bug dispenser is stopped
 }
 
-enum BugDispenserIsDispensing {
-  DISPENSING_UNKNOWN = 0;
-  DISPENSING_TRUE = 1;
-  DISPENSING_FALSE = 2;
-}
-
 // Tool command replies, decoded from AmigaTpdo1 CAN messages
 // These do not necessarily reflect the current state of the tool,
 // if the tool is not being commanded by AmigaTpdo1 messages.
@@ -148,7 +142,7 @@ message BugDispenserStatus {
   uint32 id = 2; // Bug dispenser ID (e.g., 0x20 - 0x22)
   BugDispenserState state = 3; // UNKNOWN, ACTIVE, STOPPED
   float rate = 4; // Dispensing rate in meters between drops
-  BugDispenserIsDispensing bug_dispenser_is_dispensing = 5; // Whether the hopper is dispensing
+  bool bug_dispenser_is_dispensing = 5; // Whether the hopper is dispensing
   float volume_dispensed = 6; // Volume of product dispensed in liters
 }
 
