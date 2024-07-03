@@ -27,6 +27,16 @@ from farm_ng.core.timestamp_pb2 import Timestamp
 # Important CAN node IDs
 DASHBOARD_NODE_ID = 0xE
 PENDANT_NODE_ID = 0xF
+BRAIN_NODE_ID = 0x1F
+
+
+class NodeState(IntEnum):
+    """State of the node (farm-ng device)."""
+
+    BOOTUP = 0x00  # Boot up / Initializing
+    STOPPED = 0x04  # Stopped
+    OPERATIONAL = 0x05  # Operational
+    PRE_OPERATIONAL = 0x7F  # Pre-Operational
 
 
 class PendantButtons(IntEnum):
@@ -102,6 +112,30 @@ class Packet:
     def age(self):
         """Age of the most recent message."""
         return time.monotonic() - self.stamp.stamp
+
+
+class FarmngHeartbeat(Packet):
+    """Custom Heartbeat message = status sent regularly by farm-ng components."""
+
+    format = "<BI3s"
+    cob_id = 0x700
+
+    def __init__(self, node_state: NodeState = NodeState.BOOTUP, ticks_ms: int = 0, serial_number=bytes()):
+        self.node_state = node_state
+        self.ticks_ms = ticks_ms
+        self.serial_number = serial_number
+
+    def encode(self):
+        """Returns the data contained by the class encoded as CAN message data."""
+        return pack(self.format, self.node_state, self.ticks_ms, self.serial_number[:3])
+
+    def decode(self, data):
+        """Decodes CAN message data and populates the values of the class."""
+        (node_state, self.ticks_ms, self.serial_number) = unpack(self.format, data)
+        self.node_state = NodeState(node_state)
+
+    def __str__(self):
+        return f"node_state: {self.node_state} ticks_ms: {self.ticks_ms} serial_number: {self.serial_number}"
 
 
 def make_amiga_rpdo1_proto(
