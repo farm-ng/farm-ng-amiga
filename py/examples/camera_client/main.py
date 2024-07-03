@@ -125,15 +125,15 @@ async def main(service_config_path: Path) -> None:
         service_config_path (Path): The path to the camera service config.
     """
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
-    monitor_duration = 1 * 30
+    monitor_duration = 1 * 20
     wait_durations = [
         3,
         17,
-        301,
-        301,
+        50,
+        50,
         1,
-        301,
-        400,
+        50,
+        40,
     ]  # Random wait durations, but at least two larger than 300 s (grace period)
     repeat_count = len(wait_durations)
 
