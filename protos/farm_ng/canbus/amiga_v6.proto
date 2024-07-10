@@ -74,7 +74,8 @@ message AmigaV6CanbusState {
   // Relative battery charge level on range [0.0, 1.0].
   // Will be negative if the charge level cannot be measured.
   double battery_charge_level = 3;
-  bool last_send_error = 4;  // True if the last send on the canbus failed
+  bool send_error = 4;  // True if recent send on the CAN bus failed
+  bool recv_error = 5;  // True if recent recv on the CAN bus indicated an error
 }
 
 message PendantState {
