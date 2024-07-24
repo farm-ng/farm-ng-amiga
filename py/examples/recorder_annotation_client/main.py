@@ -18,7 +18,6 @@ from pathlib import Path
 from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfig
 from farm_ng.core.events_file_reader import proto_from_json_file
-from google.protobuf.struct_pb2 import Struct
 
 
 async def main(service_config_path: Path) -> None:
@@ -30,7 +29,7 @@ async def main(service_config_path: Path) -> None:
     # create a client to the camera service
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
 
-    async for event, message in EventClient(config).subscribe(config.subscriptions[0], decode=False):
+    async for event, message in EventClient(config).subscribe(config.subscriptions[0], decode=True):
         print(message)
 
 

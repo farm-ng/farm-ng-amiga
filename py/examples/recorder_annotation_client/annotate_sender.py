@@ -18,7 +18,7 @@ from pathlib import Path
 from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfig
 from farm_ng.core.events_file_reader import proto_from_json_file
-from google.protobuf.struct_pb2 import Struct
+from farm_ng.core.recorder_pb2 import RecorderAnnotation, AnnotationKind
 
 
 async def main(service_config_path: Path) -> None:
@@ -31,12 +31,9 @@ async def main(service_config_path: Path) -> None:
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
         
         
-    # msg = Struct()
-    # msg.update({
-    #     "annotation": ""
-    # })
-    
-    # print("!", msg)
+    msg = RecorderAnnotation()
+    msg.kind = AnnotationKind.NOTE
+    msg.message = "Fuck from Gui"
         
     await EventClient(config).request_reply("data_collection/annotate", msg)
 
