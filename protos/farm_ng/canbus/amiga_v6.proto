@@ -44,7 +44,6 @@ message AmigaTpdo1 {
   double measured_angular_rate = 5;     // Based on unicycle model
   uint32 pto_bits = 6;                  // bit masked PTO device states
   uint32 hbridge_bits = 7;              // bit masked H-bridge device states
-  uint32 state_of_charge = 8;           // Battery state of charge (0-100%)
 }
 
 message AmigaPdo2 {
