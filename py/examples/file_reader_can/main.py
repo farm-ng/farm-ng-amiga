@@ -37,18 +37,13 @@ def main(file_name: str) -> None:
     events_dict: dict[str, list[EventLogPosition]] = build_events_dict(events_index)
     print(f"All available topics: {sorted(events_dict.keys())}")
 
-    can_events = events_dict["/canbus/raw_messages"]
+    can_events = events_dict["/amigadata_collection/annotate"]
     print(f"Found {len(can_events)} packets of canbus_pb2.RawCanbusMessages")
 
     for event_log in can_events:
         # parse the message
-        sample: canbus_pb2.RawCanbusMessages = event_log.read_message()
-
-        msg: canbus_pb2.RawCanbusMessage
-        for msg in sample.messages:
-            if msg.id == AmigaTpdo1.cob_id + DASHBOARD_NODE_ID:
-                tpdo1: AmigaTpdo1 = AmigaTpdo1.from_raw_canbus_message(msg)
-                print(tpdo1)
+        sample = event_log.read_message()
+        print(sample)
 
     assert reader.close()
 
