@@ -15,9 +15,6 @@ from __future__ import annotations
 
 import argparse
 
-from farm_ng.canbus import canbus_pb2
-from farm_ng.canbus.packet import AmigaTpdo1
-from farm_ng.canbus.packet import DASHBOARD_NODE_ID
 from farm_ng.core.events_file_reader import build_events_dict
 from farm_ng.core.events_file_reader import EventLogPosition
 from farm_ng.core.events_file_reader import EventsFileReader
