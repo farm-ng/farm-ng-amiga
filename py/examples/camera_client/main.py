@@ -33,7 +33,7 @@ async def main(service_config_path: Path) -> None:
     Args:
         service_config_path (Path): The path to the camera service config.
     """
-    # create a client to the camera service
+    # Create a client to the camera service
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
 
     async for event, message in EventClient(config).subscribe(config.subscriptions[0], decode=True):
@@ -43,17 +43,17 @@ async def main(service_config_path: Path) -> None:
             or event.timestamps[0].stamp
         )
 
-        # print the timestamp and metadata
+        # Print the timestamp and metadata
         print(f"Timestamp: {stamp}\n")
         print(f"Meta: {message.meta}")
         print("###################\n")
 
-        # cast image data bytes to numpy and decode
+        # Cast image data bytes to numpy and decode
         image = cv2.imdecode(np.frombuffer(message.image_data, dtype="uint8"), cv2.IMREAD_UNCHANGED)
         if event.uri.path == "/disparity":
             image = cv2.applyColorMap(image * 3, cv2.COLORMAP_JET)
 
-        # visualize the image
+        # Visualize the image
         cv2.namedWindow("image", cv2.WINDOW_NORMAL)
         cv2.imshow("image", image)
         cv2.waitKey(1)
