@@ -30,7 +30,7 @@ async def main(service_config_path: Path) -> None:
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
 
     async for event, message in EventClient(config).subscribe(config.subscriptions[0], decode=True):
-        print(message)
+        print(f"New message: \n {message}")
 
 
 if __name__ == "__main__":
