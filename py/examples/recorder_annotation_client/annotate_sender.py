@@ -13,12 +13,15 @@
 # limitations under the License.
 import argparse
 import asyncio
+import time
 from pathlib import Path
 
 from farm_ng.core.event_client import EventClient
 from farm_ng.core.event_service_pb2 import EventServiceConfig
 from farm_ng.core.events_file_reader import proto_from_json_file
-from farm_ng.core.recorder_pb2 import RecorderAnnotation, AnnotationKind
+from farm_ng.core.recorder_pb2 import AnnotationKind
+from farm_ng.core.recorder_pb2 import RecorderAnnotation
+from farm_ng.core.timestamp_pb2 import Timestamp
 
 
 async def main(service_config_path: Path) -> None:
@@ -29,12 +32,17 @@ async def main(service_config_path: Path) -> None:
     """
     # create a client to the camera service
     config: EventServiceConfig = proto_from_json_file(service_config_path, EventServiceConfig())
-        
-        
+
+    stamp = Timestamp()
+    stamp.stamp = time.monotonic()
+    stamp.clock_name = "boron-banana/monotonic"
+    stamp.semantics = "client/send"
+
     msg = RecorderAnnotation()
     msg.kind = AnnotationKind.NOTE
     msg.message = "Fuck from Gui"
-        
+    msg.stamp.CopyFrom(stamp)
+
     await EventClient(config).request_reply("data_collection/annotate", msg)
 
 
