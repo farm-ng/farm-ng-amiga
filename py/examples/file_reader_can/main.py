@@ -34,8 +34,8 @@ def main(file_name: str) -> None:
     events_dict: dict[str, list[EventLogPosition]] = build_events_dict(events_index)
     print(f"All available topics: {sorted(events_dict.keys())}")
 
-    can_events = events_dict["/amigadata_collection/annotate"]
-    print(f"Found {len(can_events)} packets of canbus_pb2.RawCanbusMessages")
+    can_events = events_dict["/data_collection/annotation"]
+    print(f"Found {len(can_events)} annotated packets")
 
     for event_log in can_events:
         # parse the message
