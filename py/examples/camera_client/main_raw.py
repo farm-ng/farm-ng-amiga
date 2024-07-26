@@ -27,6 +27,29 @@ from farm_ng.core.stamp import get_stamp_by_semantics_and_clock_type
 from farm_ng.core.stamp import StampSemantics
 
 
+# Convert YUV420 to BGR format (OpenCV uses BGR by default)
+def yuv420_to_bgr(yuv420, width, height):
+    yuv420 = np.frombuffer(yuv420, dtype=np.uint8)
+    y_size = width * height
+    uv_size = y_size // 4
+
+    y = yuv420[0:y_size].reshape((height, width))
+    u = yuv420[y_size : y_size + uv_size].reshape((height // 2, width // 2))
+    v = yuv420[y_size + uv_size :].reshape((height // 2, width // 2))
+
+    # Upscale U and V planes to match Y plane size
+    u = cv2.resize(u, (width, height), interpolation=cv2.INTER_LINEAR)
+    v = cv2.resize(v, (width, height), interpolation=cv2.INTER_LINEAR)
+
+    # Merge Y, U, and V channels back into a single image
+    yuv = cv2.merge((y, u, v))
+
+    # Convert YUV to BGR
+    bgr = cv2.cvtColor(yuv, cv2.COLOR_YUV2BGR)
+
+    return bgr
+
+
 async def main(service_config_path: Path) -> None:
     """Run the camera service client.
 
@@ -43,28 +66,32 @@ async def main(service_config_path: Path) -> None:
             or event.timestamps[0].stamp
         )
 
-        # Print the timestamp and metadata
-        print(f"Timestamp: {stamp}\n")
-        print(f"Meta: {message.meta}")
-        print("###################\n")
-
         # "RAW" images only have /rgb and /left, no /right or /disparity
         image = None
         if event.uri.path == "/rgb":
             width, height = (1920, 1080)
+            try:
+                image = yuv420_to_bgr(message.image_data, width, height)
+            except Exception as e:
+                print(f"Error converting YUV420 to BGR: {e}")
+                continue
         elif event.uri.path == "/left":
             width, height = (1280, 800)
+            try:
+                image = np.frombuffer(message.image_data, dtype=np.uint8).reshape(height, width)
+            except Exception as e:
+                print(f"Error converting left image to BGR: {e}")
+                continue
         else:
             print(f"Unknown image type: {event.uri.path}")
             continue
 
-        try:
-            image = np.frombuffer(message.data, dtype=np.uint8).reshape((height, width, 3))
-        except ValueError as e:
-            print(f"Error: {e}")
-            continue
-
         if image is not None:
+            # Print the timestamp and metadata
+            print(f"Timestamp: {stamp}\n")
+            print(f"Meta: {message.meta}")
+            print("###################\n")
+
             # Visualize the image
             cv2.namedWindow("image", cv2.WINDOW_NORMAL)
             cv2.imshow("image", image)
