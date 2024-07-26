@@ -1,13 +1,13 @@
 {
-    "name": "oak0",
+    "name": "oak/1",
     "port": 50010,
-    "host": "localhost",
+    "host": "100.109.169.103",
     "log_level": "INFO",
     "subscriptions": [
         {
             "uri": {
-                "path": "/rgb",
-                "query": "service_name=oak0"
+                "path": "/left",
+                "query": "service_name=oak/1"
             },
             "every_n": 1
         }
