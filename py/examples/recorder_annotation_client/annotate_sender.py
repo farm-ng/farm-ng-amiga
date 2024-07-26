@@ -38,7 +38,7 @@ async def main(service_config_path: Path) -> None:
     msg = RecorderAnnotation()
     msg.kind = AnnotationKind.ANNOTATION_NOTE
     msg.message = "Hello from Gui!"
-    msg.stamp.CopyFrom(stamp)
+    msg.stamps.append(stamp)
 
     await EventClient(config).request_reply("data_collection/annotate", msg)
 
