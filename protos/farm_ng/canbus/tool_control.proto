@@ -82,7 +82,7 @@ message PtoCommand {
 // For commanding a BugDispenser device
 message BugDispenserCommand {
   uint32 id = 1; // Bug dispenser ID (e.g., 0x20 - 0x22)
-  float rate = 2; // Dispensing rate in meters between drops
+  float rate = 2; // Dispensing rate in mL/m
   BugDispenserState state = 3; // Bug dispenser state (UNKNOWN, ACTIVE, STOPPED)
 }
 
@@ -141,7 +141,7 @@ message BugDispenserStatus {
   double stamp = 1; // Stamp of the bug dispenser RawCanbusMessage event
   uint32 id = 2; // Bug dispenser ID (e.g., 0x20 - 0x22)
   BugDispenserState state = 3; // UNKNOWN, ACTIVE, STOPPED
-  float rate = 4; // Dispensing rate in meters between drops
+  float rate = 4; // Dispensing rate in mL/m
   bool bug_dispenser_is_dispensing = 5; // Whether the hopper is dispensing
   float volume_dispensed = 6; // Volume of product dispensed in liters
 }
