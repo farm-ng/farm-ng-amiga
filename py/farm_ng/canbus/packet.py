@@ -540,20 +540,20 @@ class BugDispenserCommand(Packet):
     """Bug dispenser rate in m/drop (request) sent to the Amiga dashboard."""
 
     cob_id = 0x400
+    format = "<3B5x"
     scale = 10.0
 
     def __init__(self, rate0=0, rate1=0, rate2=0):
         self.rate0 = rate0
         self.rate1 = rate1
         self.rate2 = rate2
-        self.format = '<3B5x'  # 3 bytes for rates, 5 bytes padding
         self.stamp_packet(time.monotonic())
 
     def encode(self):
         """Returns the data contained by the class encoded as CAN message data."""
 
         if any(rate > 25.5 or rate < 0.0 for rate in [self.rate0, self.rate1, self.rate2]):
-            raise ValueError("Rates must be between 0.0 and 25.5 m/drop")
+            raise ValueError("Rates must be between 0.0 and 25.5 mL/m")
 
         return pack(
             self.format, int(self.rate0 * self.scale), int(self.rate1 * self.scale), int(self.rate2 * self.scale)
@@ -561,7 +561,6 @@ class BugDispenserCommand(Packet):
 
     def decode(self, data):
         """Decodes CAN message data and populates the values of the class."""
-
         rate0, rate1, rate2 = unpack(self.format, data)
 
         # Convert rates to m/drop
@@ -581,19 +580,19 @@ class BugDispenserCommand(Packet):
 
 
 class BugDispenserState(Packet):
-    """Bug dispenser rate in m/drop, 8-bit counter (response) received from the Amiga dashboard."""
+    """Bug dispenser rate in mL/m, 8-bit counter (response) received from the Amiga dashboard."""
 
     cob_id = 0x380
+    format = "<6B2x"
     scale = 10.0
 
     def __init__(self, rate0=0, counter0=0, rate1=0, counter1=0, rate2=0, counter2=0):
         self.rate0 = rate0
-        self.counter0 = counter0
         self.rate1 = rate1
-        self.counter1 = counter1
         self.rate2 = rate2
+        self.counter0 = counter0
+        self.counter1 = counter1
         self.counter2 = counter2
-        self.format = '<6B2x'  # 3 bytes for rates, 3 bytes for counters, 2 padding bytes
         self.stamp_packet(time.monotonic())
 
     def encode(self):
@@ -604,7 +603,7 @@ class BugDispenserState(Packet):
         """
 
         if any(rate > 25.5 or rate < 0.0 for rate in [self.rate0, self.rate1, self.rate2]):
-            raise ValueError("Rates must be between 0 and 25.5 m/drop")
+            raise ValueError("Rates must be between 0 and 25.5 mL/m")
 
         if any(counter > 255 or counter < 0 for counter in [self.counter0, self.counter1, self.counter2]):
             raise ValueError("Counters must be between 0 and 255")
