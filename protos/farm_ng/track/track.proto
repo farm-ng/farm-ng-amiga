@@ -19,6 +19,7 @@ syntax = "proto3";
 
 import "farm_ng/core/lie.proto";
 import "farm_ng/core/pose.proto";
+import "farm_ng/canbus/tool_control.proto";
 
 package farm_ng.track.proto;
 
@@ -26,6 +27,8 @@ package farm_ng.track.proto;
 message Track {
   // The waypoints along the track
   repeated farm_ng.core.proto.Pose waypoints = 1;
+  // Map of key waypoints to their associated actuator command
+  map<int32, farm_ng.canbus.proto.ActuatorCommands> key_waypoint_actions = 2;
 }
 
 // This is sent to the track_follower service by a client to request a track be followed.
