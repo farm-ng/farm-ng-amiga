@@ -33,10 +33,13 @@ repos:
           - --skip
           - "*.bib,*.ipynb,*.lock"
 
-  - repo: https://github.com/myint/docformatter
-    rev: v1.7.5
+  - repo: local
     hooks:
       - id: docformatter
+        name: "docformatter"
+        entry: docformatter
+        language: python
+        types: [python]
         args: [--in-place, --wrap-summaries=115, --wrap-descriptions=120]
 
   - repo: https://github.com/Lucas-C/pre-commit-hooks
