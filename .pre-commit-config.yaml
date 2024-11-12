@@ -5,7 +5,7 @@ repos:
     - id: black
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v5.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -33,8 +33,11 @@ repos:
           - --skip
           - "*.bib,*.ipynb,*.lock"
 
+  # TODO: Set ``rev: v1.7.6`` once the release is available.
+  # See: https://github.com/PyCQA/docformatter/issues/293
   - repo: https://github.com/myint/docformatter
-    rev: v1.7.5
+    # rev: v1.7.6
+    rev: "eb1df347edd128b30cd3368dddc3aa65edcfac38"
     hooks:
       - id: docformatter
         args: [--in-place, --wrap-summaries=115, --wrap-descriptions=120]
