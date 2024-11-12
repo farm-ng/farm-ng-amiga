@@ -68,7 +68,6 @@ enum PixelFormat {
   Encoded = 2;
 }
 
-// I don't like this approach, but Rust doesn't seem to support optional types
 message Resolution {
   uint32 width = 1;
   uint32 height = 2;
