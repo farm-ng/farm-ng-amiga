@@ -65,6 +65,7 @@ message EncoderOptions {
 enum PixelFormat {
   YUV420 = 0;
   RAW8 = 1;
+  Encoded = 2;
 }
 
 
@@ -77,8 +78,8 @@ message OakImageMeta {
   double timestamp_recv = 7;   // seconds, host receive time in host monotonic clock
   CameraSettings settings = 6;
   EncoderOptions encoder_options = 8;
-  uint32 width = 9;
-  uint32 height = 10;
+  optional uint32 width = 9;
+  optional uint32 height = 10;
   PixelFormat pixel_format = 11;
 }
 
