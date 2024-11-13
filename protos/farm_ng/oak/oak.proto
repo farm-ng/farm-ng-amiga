@@ -62,6 +62,18 @@ message EncoderOptions {
   uint32 frames_per_keyframe = 5;
 }
 
+enum PixelFormat {
+  YUV420 = 0;
+  RAW8 = 1;
+  Encoded = 2;
+}
+
+message Resolution {
+  uint32 width = 1;
+  uint32 height = 2;
+}
+
+
 message OakImageMeta {
   int64 category = 1;          // DepthAI catetory
   int64 instance_num = 2;      // DepthAI instance number
@@ -71,6 +83,8 @@ message OakImageMeta {
   double timestamp_recv = 7;   // seconds, host receive time in host monotonic clock
   CameraSettings settings = 6;
   EncoderOptions encoder_options = 8;
+  Resolution resolution = 9;
+  PixelFormat pixel_format = 10;
 }
 
 message OakFrame {
