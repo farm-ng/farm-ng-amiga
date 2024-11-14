@@ -63,9 +63,10 @@ message EncoderOptions {
 }
 
 enum PixelFormat {
-  YUV420 = 0;
-  RAW8 = 1;
-  Encoded = 2;
+  UNKNOWN = 0;
+  YUV420 = 1;
+  RAW8 = 2;
+  Encoded = 3;
 }
 
 message Resolution {
