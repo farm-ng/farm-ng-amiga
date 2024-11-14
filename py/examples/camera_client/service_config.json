@@ -1,5 +1,5 @@
 {
-    "name": "oak0",
+    "name": "oak/0",
     "port": 50010,
     "host": "localhost",
     "log_level": "INFO",
@@ -7,7 +7,7 @@
         {
             "uri": {
                 "path": "/rgb",
-                "query": "service_name=oak0"
+                "query": "service_name=oak/0"
             },
             "every_n": 1
         }
