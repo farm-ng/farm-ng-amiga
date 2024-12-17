@@ -11,7 +11,7 @@ on:
 jobs:
   # TODO: fix mypy for protobufs
   # mypy:
-  #   runs-on: [ubuntu-latest]
+  #   runs-on: [ubuntu-22.04]
   #   steps:
   #   - uses: actions/checkout@v3
   #   - name: Install dependencies
@@ -20,7 +20,7 @@ jobs:
   #     run: mypy
 
   pre-commit-check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
