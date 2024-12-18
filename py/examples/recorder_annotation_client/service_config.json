@@ -1,0 +1,15 @@
+{
+    "name": "amiga",
+    "port": 50010,
+    "host": "localhost",
+    "log_level": "INFO",
+    "subscriptions": [
+        {
+            "uri": {
+                "path": "/annotation",
+                "query": "service_name=data_collection"
+            },
+            "every_n": 1
+        }
+    ]
+}
