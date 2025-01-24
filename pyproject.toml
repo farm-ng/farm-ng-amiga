@@ -23,6 +23,8 @@ profile = "black"
 [build-system]
 requires = [
     "setuptools",
+    "wheel",
     "farm-ng-package",
+    "farm-ng-core",
     ]
 build-backend = "setuptools.build_meta"
