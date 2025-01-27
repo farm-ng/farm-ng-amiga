@@ -25,6 +25,7 @@ requires = [
     "setuptools",
     "wheel",
     "farm-ng-core",
+    "farm-ng-package",
     "protobuf<=5.27.5",
     "grpcio-tools==1.64.1",
     ]
