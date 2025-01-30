@@ -14,11 +14,11 @@ jobs:
         # Match ci_python.yml. See notes on Python version there.
         python-version: '3.8'
     - name: Install dependencies
-      run: python3 -m pip install --upgrade setuptools wheel
+      run: python3 -m pip install --upgrade setuptools wheel build
     - name: Compile project
       run: python3 -m pip install -e .
     - name: Build distribution package
-      run: python3 setup.py sdist bdist_wheel
+      run: python3 -m build
     - name: Publish distribution 📦 to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
