@@ -9,7 +9,10 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@master
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@v5
+      with:
+        # Match ci_python.yml. See notes on Python version there.
+        python-version: '3.8'
     - name: Install dependencies
       run: python3 -m pip install --upgrade setuptools wheel
     - name: Compile project

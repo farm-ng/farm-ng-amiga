@@ -16,11 +16,15 @@ jobs:
       matrix:
         # Ubuntu with python 3.8 is our current supported target, matching
         # AmigaOS on the Brain.
+        # Note also that we fix grpcio-tools==1.64.1 at build time in
+        # pyproject.toml to control the protoc version and resulting gencode
+        # version of the generated protobuf code we package. v1.64.1 is
+        # incompatible with recent Python versions, at least 3.13+.
         os: [ubuntu-22.04]
         python-version: [3.8]
     steps:
     - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
+    - uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
