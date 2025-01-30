@@ -14,8 +14,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest] # ubuntu only for now macos-latest, windows-latest]
-        python-version: [3.8] # ubuntu 20.04, python 3.8 is our current supported target
+        # Ubuntu with python 3.8 is our current supported target, matching
+        # AmigaOS on the Brain.
+        os: [ubuntu-22.04]
+        python-version: [3.8]
     steps:
     - uses: actions/checkout@v3
     - uses: actions/setup-python@v4
