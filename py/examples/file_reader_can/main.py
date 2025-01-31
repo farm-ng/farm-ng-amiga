@@ -15,9 +15,6 @@ from __future__ import annotations
 
 import argparse
 
-from farm_ng.canbus import canbus_pb2
-from farm_ng.canbus.packet import AmigaTpdo1
-from farm_ng.canbus.packet import DASHBOARD_NODE_ID
 from farm_ng.core.events_file_reader import build_events_dict
 from farm_ng.core.events_file_reader import EventLogPosition
 from farm_ng.core.events_file_reader import EventsFileReader
@@ -37,18 +34,13 @@ def main(file_name: str) -> None:
     events_dict: dict[str, list[EventLogPosition]] = build_events_dict(events_index)
     print(f"All available topics: {sorted(events_dict.keys())}")
 
-    can_events = events_dict["/canbus/raw_messages"]
-    print(f"Found {len(can_events)} packets of canbus_pb2.RawCanbusMessages")
+    can_events = events_dict["/data_collection/annotation"]
+    print(f"Found {len(can_events)} annotated packets")
 
     for event_log in can_events:
         # parse the message
-        sample: canbus_pb2.RawCanbusMessages = event_log.read_message()
-
-        msg: canbus_pb2.RawCanbusMessage
-        for msg in sample.messages:
-            if msg.id == AmigaTpdo1.cob_id + DASHBOARD_NODE_ID:
-                tpdo1: AmigaTpdo1 = AmigaTpdo1.from_raw_canbus_message(msg)
-                print(tpdo1)
+        sample = event_log.read_message()
+        print(sample)
 
     assert reader.close()
 
