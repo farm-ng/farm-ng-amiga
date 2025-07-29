@@ -78,7 +78,13 @@ async def build_track(client: EventClient | None = None, save_track: Path | None
     """
     print("Building track...")
 
-    track: Track = await build_row_end_maneuver(client, forward_turn=2.5, row_spacing=6.0, direction="left")
+    # NOTE: In this example, we will create a row-end maneuver track.
+    # The Amiga will drive forward, turn 90 degrees, drive forward to the next row,
+    # turn 90 degrees to align with the next row, and then drive forward again.
+    # In this specific example, we will simulate a left turn, use a buffer distance of 2.5 meters
+    # and a row spacing of 6.0 meters.
+
+    track: Track = await build_row_end_maneuver(client, buffer_distance=2.5, row_spacing=6.0, direction="left")
 
     track_builder = TrackBuilder(start=None)
     track_builder.track = track
@@ -87,7 +93,7 @@ async def build_track(client: EventClient | None = None, save_track: Path | None
     if save_track is not None:
         track_builder.save_track(save_track)
 
-    # Plot the track
+    # Plot the track for visualization
     waypoints = track_builder.unpack_track()
     plot_track(waypoints)
     return track_builder.track

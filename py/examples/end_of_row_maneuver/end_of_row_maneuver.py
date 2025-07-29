@@ -26,8 +26,8 @@ from google.protobuf.empty_pb2 import Empty
 from track_planner import TrackBuilder
 
 
-async def create_start_pose(client: EventClient | None = None, timeout: float = 0.5) -> Pose3F64:
-    """Create a start pose for the track.
+async def get_current_pose(client: EventClient | None = None, timeout: float = 0.5) -> Pose3F64:
+    """Get the current pose for the track.
 
     Args:
         client: A EventClient for the required service (filter)
@@ -56,12 +56,15 @@ async def create_start_pose(client: EventClient | None = None, timeout: float = 
 
 
 async def build_row_end_maneuver(
-    client: EventClient | None = None, forward_turn: float = 2.5, row_spacing: float = 6.0, direction: str = "left"
+    client: EventClient | None = None, buffer_distance: float = 2.5, row_spacing: float = 6.0, direction: str = "left"
 ) -> Track:
     """Builds a custom track for the Amiga to follow.
 
     Args:
         client: A EventClient for the required service (filter)
+        buffer_distance: The distance to drive forward before turning (in meters)
+        row_spacing: The distance between rows (in meters)
+        direction: The direction to turn at the end of the row, either "left" or "right"
     Returns:
         The track
     """
@@ -71,32 +74,33 @@ async def build_row_end_maneuver(
 
     print("Building track...")
 
-    current_pose: Pose3F64 = await create_start_pose(client)
+    current_pose: Pose3F64 = await get_current_pose(client)
     track_builder = TrackBuilder(start=current_pose)
     if direction not in ["left", "right"]:
         raise ValueError("Direction must be 'left' or 'right'")
 
-    turn_sign = 1 if direction == "left" else -1
+    turn_sign: float = 1.0 if direction == "left" else -1.0
 
     # Based on field tests, 'zero-radius turns' are less likely to cause motor overheating issues.
     # For this reason, when transitioning between rows, we will only make zero-radius turns.
-    # The goal is to drive forward 2.5 m (buffer distance), turn 90 degrees, drive forward 6 m (row spacing),
-    # turn 90 degrees to align with the next row, and then drive forward 2.5 m.
+    # The goal is to drive forward (buffer distance), turn 90 degrees,
+    # drive forward again to the next row (row spacing), turn 90 degrees to align with the next row,
+    # and then drive forward again (buffer distance).
 
-    # Drive forward 2.5 m
-    track_builder.create_straight_segment(next_frame_b="goal1", distance=forward_turn, spacing=0.1)
+    # Drive forward
+    track_builder.create_straight_segment(next_frame_b="forward_buffer_distance", distance=buffer_distance, spacing=0.1)
 
-    # Maneuver at the end of row: turn 90 degrees to the left
-    track_builder.create_turn_segment(next_frame_b="goal2", angle=radians(90 * turn_sign), spacing=0.1)
+    # Maneuver at the end of row: turn 90 degrees
+    track_builder.create_turn_segment(next_frame_b="zero_radius_turn", angle=radians(90 * turn_sign), spacing=0.1)
 
-    # Drive forward 6 m (row spacing)
-    track_builder.create_straight_segment(next_frame_b="goal3", distance=row_spacing, spacing=0.1)
+    # Drive forward to the next row
+    track_builder.create_straight_segment(next_frame_b="forward_next_row", distance=row_spacing, spacing=0.1)
 
-    # Maneuver at the end of row: align with the next row (another 90 degrees to the left)
-    track_builder.create_turn_segment(next_frame_b="goal2", angle=radians(90 * turn_sign), spacing=0.1)
+    # Maneuver at the end of row: align with the next row (another 90-degree turn)
+    track_builder.create_turn_segment(next_frame_b="zero_radius_turn", angle=radians(90 * turn_sign), spacing=0.1)
 
-    # Drive forward 1m (just for visualization - in reality, we will create an AB segment to the next waypoint)
-    track_builder.create_straight_segment(next_frame_b="goal5", distance=forward_turn, spacing=0.1)
+    # Drive forward
+    track_builder.create_straight_segment(next_frame_b="forward_buffer_distance", distance=buffer_distance, spacing=0.1)
 
     # Print the number of waypoints in the track
     print(f" Track created with {len(track_builder.track_waypoints)} waypoints")
