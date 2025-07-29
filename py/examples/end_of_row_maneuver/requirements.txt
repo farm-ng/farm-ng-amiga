@@ -1,0 +1,4 @@
+farm-ng-amiga
+farm-ng-core
+matplotlib
+numpy
