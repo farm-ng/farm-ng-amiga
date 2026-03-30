@@ -22,7 +22,7 @@ import "farm_ng/core/pose.proto";
 
 package farm_ng.track.proto;
 
-message WaypointGeojson {
+message GpsWaypoint {
   // Latitude in degrees
   double latitude = 1;
   // Longitude in degrees
@@ -37,7 +37,7 @@ message WaypointGeojson {
 message Track {
   // The waypoints along the track
   repeated farm_ng.core.proto.Pose waypoints = 1;
-  repeated WaypointGeojson geojson_waypoints = 2;
+  repeated GpsWaypoint gps_waypoints = 2;
 }
 
 // This is sent to the track_follower service by a client to request a track be followed.
