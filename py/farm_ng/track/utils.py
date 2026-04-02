@@ -25,7 +25,7 @@ from farm_ng.core.pose_pb2 import Pose
 from farm_ng.core.lie_pb2 import Isometry3F64, Rotation3F64, QuaternionF64
 from farm_ng.core.linalg_pb2 import Vec3F64
 from farm_ng.filter.filter_pb2 import FilterTrack
-from farm_ng.track.track_pb2 import Track, WaypointGeojson
+from farm_ng.track.track_pb2 import Track, GpsWaypoint
 from farm_ng.gps.gps_pb2 import GpsFrame
 
 from farm_ng.track.rotation import theta_to_quaternion_z
@@ -155,30 +155,30 @@ def convert_track_to_local(track: Track, anchor: GpsFrame) -> Track:
     return Track(waypoints=poses)
 
 def convert_track_to_global(track: Track, anchor: GpsFrame) -> Track:
-    """Converts a track with local poses (waypoints) and an anchor to global GPS coordinates (geojson_waypoints).
-        Assumes tracks contain only local waypoints or global geojson_waypoints - mix is not supported.
+    """Converts a track with local poses (waypoints) and an anchor to global GPS coordinates (gps_waypoints).
+        Assumes tracks contain only local waypoints or global gps_waypoints - mix is not supported.
 
     Args:
         track: The track with local NWU waypoints
         anchor: The GPS frame to use as the origin.
 
     Returns:
-       a Track with GPS waypoints (geojson_waypoints).
+       a Track with GPS waypoints (gps_waypoints).
     """
     
-    # if track already uses geojson_waypoints, return as is
-    if len(track.geojson_waypoints) > 0:
+    # if track already uses gps_waypoints, return as is
+    if len(track.gps_waypoints) > 0:
         return track
 
-    elif len(track.waypoints)>0 and len(track.geojson_waypoints) > 0:
-        raise ValueError("Track contains both waypoints and geojson_waypoints, cannot convert.")
+    elif len(track.waypoints)>0 and len(track.gps_waypoints) > 0:
+        raise ValueError("Track contains both waypoints and gps_waypoints, cannot convert.")
 
     else:
 
         if anchor is None:
             raise ValueError("Anchor GPS frame is None; cannot convert track to global coordinates")
         
-        geojson_track = Track()
+        gps_track = Track()
 
         for wp in track.waypoints:
             global_pos = compute_global_position(
@@ -189,12 +189,12 @@ def convert_track_to_global(track: Track, anchor: GpsFrame) -> Track:
                 wp.a_from_b.translation.z
                 )
             )
-            geojson_wp = WaypointGeojson(
+            gps_wp = GpsWaypoint(
                 latitude=global_pos.latitude,
                 longitude=global_pos.longitude,
                 altitude=global_pos.altitude,
             )
-            geojson_track.geojson_waypoints.append(geojson_wp)
+            gps_track.gps_waypoints.append(gps_wp)
 
-        return geojson_track
+        return gps_track
 
