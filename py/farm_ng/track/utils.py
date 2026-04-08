@@ -61,7 +61,7 @@ def update_filter_track(track_path: Path) -> None:
 
 
 def compute_relative_position(
-    anchor: GpsFrame, pos: Union[GpsFrame, WaypointGeojson]
+    anchor: GpsFrame, pos: Union[GpsFrame, GpsWaypoint]
 ) -> tuple[float, float, float]:
     """Computes the NWU relative position of a GPS frame given an anchor.
     Args:
