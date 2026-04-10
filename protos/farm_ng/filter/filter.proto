@@ -19,6 +19,7 @@ syntax = "proto3";
 
 import "farm_ng/core/linalg.proto";
 import "farm_ng/core/pose.proto";
+import "farm_ng/gps/gps.proto";
 
 package farm_ng.filter.proto;
 
@@ -52,6 +53,12 @@ message FilterState {
 
   double heading = 6; // Rotation about the z-axis contained in pose, in radians
   repeated DivergenceCriteria divergence_criteria = 7; // Criteria that flagged filter divergence, if any
+
+  // State in absolute coordinates (lat, lon)
+  double latitude = 9;  // degrees
+  double longitude = 10; 
+  farm_ng.gps.proto.GpsFrame anchor_gps_frame = 11;
+
 }
 
 message FilterTrack {

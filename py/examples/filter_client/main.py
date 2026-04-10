@@ -61,6 +61,9 @@ async def main(service_config_path: Path) -> None:
         print(f"Filter has converged: {message.has_converged}")
         print("Pose uncertainties:")
         print(f"x: {uncertainties[0]:.3f} m, y: {uncertainties[1]:.3f} m, orientation: {uncertainties[2]:.3f} rad")
+        print(f"latitude: {message.latitude:.6f} deg, longitude: {message.longitude:.6f} deg")
+        print(f"Anchor Latitude:{message.anchor_gps_frame.latitude:.6f} deg, "
+              f"Anchor Longitude: {message.anchor_gps_frame.longitude:.6f} deg")
         if not message.has_converged:
             print(f"Filter diverged due to: {divergence_criteria}")
 

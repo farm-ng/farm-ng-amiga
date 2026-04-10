@@ -22,10 +22,22 @@ import "farm_ng/core/pose.proto";
 
 package farm_ng.track.proto;
 
+message GpsWaypoint {
+  // Latitude in degrees
+  double latitude = 1;
+  // Longitude in degrees
+  double longitude = 2;
+  // Altitude in meters above WGS84 ellipsoid
+  double altitude = 3;
+  // Heading in degrees (0-360, clockwise from True North)
+  double heading = 4;
+}
+
 // A track is a sequence of waypoints that the robot should follow or already drove.
 message Track {
   // The waypoints along the track
   repeated farm_ng.core.proto.Pose waypoints = 1;
+  repeated GpsWaypoint gps_waypoints = 2;
 }
 
 // This is sent to the track_follower service by a client to request a track be followed.
