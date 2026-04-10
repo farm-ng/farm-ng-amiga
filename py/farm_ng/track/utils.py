@@ -124,18 +124,18 @@ def convert_track_to_local(track: Track, anchor: GpsFrame) -> Track:
     """
     poses: List[Pose] = []
 
-    for i, wp in enumerate(track.geojson_waypoints):
+    for i, wp in enumerate(track.gps_waypoints):
         # Compute relative NWU position
         north, west, up = compute_relative_position(anchor, wp)  # NWU
         translation = Vec3F64(x=north, y=west, z=0.0)  # ignore up for now
 
-        if len(track.geojson_waypoints) == 1:
+        if len(track.gps_waypoints) == 1:
             # No heading and only one waypoint, use identity rotation
             rotation = Rotation3F64(
                 unit_quaternion=QuaternionF64(real=1.0, imag=Vec3F64(x=0, y=0, z=0))
             )
-        elif i < len(track.geojson_waypoints) - 1:
-            next_wp = track.geojson_waypoints[i + 1]
+        elif i < len(track.gps_waypoints) - 1:
+            next_wp = track.gps_waypoints[i + 1]
             # Compute relative position
             relpos = compute_relative_position(wp, next_wp)
             # Compute heading from relative position
